@@ -1,0 +1,615 @@
+"use client"
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { FaCar, FaCalendarAlt, FaInbox, FaSignOutAlt, FaSave, FaSearch, FaMoneyBillWave, FaFileAlt, FaCarSide, FaCheck, FaClock, FaWhatsapp, FaPhone, FaTimes, FaEdit, FaTaxi, FaPlane, FaHotel, FaHandshake, FaExclamationTriangle } from 'react-icons/fa';
+import { vehicles } from '../../../data/vehicles';
+import Pagination from '../../../components/Pagination';
+
+const statusColors: Record<string, string> = {
+  'Pending': 'bg-purple-100 text-purple-700',
+  'Finished': 'bg-green-100 text-green-700',
+  'Canceled': 'bg-red-100 text-red-700',
+};
+
+function getPrice(carType: string) {
+  const v = vehicles.find(v => v.name === carType);
+  if (!v) return 0;
+  // Extract number from '120,000 RWF/day'
+  const match = v.price.replace(/,/g, '').match(/\d+/);
+  return match ? parseInt(match[0]) : 0;
+}
+
+function formatRWF(num: number) {
+  return num.toLocaleString('en-US') + ' RWF';
+}
+
+export default function AgentDashboard() {
+  const router = useRouter();
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [showConfirm, setShowConfirm] = useState<{index: number, open: boolean} | null>(null);
+  const [fullTankChecked, setFullTankChecked] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
+  const [showExtend, setShowExtend] = useState<{index: number, open: boolean} | null>(null);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  useEffect(() => {
+    const isAgent = localStorage.getItem('isAgent');
+    if (!isAgent) {
+      router.push('/agent/login');
+    } else {
+      // Use absolute URL to ensure proper resolution
+      const apiUrl = window.location.origin + '/api/bookings';
+      
+      fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+        .then(res => {
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          return res.json();
+        })
+        .then(data => {
+          setBookings(data);
+          // Trigger animations after data loads
+          setTimeout(() => setIsLoaded(true), 100);
+        })
+        .catch(error => {
+          console.error('Error fetching bookings:', error);
+          // Set empty array to prevent errors
+          setBookings([]);
+          setIsLoaded(true);
+        });
+    }
+  }, [router]);
+
+  function getInitials(name: string) {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  }
+
+  // Filter and search logic
+  const filteredBookings = bookings.filter(b => {
+    const matchesSearch =
+      (b.name?.toLowerCase().includes(search.toLowerCase()) || b.guestName?.toLowerCase().includes(search.toLowerCase())) ||
+      (b.carType?.toLowerCase().includes(search.toLowerCase()) || b.roomType?.toLowerCase().includes(search.toLowerCase())) ||
+      (b.phone && b.phone.includes(search)) ||
+      (b.email && b.email.includes(search));
+    
+    const matchesStatus =
+      statusFilter === 'All' ||
+      (statusFilter === 'Pending' && b.status === 'Pending') ||
+      (statusFilter === 'Finished' && b.status === 'Completed') ||
+      (statusFilter === 'Active' && b.status === 'Active') ||
+      (statusFilter === 'Confirmed' && b.status === 'Confirmed');
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedBookings = filteredBookings.slice(startIndex, endIndex);
+
+  // Reset to first page when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter]);
+
+  // Calculate overdue and today's returns (for car rentals only)
+  const overdueCount = bookings.filter(b => {
+    if (b.type === 'Car Rental' && !b.returnConfirmed && b.returnDate && b.returnTime) {
+      const now = new Date();
+      const ret = new Date(`${b.returnDate}T${b.returnTime}`);
+      return now > ret;
+    }
+    return false;
+  }).length;
+
+  const todayReturns = bookings.filter(b => {
+    if (b.type === 'Car Rental' && b.returnDate && b.returnTime) {
+      const today = new Date().toISOString().split('T')[0];
+      return b.returnDate === today;
+    }
+    return false;
+  }).length;
+
+  // Calculate stats for different booking types
+  const carRentals = bookings.filter(b => b.type === 'Car Rental');
+  const hotelBookings = bookings.filter(b => b.type === 'Hotel');
+  const activeCarRentals = carRentals.filter(b => !b.returnConfirmed).length;
+  const pendingHotelBookings = hotelBookings.filter(b => b.status === 'Pending').length;
+
+  // Calculate turnover (for car rentals only)
+  const turnover = carRentals.reduce((sum, b) => sum + getPrice(b.carType), 0);
+  const income = turnover;
+
+  const stats = [
+    { label: 'Turnover', value: formatRWF(turnover), change: '', color: 'purple', trend: 'up' },
+    { label: 'Income', value: formatRWF(income), change: '', color: 'green', trend: 'up' },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <aside className="w-64 bg-white border-r flex flex-col py-8 px-6 min-h-screen transform transition-transform duration-500 ease-in-out">
+        <div className="flex items-center gap-3 mb-10 animate-fade-in">
+          <img src="/logo.png" alt="KIMU Transport Logo" className="w-12 h-12 animate-pulse" />
+          <span className="font-bold text-xl text-orange-700">KIMU Transport & Multiservices</span>
+        </div>
+        <nav className="flex-1">
+          <ul className="space-y-2">
+            <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg bg-purple-50 text-purple-700 font-semibold transition-all duration-300 hover:scale-105" href="#"><FaCar /> Dashboard</a></li>
+            <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105" href="/agent/calendar"><FaCalendarAlt /> Calendar</a></li>
+          </ul>
+          <div className="mt-8">
+            <div className="text-xs text-gray-400 mb-2">REPORT</div>
+            <ul className="space-y-2">
+              <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105" href="/agent/transactions"><FaMoneyBillWave /> Transactions</a></li>
+              <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105" href="/agent/reports"><FaFileAlt /> Reports</a></li>
+            </ul>
+          </div>
+          <div className="mt-8">
+            <div className="text-xs text-gray-400 mb-2">OTHER SERVICES</div>
+            <ul className="space-y-2">
+              <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all duration-300 hover:scale-105" href="/agent/taxi"><FaTaxi className="text-blue-600" /> Premium Taxi Services</a></li>
+              <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all duration-300 hover:scale-105" href="/agent/airport-transfers"><FaPlane className="text-blue-600" /> Airport Transfers</a></li>
+              <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all duration-300 hover:scale-105" href="/agent/hotel-accommodation"><FaHotel className="text-orange-500" /> Hotel Accommodation</a></li>
+              <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all duration-300 hover:scale-105" href="/agent/automotive-sales"><FaHandshake className="text-blue-600" /> Automotive Sales & Consultancy</a></li>
+            </ul>
+          </div>
+        </nav>
+        <div className="mt-auto pt-8">
+          <a href="/agent/logout" className="flex items-center gap-3 text-red-500 font-semibold hover:underline transition-all duration-300 hover:scale-105"><FaSignOutAlt /> Logout</a>
+        </div>
+      </aside>
+      {/* Main Content */}
+      <main className="flex-1 max-w-full mx-auto p-8 flex flex-col gap-8">
+        <h2 className={`text-2xl font-bold mb-2 transition-all duration-700 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          Dashboard Overview
+        </h2>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {stats.map((stat, index) => (
+            <div 
+              key={stat.label} 
+              className={`bg-white rounded-2xl p-8 shadow flex flex-col gap-2 border-t-4 border-${stat.color}-500 max-w-full transition-all duration-700 hover:scale-105 hover:shadow-xl ${
+                isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              }`}
+              style={{ transitionDelay: `${index * 200}ms` }}
+            >
+              <div className="font-semibold text-gray-500">{stat.label}</div>
+              <div className="text-2xl font-bold">{stat.value}</div>
+              <div className={`text-xs ${stat.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>{stat.change}</div>
+            </div>
+          ))}
+        </div>
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+          <div className={`bg-white rounded-2xl shadow p-8 max-w-full transition-all duration-700 hover:scale-105 hover:shadow-xl ${
+            isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`} style={{ transitionDelay: '400ms' }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Bookings</p>
+                <p className="text-3xl font-bold text-gray-900">{bookings.length}</p>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-full animate-pulse">
+                <FaCalendarAlt className="text-blue-600 text-xl" />
+              </div>
+            </div>
+          </div>
+
+          <div className={`bg-white rounded-2xl shadow p-8 max-w-full transition-all duration-700 hover:scale-105 hover:shadow-xl ${
+            isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`} style={{ transitionDelay: '500ms' }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Active Rentals</p>
+                <p className="text-3xl font-bold text-gray-900">{activeCarRentals}</p>
+              </div>
+              <div className="p-3 bg-green-100 rounded-full animate-pulse">
+                <FaCar className="text-green-600 text-xl" />
+              </div>
+            </div>
+          </div>
+
+          <div className={`bg-white rounded-2xl shadow p-8 max-w-full transition-all duration-700 hover:scale-105 hover:shadow-xl ${
+            isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`} style={{ transitionDelay: '600ms' }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Pending Hotels</p>
+                <p className="text-3xl font-bold text-orange-600">{pendingHotelBookings}</p>
+              </div>
+              <div className="p-3 bg-orange-100 rounded-full animate-pulse">
+                <FaHotel className="text-orange-600 text-xl" />
+              </div>
+            </div>
+          </div>
+
+          <div className={`bg-white rounded-2xl shadow p-8 max-w-full transition-all duration-700 hover:scale-105 hover:shadow-xl ${
+            isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`} style={{ transitionDelay: '700ms' }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Overdue Returns</p>
+                <p className="text-3xl font-bold text-red-600">{overdueCount}</p>
+              </div>
+              <div className="p-3 bg-red-100 rounded-full animate-pulse">
+                <FaExclamationTriangle className="text-red-600 text-xl" />
+              </div>
+            </div>
+          </div>
+
+          <div className={`bg-white rounded-2xl shadow p-8 max-w-full transition-all duration-700 hover:scale-105 hover:shadow-xl ${
+            isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`} style={{ transitionDelay: '800ms' }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Today&apos;s Returns</p>
+                <p className="text-3xl font-bold text-gray-900">{todayReturns}</p>
+              </div>
+              <div className="p-3 bg-yellow-100 rounded-full animate-pulse">
+                <FaClock className="text-yellow-600 text-xl" />
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Search and Filter */}
+        <div className={`bg-white rounded-2xl shadow p-8 max-w-full mx-auto mb-6 transition-all duration-700 hover:shadow-xl ${
+          isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+        }`} style={{ transitionDelay: '900ms' }}>
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="Search by name, phone, email, car type, or room type..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+              />
+            </div>
+            <div className="flex gap-2">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+              >
+                <option value="All">All Status</option>
+                <option value="Pending">Pending</option>
+                <option value="Active">Active</option>
+                <option value="Confirmed">Confirmed</option>
+                <option value="Finished">Finished</option>
+              </select>
+              <button
+                onClick={() => { setSearch(''); setStatusFilter('All'); }}
+                className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all duration-300 hover:scale-105"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        </div>
+        {/* Car Listings Table */}
+        <div className={`bg-white rounded-2xl shadow p-8 max-w-full mx-auto transition-all duration-700 hover:shadow-xl ${
+          isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+        }`} style={{ transitionDelay: '1000ms' }}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-2xl font-bold">All Bookings</h3>
+            <select className="border rounded px-2 py-1 text-sm transition-all duration-300 hover:bg-gray-50">
+              <option>This Week</option>
+              <option>This Month</option>
+            </select>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="text-gray-500 text-left">
+                  <th className="py-4 px-6">No</th>
+                  <th className="py-4 px-6">Type</th>
+                  <th className="py-4 px-6">Client</th>
+                  <th className="py-4 px-6">Contact</th>
+                  <th className="py-4 px-6">Details</th>
+                  <th className="py-4 px-6">Dates</th>
+                  <th className="py-4 px-6">Status</th>
+                  <th className="py-4 px-6">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedBookings.map((b, i) => {
+                  const vehicle = vehicles.find(v => v.name === b.carType);
+                  const isOverdue = b.type === 'Car Rental' && !b.returnConfirmed && b.returnDate && b.returnTime && new Date() > new Date(`${b.returnDate}T${b.returnTime}`);
+                  const clientName = b.name || b.guestName;
+                  const clientEmail = b.email;
+                  
+                  return (
+                    <tr 
+                      key={i} 
+                      className={`border-b last:border-0 hover:bg-gray-50 transition-all duration-300 ${
+                        isOverdue ? 'bg-red-50' : i % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+                      }`}
+                      style={{ animationDelay: `${i * 50}ms` }}
+                    >
+                      <td className="py-6 px-6 align-middle font-semibold">{startIndex + i + 1}</td>
+                      <td className="py-6 px-6 align-middle">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold gap-1 ${
+                          b.type === 'Car Rental' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'
+                        }`}>
+                          {b.type === 'Car Rental' ? <FaCar className="text-blue-500" /> : <FaHotel className="text-orange-500" />}
+                          {b.type}
+                        </span>
+                      </td>
+                      <td className="py-6 px-6 align-middle">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm ${
+                            b.type === 'Car Rental' ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'
+                          }`}>
+                            {getInitials(clientName)}
+                          </div>
+                          <div>
+                            <div className="font-semibold">{clientName}</div>
+                            {clientEmail && <div className="text-xs text-gray-500">{clientEmail}</div>}
+                            {b.nationality && <div className="text-xs text-gray-500">{b.nationality}</div>}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-6 px-6 align-middle">
+                        <div className="flex items-center gap-2">
+                          <FaPhone className="text-gray-400" />
+                          <span>{b.phone}</span>
+                        </div>
+                      </td>
+                      <td className="py-6 px-6 align-middle">
+                        {b.type === 'Car Rental' ? (
+                          <div className="flex items-center gap-2">
+                            {vehicle && vehicle.image && (
+                              <img src={vehicle.image} alt={vehicle.name} className="w-16 h-12 object-contain rounded shadow" />
+                            )}
+                            <div>
+                              <div className="font-semibold">{b.carType}</div>
+                              <div className="text-xs text-gray-400">{vehicle?.type}</div>
+                              <div className="text-xs text-gray-500">{b.rentalDays || 1} day(s)</div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div>
+                            <div className="font-semibold">{b.roomType} Room</div>
+                            <div className="text-xs text-gray-400">{b.guests} guest(s)</div>
+                            {b.specialRequests && <div className="text-xs text-gray-500">Special requests</div>}
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-6 px-6 align-middle">
+                        {b.type === 'Car Rental' ? (
+                          <div>
+                            <div className="text-xs text-gray-500">Pickup: {b.pickupDate} {b.pickupTime}</div>
+                            <div className="text-xs text-gray-500">Return: {b.returnDate} {b.returnTime || '-'}</div>
+                          </div>
+                        ) : (
+                          <div>
+                            <div className="text-xs text-gray-500">Check-in: {b.checkInDate}</div>
+                            <div className="text-xs text-gray-500">Check-out: {b.checkOutDate}</div>
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-6 px-6 align-middle">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold gap-1
+                          ${b.status === 'Completed' || b.returnConfirmed ? 'bg-green-100 text-green-800' : 
+                            isOverdue ? 'bg-red-200 text-red-800' : 
+                            b.status === 'Confirmed' ? 'bg-blue-100 text-blue-800' :
+                            'bg-yellow-100 text-yellow-800'}`}
+                        >
+                          {b.status === 'Completed' || b.returnConfirmed ? <FaCheck className="text-green-500" /> : 
+                           isOverdue ? <FaClock className="text-red-500" /> : 
+                           b.status === 'Confirmed' ? <FaCheck className="text-blue-500" /> :
+                           <FaClock className="text-yellow-500" />}
+                          {b.status === 'Completed' || b.returnConfirmed ? 'Completed' : 
+                           isOverdue ? 'Overdue' : 
+                           b.status === 'Confirmed' ? 'Confirmed' :
+                           b.status || 'Pending'}
+                        </span>
+                        {b.type === 'Car Rental' && !b.returnConfirmed && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            <button
+                              title="Confirm Return"
+                              className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
+                              onClick={e => { e.stopPropagation(); setShowConfirm({index: startIndex + i, open: true}); setFullTankChecked(false); }}
+                            >
+                              <FaCheck />
+                            </button>
+                            <button
+                              title="Extend Rental"
+                              className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
+                              onClick={e => { e.stopPropagation(); setShowExtend({index: startIndex + i, open: true}); }}
+                            >
+                              <FaEdit />
+                            </button>
+                            <button
+                              title="Send WhatsApp"
+                              className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
+                              onClick={e => { e.stopPropagation(); window.open(`https://wa.me/${b.phone.replace(/\D/g, '')}?text=Hello ${clientName}, regarding your ${b.type.toLowerCase()}...`, '_blank'); }}
+                            >
+                              <FaWhatsapp />
+                            </button>
+                            <button
+                              title="Call"
+                              className="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
+                              onClick={e => { e.stopPropagation(); window.open(`tel:${b.phone}`, '_blank'); }}
+                            >
+                              <FaPhone />
+                            </button>
+                          </div>
+                        )}
+                        {b.type === 'Hotel' && b.status === 'Pending' && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            <button
+                              title="Confirm Booking"
+                              className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
+                              onClick={async (e) => { 
+                                e.stopPropagation(); 
+                                const updatedBookings = [...bookings];
+                                updatedBookings[startIndex + i].status = 'Confirmed';
+                                setBookings(updatedBookings);
+                                
+                                // Send status update notification
+                                try {
+                                  const response = await fetch('/api/notifications/status-update', {
+                                    method: 'POST',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                      booking: updatedBookings[startIndex + i],
+                                      status: 'Confirmed'
+                                    })
+                                  });
+                                  if (!response.ok) {
+                                    console.error('Failed to send status update notification');
+                                  }
+                                } catch (error) {
+                                  console.error('Error sending status update notification:', error);
+                                }
+                              }}
+                            >
+                              <FaCheck />
+                            </button>
+                            <button
+                              title="Send WhatsApp"
+                              className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
+                              onClick={e => { e.stopPropagation(); window.open(`https://wa.me/${b.phone.replace(/\D/g, '')}?text=Hello ${clientName}, regarding your hotel booking...`, '_blank'); }}
+                            >
+                              <FaWhatsapp />
+                            </button>
+                            <button
+                              title="Call"
+                              className="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
+                              onClick={e => { e.stopPropagation(); window.open(`tel:${b.phone}`, '_blank'); }}
+                            >
+                              <FaPhone />
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            totalItems={filteredBookings.length}
+            itemsPerPage={itemsPerPage}
+            showItemsPerPage={true}
+            onItemsPerPageChange={setItemsPerPage}
+          />
+        </div>
+      </main>
+
+      {/* Confirm Return Modal */}
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 animate-scale-in">
+            <h3 className="text-xl font-bold mb-4">Confirm Return</h3>
+            <div className="mb-4">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={fullTankChecked}
+                  onChange={(e) => setFullTankChecked(e.target.checked)}
+                  className="rounded"
+                />
+                <span>Full tank confirmed</span>
+              </label>
+            </div>
+            <div className="flex gap-4">
+              <button
+                onClick={() => {
+                  // Handle return confirmation
+                  const updatedBookings = [...bookings];
+                  updatedBookings[showConfirm.index].returnConfirmed = true;
+                  setBookings(updatedBookings);
+                  setShowConfirm(null);
+                  
+                  // Send return confirmation notification
+                  fetch('/api/notifications/status-update', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      booking: updatedBookings[showConfirm.index],
+                      status: 'Return Confirmed'
+                    })
+                  }).catch(error => {
+                    console.error('Error sending return confirmation notification:', error);
+                  });
+                }}
+                className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-300 hover:scale-105"
+              >
+                Confirm
+              </button>
+              <button
+                onClick={() => setShowConfirm(null)}
+                className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-all duration-300 hover:scale-105"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Extend Rental Modal */}
+      {showExtend && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 animate-scale-in">
+            <h3 className="text-xl font-bold mb-4">Extend Rental</h3>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">New Return Date</label>
+              <input
+                type="date"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">New Return Time</label>
+              <input
+                type="time"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div className="flex gap-4">
+              <button
+                onClick={() => {
+                  // Handle rental extension
+                  setShowExtend(null);
+                }}
+                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-300 hover:scale-105"
+              >
+                Extend
+              </button>
+              <button
+                onClick={() => setShowExtend(null)}
+                className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-all duration-300 hover:scale-105"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+} 
