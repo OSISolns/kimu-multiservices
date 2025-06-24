@@ -68,21 +68,6 @@ export default function Home() {
       });
   }, []);
 
-  // Generate dynamic car specs and offers
-  const getCarSpecs = (vehicleId: number) => {
-    const specs = {
-      seats: [4, 5, 6, 7][Math.floor(Math.random() * 4)],
-      transmission: ['Automatic', 'Manual'][Math.floor(Math.random() * 2)],
-      fuelType: ['Petrol', 'Diesel', 'Hybrid'][Math.floor(Math.random() * 3)],
-      year: 2020 + Math.floor(Math.random() * 4),
-      mileage: Math.floor(Math.random() * 50000) + 10000,
-      engine: ['1.6L', '2.0L', '2.5L', '3.0L'][Math.floor(Math.random() * 4)],
-      power: (Math.floor(Math.random() * 200) + 100).toString(),
-      fuelEfficiency: (Math.floor(Math.random() * 10) + 15).toString(),
-    }
-    return specs
-  }
-
   const getSpecialOffer = () => {
     const offers = [
       'Weekend Discount',
@@ -325,23 +310,22 @@ export default function Home() {
                           {/* Specifications Grid */}
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                             {(() => {
-                              const specs = getCarSpecs(shuffledVehicles[current].id)
                               return (
                                 <>
                                   <div className="bg-gray-50 rounded-lg p-3 text-center">
-                                    <div className="text-lg font-bold text-blue-600">{specs.seats}</div>
+                                    <div className="text-lg font-bold text-blue-600">{shuffledVehicles[current].capacity}</div>
                                     <div className="text-xs text-gray-500">Seats</div>
                                   </div>
                                   <div className="bg-gray-50 rounded-lg p-3 text-center">
-                                    <div className="text-sm font-bold text-blue-600">{specs.transmission}</div>
+                                    <div className="text-sm font-bold text-blue-600">{shuffledVehicles[current].transmission}</div>
                                     <div className="text-xs text-gray-500">Transmission</div>
                                   </div>
                                   <div className="bg-gray-50 rounded-lg p-3 text-center">
-                                    <div className="text-sm font-bold text-blue-600">{specs.fuelType}</div>
+                                    <div className="text-sm font-bold text-blue-600">{shuffledVehicles[current].fuel}</div>
                                     <div className="text-xs text-gray-500">Fuel</div>
                                   </div>
                                   <div className="bg-gray-50 rounded-lg p-3 text-center">
-                                    <div className="text-sm font-bold text-blue-600">{specs.year}</div>
+                                    <div className="text-sm font-bold text-blue-600">{shuffledVehicles[current].year}</div>
                                     <div className="text-xs text-gray-500">Year</div>
                                   </div>
                                 </>
@@ -649,24 +633,23 @@ export default function Home() {
                           <h4 className="text-lg font-semibold text-gray-900 mb-4">Technical Specifications</h4>
                           <div className="grid grid-cols-2 gap-4">
                             {(() => {
-                              const specs = getCarSpecs(selectedCar.id)
                               return (
                                 <>
                                   <div className="bg-gray-50 rounded-lg p-3">
                                     <div className="text-sm text-gray-500">Engine</div>
-                                    <div className="font-semibold text-gray-900">{specs.engine}</div>
+                                    <div className="font-semibold text-gray-900">{selectedCar.engine}</div>
                                   </div>
                                   <div className="bg-gray-50 rounded-lg p-3">
                                     <div className="text-sm text-gray-500">Power</div>
-                                    <div className="font-semibold text-gray-900">{specs.power} HP</div>
+                                    <div className="font-semibold text-gray-900">{selectedCar.power} HP</div>
                                   </div>
                                   <div className="bg-gray-50 rounded-lg p-3">
                                     <div className="text-sm text-gray-500">Fuel Efficiency</div>
-                                    <div className="font-semibold text-gray-900">{specs.fuelEfficiency} km/L</div>
+                                    <div className="font-semibold text-gray-900">{selectedCar.fuelEfficiency} km/L</div>
                                   </div>
                                   <div className="bg-gray-50 rounded-lg p-3">
                                     <div className="text-sm text-gray-500">Mileage</div>
-                                    <div className="font-semibold text-gray-900">{specs.mileage.toLocaleString()} km</div>
+                                    <div className="font-semibold text-gray-900">{selectedCar.mileage.toLocaleString()} km</div>
                                   </div>
                                 </>
                               )

@@ -5,18 +5,6 @@ import { vehicles, getVehiclesWithAvailability } from '../../data/vehicles'
 import { FaMapMarkerAlt, FaCalendarAlt, FaChevronLeft, FaChevronRight, FaCar, FaTaxi, FaPlane, FaHotel, FaHandshake } from 'react-icons/fa'
 import { useState, useEffect, useRef } from 'react'
 
-function getCarSpecs(vehicleId: number) {
-  return {
-    seats: [4, 5, 6, 7][vehicleId % 4],
-    transmission: ['Automatic', 'Manual'][vehicleId % 2],
-    fuelType: ['Petrol', 'Diesel', 'Hybrid', 'Full-Electric'][vehicleId % 3],
-    year: 2020 + (vehicleId % 4),
-    mileage: 10000 + (vehicleId * 3500) % 50000,
-    engine: ['1.6L', '2.0L', '2.5L', '3.0L'][vehicleId % 4],
-    power: 120 + (vehicleId % 4) * 30,
-    fuelEfficiency: 15 + (vehicleId % 5),
-  };
-}
 function getFeatures(vehicleId: number) {
   const allFeatures = ['AC', 'Bluetooth', 'GPS', 'Backup Camera', 'Leather Seats', 'Sunroof', 'Cruise Control', 'USB Charging'];
   return allFeatures.slice(0, 3 + (vehicleId % 4));
@@ -30,7 +18,6 @@ function getReviews(vehicleId: number) {
 
 function CarDetailsModal({ vehicle, onClose }: { vehicle: any, onClose: () => void }) {
   if (!vehicle) return null;
-  const specs = getCarSpecs(vehicle.id);
   const features = getFeatures(vehicle.id);
   const rating = getRating(vehicle.id);
   const reviews = getReviews(vehicle.id);
@@ -67,27 +54,27 @@ function CarDetailsModal({ vehicle, onClose }: { vehicle: any, onClose: () => vo
           <div className="text-xl font-bold text-orange-600 mb-2">{vehicle.price}</div>
           <div className="grid grid-cols-2 gap-3 w-full mb-4">
             <div className="bg-gray-50 rounded-lg p-3 text-center">
-              <div className="text-lg font-bold text-blue-600">{specs.seats}</div>
+              <div className="text-lg font-bold text-blue-600">{vehicle.seats}</div>
               <div className="text-xs text-gray-500">Seats</div>
             </div>
             <div className="bg-gray-50 rounded-lg p-3 text-center">
-              <div className="text-sm font-bold text-blue-600">{specs.transmission}</div>
+              <div className="text-sm font-bold text-blue-600">{vehicle.transmission}</div>
               <div className="text-xs text-gray-500">Transmission</div>
             </div>
             <div className="bg-gray-50 rounded-lg p-3 text-center">
-              <div className="text-sm font-bold text-blue-600">{specs.fuelType}</div>
+              <div className="text-sm font-bold text-blue-600">{vehicle.fuelType}</div>
               <div className="text-xs text-gray-500">Fuel</div>
             </div>
             <div className="bg-gray-50 rounded-lg p-3 text-center">
-              <div className="text-sm font-bold text-blue-600">{specs.year}</div>
+              <div className="text-sm font-bold text-blue-600">{vehicle.year}</div>
               <div className="text-xs text-gray-500">Year</div>
             </div>
             <div className="bg-gray-50 rounded-lg p-3 text-center">
-              <div className="text-sm font-bold text-blue-600">{specs.engine}</div>
+              <div className="text-sm font-bold text-blue-600">{vehicle.engine}</div>
               <div className="text-xs text-gray-500">Engine</div>
             </div>
             <div className="bg-gray-50 rounded-lg p-3 text-center">
-              <div className="text-sm font-bold text-blue-600">{specs.mileage.toLocaleString()} km</div>
+              <div className="text-sm font-bold text-blue-600">{vehicle.mileage.toLocaleString()} km</div>
               <div className="text-xs text-gray-500">Mileage</div>
             </div>
           </div>

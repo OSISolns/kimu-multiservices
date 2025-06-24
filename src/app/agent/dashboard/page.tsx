@@ -1,7 +1,7 @@
 "use client"
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FaCar, FaCalendarAlt, FaInbox, FaSignOutAlt, FaSave, FaSearch, FaMoneyBillWave, FaFileAlt, FaCarSide, FaCheck, FaClock, FaWhatsapp, FaPhone, FaTimes, FaEdit, FaTaxi, FaPlane, FaHotel, FaHandshake, FaExclamationTriangle } from 'react-icons/fa';
+import { FaCar, FaCalendarAlt, FaInbox, FaSignOutAlt, FaSave, FaSearch, FaMoneyBillWave, FaFileAlt, FaCarSide, FaCheck, FaClock, FaWhatsapp, FaPhone, FaTimes, FaEdit, FaTaxi, FaPlane, FaHotel, FaHandshake, FaExclamationTriangle, FaBell } from 'react-icons/fa';
 import { vehicles } from '../../../data/vehicles';
 import Pagination from '../../../components/Pagination';
 
@@ -57,14 +57,131 @@ export default function AgentDashboard() {
           return res.json();
         })
         .then(data => {
+          if (Array.isArray(data) && data.length > 0) {
           setBookings(data);
+          } else {
+            // Use mock bookings if API returns empty
+            setBookings([
+              {
+                name: 'Jean Uwimana',
+                carType: 'Toyota Prado TXL',
+                phone: '+250788111222',
+                email: 'jean.uwimana@example.com',
+                type: 'Car Rental',
+                status: 'Active',
+                returnDate: '2024-06-25',
+                returnTime: '10:00',
+                returnConfirmed: false,
+              },
+              {
+                name: 'Alice Smith',
+                carType: 'Rav4 Full Electric',
+                phone: '+250788333444',
+                email: 'alice.smith@example.com',
+                type: 'Car Rental',
+                status: 'Pending',
+                returnDate: '2024-06-26',
+                returnTime: '15:00',
+                returnConfirmed: false,
+              },
+              {
+                name: 'Paul Mugisha',
+                carType: 'KIA Sorento',
+                phone: '+250788555666',
+                email: 'paul.mugisha@example.com',
+                type: 'Car Rental',
+                status: 'Completed',
+                returnDate: '2024-06-20',
+                returnTime: '12:00',
+                returnConfirmed: true,
+              },
+              {
+                name: 'Claudine Ingabire',
+                carType: 'Toyota Coaster',
+                phone: '+250788777888',
+                email: 'claudine.ingabire@example.com',
+                type: 'Car Rental',
+                status: 'Active',
+                returnDate: '2024-06-28',
+                returnTime: '09:00',
+                returnConfirmed: false,
+              },
+              {
+                name: 'Esther Uwimana',
+                carType: 'Hyundai Sonata',
+                phone: '+250788999000',
+                email: 'esther.uwimana@example.com',
+                type: 'Car Rental',
+                status: 'Pending',
+                returnDate: '2024-06-27',
+                returnTime: '11:30',
+                returnConfirmed: false,
+              },
+            ]);
+          }
           // Trigger animations after data loads
           setTimeout(() => setIsLoaded(true), 100);
         })
         .catch(error => {
           console.error('Error fetching bookings:', error);
-          // Set empty array to prevent errors
-          setBookings([]);
+          // Use mock bookings if API fails
+          setBookings([
+            {
+              name: 'Jean Uwimana',
+              carType: 'Toyota Prado TXL',
+              phone: '+250788111222',
+              email: 'jean.uwimana@example.com',
+              type: 'Car Rental',
+              status: 'Active',
+              returnDate: '2024-06-25',
+              returnTime: '10:00',
+              returnConfirmed: false,
+            },
+            {
+              name: 'Alice Smith',
+              carType: 'Rav4 Full Electric',
+              phone: '+250788333444',
+              email: 'alice.smith@example.com',
+              type: 'Car Rental',
+              status: 'Pending',
+              returnDate: '2024-06-26',
+              returnTime: '15:00',
+              returnConfirmed: false,
+            },
+            {
+              name: 'Paul Mugisha',
+              carType: 'KIA Sorento',
+              phone: '+250788555666',
+              email: 'paul.mugisha@example.com',
+              type: 'Car Rental',
+              status: 'Completed',
+              returnDate: '2024-06-20',
+              returnTime: '12:00',
+              returnConfirmed: true,
+            },
+            {
+              name: 'Claudine Ingabire',
+              carType: 'Toyota Coaster',
+              phone: '+250788777888',
+              email: 'claudine.ingabire@example.com',
+              type: 'Car Rental',
+              status: 'Active',
+              returnDate: '2024-06-28',
+              returnTime: '09:00',
+              returnConfirmed: false,
+            },
+            {
+              name: 'Esther Uwimana',
+              carType: 'Hyundai Sonata',
+              phone: '+250788999000',
+              email: 'esther.uwimana@example.com',
+              type: 'Car Rental',
+              status: 'Pending',
+              returnDate: '2024-06-27',
+              returnTime: '11:30',
+              returnConfirmed: false,
+            },
+          ]);
           setIsLoaded(true);
         });
     }
@@ -166,12 +283,48 @@ export default function AgentDashboard() {
             </ul>
           </div>
         </nav>
-        <div className="mt-auto pt-8">
+        <div className="mt-auto pt-8 flex flex-col gap-2">
+          <a href="/agent/settings" className="flex items-center gap-3 text-gray-700 font-semibold hover:underline transition-all duration-300 hover:scale-105"><FaSave /> Settings</a>
           <a href="/agent/logout" className="flex items-center gap-3 text-red-500 font-semibold hover:underline transition-all duration-300 hover:scale-105"><FaSignOutAlt /> Logout</a>
         </div>
       </aside>
       {/* Main Content */}
       <main className="flex-1 max-w-full mx-auto p-8 flex flex-col gap-8">
+        {/* Mock Welcome and Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-gradient-to-br from-orange-100 to-blue-50 rounded-2xl p-6 shadow flex flex-col justify-center items-center">
+            <h2 className="text-xl font-bold text-orange-700 mb-2">Welcome, Agent!</h2>
+            <p className="text-gray-600 text-center">Here's a quick overview of your activity and notifications.</p>
+          </div>
+          <div className="bg-white rounded-2xl p-6 shadow flex flex-col items-center">
+            <div className="text-2xl font-bold text-blue-700 mb-1">12</div>
+            <div className="text-gray-500">Active Rentals</div>
+          </div>
+          <div className="bg-white rounded-2xl p-6 shadow flex flex-col items-center">
+            <div className="text-2xl font-bold text-green-700 mb-1">5</div>
+            <div className="text-gray-500">Pending Bookings</div>
+          </div>
+        </div>
+        {/* Mock Notifications Panel */}
+        <div className="bg-blue-50 rounded-2xl p-6 shadow mb-8">
+          <h3 className="text-lg font-bold text-blue-700 mb-2 flex items-center gap-2"><FaBell className="text-blue-400" /> Notifications</h3>
+          <ul className="text-sm text-gray-700 space-y-2">
+            <li><span className="font-semibold text-orange-600">New booking</span> from Jean Uwimana for Toyota Prado TXL.</li>
+            <li><span className="font-semibold text-green-600">Payment received</span> for Hyundai Sonata rental.</li>
+            <li><span className="font-semibold text-blue-600">Car returned</span> by Alice Smith (Rav4 Full Electric).</li>
+            <li><span className="font-semibold text-yellow-600">Upcoming return</span> for KIA Sorento tomorrow.</li>
+          </ul>
+        </div>
+        {/* Mock Recent Activity Feed */}
+        <div className="bg-white rounded-2xl p-6 shadow mb-8">
+          <h3 className="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2"><FaClock className="text-yellow-500" /> Recent Activity</h3>
+          <ul className="text-sm text-gray-700 space-y-2">
+            <li>10:15 AM - <span className="font-semibold">Confirmed booking</span> for Toyota Coaster.</li>
+            <li>09:50 AM - <span className="font-semibold">Sent WhatsApp notification</span> to Paul Mugisha.</li>
+            <li>Yesterday - <span className="font-semibold">Completed rental</span> for KIA Sorento.</li>
+            <li>Yesterday - <span className="font-semibold">Added new agent</span> (Esther Uwimana).</li>
+          </ul>
+        </div>
         <h2 className={`text-2xl font-bold mb-2 transition-all duration-700 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           Dashboard Overview
         </h2>
@@ -261,6 +414,42 @@ export default function AgentDashboard() {
                 <FaClock className="text-yellow-600 text-xl" />
               </div>
             </div>
+          </div>
+        </div>
+        {/* More Mock Widgets */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Team Members */}
+          <div className="bg-white rounded-2xl p-6 shadow flex flex-col items-center">
+            <h3 className="text-lg font-bold text-purple-700 mb-2">Team Members</h3>
+            <ul className="text-sm text-gray-700 space-y-1">
+              <li><span className="font-semibold">Jean Uwimana</span> (Agent)</li>
+              <li><span className="font-semibold">Esther Uwimana</span> (Agent)</li>
+              <li><span className="font-semibold">Patrick Nshimiyimana</span> (Admin)</li>
+              <li><span className="font-semibold">Alice Smith</span> (Agent)</li>
+            </ul>
+          </div>
+          {/* Quick Actions */}
+          <div className="bg-gradient-to-br from-blue-100 to-green-50 rounded-2xl p-6 shadow flex flex-col items-center">
+            <h3 className="text-lg font-bold text-green-700 mb-2">Quick Actions</h3>
+            <div className="flex flex-col gap-2 w-full">
+              <a href="/agent/bookings" className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center">+ New Booking</a>
+              <a href="/agent/notifications" className="bg-orange-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-orange-600 transition-colors text-center">Send Notification</a>
+              <a href="/agent/reports" className="bg-gray-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-600 transition-colors text-center">View Reports</a>
+            </div>
+          </div>
+          {/* System Health */}
+          <div className="bg-white rounded-2xl p-6 shadow flex flex-col items-center">
+            <h3 className="text-lg font-bold text-blue-700 mb-2">System Health</h3>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-3 h-3 rounded-full bg-green-500 inline-block"></span>
+              <span className="text-green-700 font-semibold">All Systems Operational</span>
+            </div>
+            <p className="text-xs text-gray-500">Last checked: 1 min ago</p>
+          </div>
+          {/* Motivational Quote */}
+          <div className="bg-gradient-to-br from-yellow-100 to-pink-50 rounded-2xl p-6 shadow flex flex-col items-center justify-center">
+            <h3 className="text-lg font-bold text-yellow-700 mb-2">Motivation</h3>
+            <blockquote className="italic text-gray-700 text-center">“Success is not the key to happiness. Happiness is the key to success.”<br /><span className="block mt-2 text-xs text-gray-500">– Albert Schweitzer</span></blockquote>
           </div>
         </div>
         {/* Search and Filter */}

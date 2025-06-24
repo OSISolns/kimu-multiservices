@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Head from 'next/head'
 import AnimatedSection from '../../components/AnimatedSection'
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaTiktok } from 'react-icons/fa6'
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -130,6 +131,31 @@ export default function Contact() {
                     <p className="text-gray-600">Monday - Friday: 8:00 AM - 6:00 PM</p>
                     <p className="text-gray-600">Saturday: 9:00 AM - 2:00 PM</p>
                     <p className="text-gray-600">Sunday: Closed</p>
+                  </div>
+                  {/* Social Media Links */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2 mt-6">Follow us</h3>
+                    <div className="flex space-x-4">
+                      <a href="https://facebook.com/KimuTransportLtd" target="_blank" rel="noopener noreferrer" aria-label="Facebook - Kimu Transport & Multiservices Ltd"
+                        title="Kimu Transport & Multiservices Ltd on Facebook"
+                        className="rounded-full bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 transition-all p-3 text-2xl shadow-sm">
+                        <FaFacebookF />
+                      </a>
+                      <a href="https://www.instagram.com/kimu_transport/" target="_blank" rel="noopener noreferrer" aria-label="Instagram - Kimu Transport & Multiservices Ltd"
+                        title="Kimu Transport & Multiservices Ltd on Instagram"
+                        className="rounded-full bg-pink-50 hover:bg-pink-500 hover:text-white text-pink-500 transition-all p-3 text-2xl shadow-sm">
+                        <FaInstagram />
+                      </a>
+                      <a href="https://www.tiktok.com/@kimu2500?_t=ZM-8xThdmR7Jzx&_r=1" target="_blank" rel="noopener noreferrer" aria-label="TikTok - Kimu Transport & Multiservices Ltd"
+                        title="Kimu Transport & Multiservices Ltd on TikTok"
+                        className="rounded-full bg-black hover:bg-pink-600 hover:text-white text-white transition-all p-3 text-2xl shadow-sm">
+                        <FaTiktok />
+                      </a>
+                      <a href="https://linkedin.com/company/kimu-rw" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"
+                        className="rounded-full bg-blue-100 hover:bg-blue-800 hover:text-white text-blue-800 transition-all p-3 text-2xl shadow-sm">
+                        <FaLinkedinIn />
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>

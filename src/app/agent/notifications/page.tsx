@@ -1,6 +1,6 @@
 "use client"
 import { useState } from 'react';
-import { FaBell, FaWhatsapp, FaTestTube } from 'react-icons/fa';
+import { FaBell, FaWhatsapp, FaFlask } from 'react-icons/fa';
 
 export default function NotificationsPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -60,7 +60,7 @@ export default function NotificationsPage() {
                 disabled={isLoading}
                 className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center gap-2"
               >
-                <FaTestTube className="text-sm" />
+                <FaFlask className="text-sm" />
                 {isLoading ? 'Sending...' : 'Test Booking Notification'}
               </button>
             </div>
@@ -78,7 +78,7 @@ export default function NotificationsPage() {
                 disabled={isLoading}
                 className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
               >
-                <FaTestTube className="text-sm" />
+                <FaFlask className="text-sm" />
                 {isLoading ? 'Sending...' : 'Test Urgent Notification'}
               </button>
             </div>

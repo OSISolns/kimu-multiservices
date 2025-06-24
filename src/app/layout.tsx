@@ -94,7 +94,9 @@ export default function RootLayout({
                 <ul className="space-y-2">
                   <li><a href="/" className="hover:text-blue-300">Home</a></li>
                   <li><a href="/about" className="hover:text-blue-300">About</a></li>
+                  <li><a href="/services" className="hover:text-blue-300">Services</a></li>
                   <li><a href="/offers" className="hover:text-blue-300">Offers</a></li>
+                  <li><a href="/rent-a-car" className="hover:text-blue-300">Book a Car</a></li>
                   <li><a href="/contact" className="hover:text-blue-300">Contact</a></li>
                 </ul>
               </div>
