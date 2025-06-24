@@ -5,17 +5,15 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 export async function GET(req: NextRequest) {
-  const users = await prisma.user.findMany({
-    select: {
-      id: true,
-      username: true,
-      role: true,
-      createdAt: true,
-      totpSecret: true,
-    },
-    orderBy: { createdAt: 'desc' },
-  });
-  return NextResponse.json(users);
+  try {
+    const users = await prisma.user.findMany({
+      select: { id: true, username: true, role: true, createdAt: true, totpSecret: true, emailNotifications: true, whatsappNotifications: true },
+      orderBy: { username: 'asc' },
+    });
+    return NextResponse.json({ users });
+  } catch (e) {
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  }
 }
 
 export async function POST(req: NextRequest) {

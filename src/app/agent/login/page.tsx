@@ -7,8 +7,9 @@ import { QRCodeCanvas } from 'qrcode.react';
 const ISSUER = 'KIMU Transport';
 
 export default function AgentLogin() {
-  const [step, setStep] = useState<'username' | 'code'>('username');
+  const [step, setStep] = useState<'credentials' | 'code'>('credentials');
   const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -16,14 +17,18 @@ export default function AgentLogin() {
   const [showQR, setShowQR] = useState(false);
   const router = useRouter();
 
-  // Step 1: Handle username submit
-  const handleUsername = async () => {
+  // Step 1: Handle credentials submit
+  const handleCredentials = async () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`/api/agent/${encodeURIComponent(username)}`);
+      const res = await fetch('/api/agent/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
       if (!res.ok) {
-        setError('Agent not found.');
+        setError('Invalid username or password.');
         setLoading(false);
         return;
       }
@@ -31,7 +36,7 @@ export default function AgentLogin() {
       setAgent(data);
       setStep('code');
     } catch (e) {
-      setError('Error fetching agent info.');
+      setError('Error verifying credentials.');
     }
     setLoading(false);
   };
@@ -53,8 +58,8 @@ export default function AgentLogin() {
       });
       const data = await res.json();
       if (data.valid) {
-      localStorage.setItem('isAgent', 'true');
-      router.push('/agent/dashboard');
+        localStorage.setItem('isAgent', 'true');
+        router.push('/agent/dashboard');
       } else {
         setError('Invalid code. Please try again.');
       }
@@ -76,9 +81,9 @@ export default function AgentLogin() {
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md flex flex-col items-center">
         <Image src="/logo.png" alt="KIMU Logo" width={70} height={70} className="mb-4" />
         <h1 className="text-2xl font-bold mb-2 text-orange-600">KIMU Agent Login</h1>
-        {step === 'username' && (
+        {step === 'credentials' && (
           <>
-            <p className="mb-6 text-gray-500 text-sm text-center">Enter your agent username to continue.</p>
+            <p className="mb-6 text-gray-500 text-sm text-center">Enter your agent username and password to continue.</p>
             {error && (
               <div className="bg-red-100 text-red-700 p-4 rounded mb-4 w-full flex items-center gap-2">
                 <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-12.728 12.728M5.636 5.636l12.728 12.728" /></svg>
@@ -94,10 +99,18 @@ export default function AgentLogin() {
               disabled={loading}
               autoFocus
             />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="border w-full p-3 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent text-center text-lg mb-4"
+              disabled={loading}
+            />
             <button
-              onClick={handleUsername}
+              onClick={handleCredentials}
               className="bg-blue-600 text-white px-4 py-3 rounded-lg w-full font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-              disabled={loading || !username}
+              disabled={loading || !username || !password}
             >
               {loading && <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>}
               Next
@@ -124,9 +137,9 @@ export default function AgentLogin() {
               <div className="bg-red-100 text-red-700 p-4 rounded mb-4 w-full flex items-center gap-2">
                 <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-12.728 12.728M5.636 5.636l12.728 12.728" /></svg>
                 <span>{error}</span>
-        </div>
-      )}
-      <input
+              </div>
+            )}
+            <input
               type="text"
               inputMode="numeric"
               pattern="[0-9]{6}"
@@ -144,13 +157,13 @@ export default function AgentLogin() {
               disabled={loading}
             >
               {loading && <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>}
-        Login
-      </button>
+              Login
+            </button>
             <button
               className="mt-4 text-sm text-gray-500 underline"
-              onClick={() => { setStep('username'); setCode(''); setError(''); }}
+              onClick={() => { setStep('credentials'); setCode(''); setError(''); }}
             >
-              Back to username
+              Back to credentials
             </button>
             <div className="mt-6 text-xs text-gray-500 text-center">
               Need help? Contact your administrator.<br/>
