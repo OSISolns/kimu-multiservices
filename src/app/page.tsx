@@ -194,12 +194,21 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="flex-1 flex justify-end items-center mt-12 md:mt-0">
+                  <style jsx>{`
+                    @keyframes hero-float {
+                      0% { transform: scale(1) translateY(0px) translateX(0px) rotate(-2deg); }
+                      25% { transform: scale(1.04) translateY(-10px) translateX(10px) rotate(2deg); }
+                      50% { transform: scale(1.02) translateY(10px) translateX(-10px) rotate(-1deg); }
+                      75% { transform: scale(1.05) translateY(-8px) translateX(8px) rotate(1deg); }
+                      100% { transform: scale(1) translateY(0px) translateX(0px) rotate(-2deg); }
+                    }
+                  `}</style>
                   <Image 
                     src="/vehicles/TXL-02.png" 
                     alt="Luxury Car" 
-                    width={800} 
-                    height={560} 
-                    className="object-contain"
+                    width={1000} 
+                    height={700} 
+                    className="object-contain animate-hero-float"
                     priority
                     placeholder="blur"
                     blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="

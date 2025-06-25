@@ -50,6 +50,30 @@ export default function FloatingBackground() {
             transform: translate(0, 0) scale(1) rotate(0deg);
           }
         }
+        @keyframes line-horizontal {
+          0% { left: 0; opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { left: 100vw; opacity: 0; }
+        }
+        @keyframes line-vertical {
+          0% { top: 0; opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { top: 100vh; opacity: 0; }
+        }
+        @keyframes line-diagonal1 {
+          0% { left: 0; top: 0; opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { left: 100vw; top: 100vh; opacity: 0; }
+        }
+        @keyframes line-diagonal2 {
+          0% { left: 100vw; top: 0; opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { left: 0; top: 100vh; opacity: 0; }
+        }
       `}</style>
       {floaties.map((floatie) => (
         <div
@@ -68,6 +92,14 @@ export default function FloatingBackground() {
           }}
         />
       ))}
+      {/* Horizontal Line */}
+      <div style={{position:'absolute',top:'10%',left:0,width:'100vw',height:'4px',background:'rgba(59,130,246,0.5)',animation:'line-horizontal 8s linear infinite',zIndex:1}} />
+      {/* Vertical Line */}
+      <div style={{position:'absolute',left:'20%',top:0,width:'4px',height:'100vh',background:'rgba(251,146,60,0.5)',animation:'line-vertical 10s linear infinite',zIndex:1}} />
+      {/* Diagonal Line 1 */}
+      <div style={{position:'absolute',left:0,top:0,width:'4px',height:'100vh',background:'linear-gradient(135deg,rgba(16,185,129,0.5),rgba(59,130,246,0.5))',transform:'rotate(45deg)',animation:'line-diagonal1 12s linear infinite',zIndex:1}} />
+      {/* Diagonal Line 2 */}
+      <div style={{position:'absolute',left:'100vw',top:0,width:'4px',height:'100vh',background:'linear-gradient(225deg,rgba(251,146,60,0.5),rgba(59,130,246,0.5))',transform:'rotate(-45deg)',animation:'line-diagonal2 14s linear infinite',zIndex:1}} />
     </div>
   );
 } 
