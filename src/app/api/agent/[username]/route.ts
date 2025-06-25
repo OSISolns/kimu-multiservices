@@ -3,10 +3,8 @@ import { PrismaClient } from '@/generated/prisma';
 
 const prisma = new PrismaClient();
 
-export async function GET(req: NextRequest) {
-  const url = new URL(req.url);
-  const segments = url.pathname.split('/');
-  const username = segments[segments.indexOf('agent') + 1];
+export async function GET(req: NextRequest, { params }: { params: { username: string } }) {
+  const username = params.username;
 
   if (!username) {
     return NextResponse.json({ error: 'Username not provided' }, { status: 400 });
