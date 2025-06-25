@@ -1,16 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { PrismaClient } from '@/generated/prisma';
 
 const prisma = new PrismaClient();
 
 export async function GET(req: NextRequest) {
-  // Extract username from the URL
   const url = new URL(req.url);
-  const pathname = url.pathname;
-  const username = pathname.split('/').pop();
+  const segments = url.pathname.split('/');
+  const username = segments[segments.indexOf('agent') + 1];
 
   if (!username) {
-    return NextResponse.json({ error: 'Username required' }, { status: 400 });
+    return new Response('Username not provided', { status: 400 });
   }
 
   const user = await prisma.user.findUnique({
@@ -18,11 +17,17 @@ export async function GET(req: NextRequest) {
   });
 
   if (!user) {
-    return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    return new Response('User not found', { status: 404 });
   }
 
-  return NextResponse.json({
+  return new Response(JSON.stringify({
     username: user.username,
+    email: user.email,
     totpSecret: user.totpSecret ?? null,
+  }), {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    status: 200,
   });
 } 
