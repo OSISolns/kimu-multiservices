@@ -3,8 +3,11 @@ import { PrismaClient } from '@/generated/prisma';
 
 const prisma = new PrismaClient();
 
-export async function GET(req: NextRequest, { params }) {
-  const { username } = params;
+export async function GET(
+  req: NextRequest,
+  context: { params: { username: string } }
+) {
+  const { username } = context.params;
   if (!username) {
     return NextResponse.json({ error: 'Username required' }, { status: 400 });
   }
