@@ -3,11 +3,12 @@ import { PrismaClient } from '@/generated/prisma';
 
 const prisma = new PrismaClient();
 
-export async function GET(
-  req: NextRequest,
-  context: { params: { username: string } }
-) {
-  const { username } = context.params;
+export async function GET(req: NextRequest) {
+  // Extract username from the URL
+  const url = new URL(req.url);
+  const pathname = url.pathname;
+  const username = pathname.split('/').pop();
+
   if (!username) {
     return NextResponse.json({ error: 'Username required' }, { status: 400 });
   }
