@@ -15,10 +15,12 @@ datasource db {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  username     String   @unique
-  passwordHash String
-  role         String   @default("agent")
-  createdAt    DateTime @default(now())
-  totpSecret   String?
+  id                    Int      @id @default(autoincrement())
+  username              String   @unique
+  passwordHash          String
+  role                  String   @default("agent")
+  createdAt             DateTime @default(now())
+  totpSecret            String?
+  emailNotifications    Boolean  @default(false)
+  whatsappNotifications Boolean  @default(false)
 }
