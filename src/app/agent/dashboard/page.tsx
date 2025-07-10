@@ -294,7 +294,7 @@ export default function AgentDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-gradient-to-br from-orange-100 to-blue-50 rounded-2xl p-6 shadow flex flex-col justify-center items-center">
             <h2 className="text-xl font-bold text-orange-700 mb-2">Welcome, Agent!</h2>
-            <p className="text-gray-600 text-center">Here's a quick overview of your activity and notifications.</p>
+            <p className="text-gray-600 text-center">Here&apos;s a quick overview of your activity and notifications.</p>
           </div>
           <div className="bg-white rounded-2xl p-6 shadow flex flex-col items-center">
             <div className="text-2xl font-bold text-blue-700 mb-1">12</div>
