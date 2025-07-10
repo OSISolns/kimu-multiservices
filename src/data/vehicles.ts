@@ -14,6 +14,7 @@ export type Vehicle = {
   doors: number;
   description: string;
   isAvailable: boolean;
+  power?: string;
 };
 
 export const vehicles = [
@@ -32,7 +33,8 @@ export const vehicles = [
     capacity: '7 Leather Seats',
     doors: 5,
     description: 'The Toyota Prado TXL offers luxury, power, and comfort for both city and off-road journeys. Perfect for executive travel and family adventures in Rwanda.',
-    isAvailable: true
+    isAvailable: true,
+    power: '',
   },
   {
     id: 2,
@@ -49,7 +51,8 @@ export const vehicles = [
     capacity: '28 Seats',
     doors: 3,
     description: 'The Toyota Coaster is ideal for group travel, offering spacious seating and reliable performance for tours, events, and airport transfers.',
-    isAvailable: true
+    isAvailable: true,
+    power: '',
   },
   {
     id: 3,
@@ -66,7 +69,8 @@ export const vehicles = [
     capacity: '5 Seats',
     doors: 5,
     description: 'Experience the future of driving with the Rav4 Full Electric. Eco-friendly, powerful, and comfortable for both city and countryside.',
-    isAvailable: true
+    isAvailable: true,
+    power: '',
   },
   {
     id: 4,
@@ -83,7 +87,8 @@ export const vehicles = [
     capacity: '5 Seats',
     doors: 5,
     description: 'The KIA Sorento combines style, space, and performance. A great choice for families and business travelers seeking comfort and reliability.',
-    isAvailable: true
+    isAvailable: true,
+    power: '',
   },
   {
     id: 5,
@@ -100,7 +105,8 @@ export const vehicles = [
     capacity: '5 Seats',
     doors: 4,
     description: 'The Hyundai Sonata offers a smooth ride, modern features, and excellent fuel efficiency. Perfect for city commutes and business trips.',
-    isAvailable: true
+    isAvailable: true,
+    power: '',
   },
   {
     id: 6,
@@ -117,7 +123,8 @@ export const vehicles = [
     capacity: '7 Seats',
     doors: 5,
     description: 'The Toyota Noah is a versatile minivan, ideal for families and groups. Enjoy spacious seating and flexible cargo options.',
-    isAvailable: true
+    isAvailable: true,
+    power: '',
   },
   {
     id: 7,
@@ -134,7 +141,8 @@ export const vehicles = [
     capacity: '5 Seats',
     doors: 4,
     description: 'The Hyundai Tucson is a compact SUV with a reputation for reliability and comfort. Great for both urban and rural travel.',
-    isAvailable: true
+    isAvailable: true,
+    power: '',
   },
   {
     id: 8,
@@ -151,7 +159,8 @@ export const vehicles = [
     capacity: '5 Seats',
     doors: 4,
     description: 'The Toyota Levin blends efficiency and style. A modern sedan for those who value comfort and advanced technology.',
-    isAvailable: true
+    isAvailable: true,
+    power: '',
   },
   {
     id: 9,
@@ -168,7 +177,8 @@ export const vehicles = [
     capacity: '5 Seats',
     doors: 4,
     description: "The Toyota Prius is the world's favorite hybrid, offering outstanding fuel economy and a comfortable ride for city and highway.",
-    isAvailable: true
+    isAvailable: true,
+    power: '',
   },
   {
     id: 10,
@@ -185,7 +195,8 @@ export const vehicles = [
     capacity: '5 Seats',
     doors: 4,
     description: 'The Kia K5 Optima is a stylish sedan with advanced features and a smooth, quiet ride. Ideal for business and leisure.',
-    isAvailable: true
+    isAvailable: true,
+    power: '',
   },
 ];
 
