@@ -24,3 +24,21 @@ model User {
   emailNotifications    Boolean  @default(false)
   whatsappNotifications Boolean  @default(false)
 }
+
+model Vehicle {
+  id           Int     @id @default(autoincrement())
+  name         String
+  image        String
+  type         String
+  category     String
+  price        String
+  year         Int
+  engine       String
+  mileage      String
+  transmission String
+  fuel         String
+  capacity     String
+  doors        Int
+  description  String
+  isAvailable  Boolean @default(true)
+}

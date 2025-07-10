@@ -128,6 +128,24 @@ exports.Prisma.UserScalarFieldEnum = {
   whatsappNotifications: 'whatsappNotifications'
 };
 
+exports.Prisma.VehicleScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  image: 'image',
+  type: 'type',
+  category: 'category',
+  price: 'price',
+  year: 'year',
+  engine: 'engine',
+  mileage: 'mileage',
+  transmission: 'transmission',
+  fuel: 'fuel',
+  capacity: 'capacity',
+  doors: 'doors',
+  description: 'description',
+  isAvailable: 'isAvailable'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -140,7 +158,8 @@ exports.Prisma.NullsOrder = {
 
 
 exports.Prisma.ModelName = {
-  User: 'User'
+  User: 'User',
+  Vehicle: 'Vehicle'
 };
 
 /**
