@@ -202,11 +202,11 @@ export default function RentCarForm() {
   const isStep5Valid = form.paymentMethod && form.agreeToTerms && form.agreeToPrivacy;
 
   let canProceed = false;
-  if (currentStep === 1) canProceed = isStep1Valid;
-  else if (currentStep === 2) canProceed = isStep2Valid;
-  else if (currentStep === 3) canProceed = isStep3Valid;
+  if (currentStep === 1) canProceed = !!isStep1Valid;
+  else if (currentStep === 2) canProceed = !!isStep2Valid;
+  else if (currentStep === 3) canProceed = !!isStep3Valid;
   else if (currentStep === 4) canProceed = true;
-  else if (currentStep === 5) canProceed = isStep5Valid;
+  else if (currentStep === 5) canProceed = !!isStep5Valid;
 
   if (success) {
     return (
