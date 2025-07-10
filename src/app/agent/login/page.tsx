@@ -176,7 +176,7 @@ export default function AgentLogin() {
               <ul className="text-xs text-blue-700 space-y-1">
                 <li>• Make sure your device time is synchronized</li>
                 <li>• Wait for the code to refresh (30-second intervals)</li>
-                <li>• Check that you're using the correct account in your authenticator app</li>
+                <li>• Check that you&apos;re using the correct account in your authenticator app</li>
                 <li>• Try entering the code immediately when it appears</li>
               </ul>
             </div>
