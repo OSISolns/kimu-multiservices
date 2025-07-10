@@ -144,7 +144,8 @@ exports.Prisma.VehicleScalarFieldEnum = {
   doors: 'doors',
   description: 'description',
   isAvailable: 'isAvailable',
-  power: 'power'
+  power: 'power',
+  fuelEfficiency: 'fuelEfficiency'
 };
 
 exports.Prisma.SortOrder = {

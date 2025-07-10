@@ -15,6 +15,7 @@ export type Vehicle = {
   description: string;
   isAvailable: boolean;
   power: string;
+  fuelEfficiency: string;
 };
 
 export const vehicles = [
@@ -35,6 +36,7 @@ export const vehicles = [
     description: 'The Toyota Prado TXL offers luxury, power, and comfort for both city and off-road journeys. Perfect for executive travel and family adventures in Rwanda.',
     isAvailable: true,
     power: '',
+    fuelEfficiency: '',
   },
   {
     id: 2,
@@ -53,6 +55,7 @@ export const vehicles = [
     description: 'The Toyota Coaster is ideal for group travel, offering spacious seating and reliable performance for tours, events, and airport transfers.',
     isAvailable: true,
     power: '',
+    fuelEfficiency: '',
   },
   {
     id: 3,
@@ -71,6 +74,7 @@ export const vehicles = [
     description: 'Experience the future of driving with the Rav4 Full Electric. Eco-friendly, powerful, and comfortable for both city and countryside.',
     isAvailable: true,
     power: '',
+    fuelEfficiency: '',
   },
   {
     id: 4,
@@ -89,6 +93,7 @@ export const vehicles = [
     description: 'The KIA Sorento combines style, space, and performance. A great choice for families and business travelers seeking comfort and reliability.',
     isAvailable: true,
     power: '',
+    fuelEfficiency: '',
   },
   {
     id: 5,
@@ -107,6 +112,7 @@ export const vehicles = [
     description: 'The Hyundai Sonata offers a smooth ride, modern features, and excellent fuel efficiency. Perfect for city commutes and business trips.',
     isAvailable: true,
     power: '',
+    fuelEfficiency: '',
   },
   {
     id: 6,
@@ -125,6 +131,7 @@ export const vehicles = [
     description: 'The Toyota Noah is a versatile minivan, ideal for families and groups. Enjoy spacious seating and flexible cargo options.',
     isAvailable: true,
     power: '',
+    fuelEfficiency: '',
   },
   {
     id: 7,
@@ -143,6 +150,7 @@ export const vehicles = [
     description: 'The Hyundai Tucson is a compact SUV with a reputation for reliability and comfort. Great for both urban and rural travel.',
     isAvailable: true,
     power: '',
+    fuelEfficiency: '',
   },
   {
     id: 8,
@@ -161,6 +169,7 @@ export const vehicles = [
     description: 'The Toyota Levin blends efficiency and style. A modern sedan for those who value comfort and advanced technology.',
     isAvailable: true,
     power: '',
+    fuelEfficiency: '',
   },
   {
     id: 9,
@@ -179,6 +188,7 @@ export const vehicles = [
     description: "The Toyota Prius is the world's favorite hybrid, offering outstanding fuel economy and a comfortable ride for city and highway.",
     isAvailable: true,
     power: '',
+    fuelEfficiency: '',
   },
   {
     id: 10,
@@ -197,6 +207,7 @@ export const vehicles = [
     description: 'The Kia K5 Optima is a stylish sedan with advanced features and a smooth, quiet ride. Ideal for business and leisure.',
     isAvailable: true,
     power: '',
+    fuelEfficiency: '',
   },
 ];
 
