@@ -20,10 +20,8 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Username already exists' }, { status: 409 });
       }
     }
-    const dataToUpdate = {
-      username: newUsername,
-      ...(newRole ? { role: newRole } : {}),
-    };
+    let dataToUpdate: { role?: any; username: any; passwordHash?: string } = { username };
+    if (newRole) dataToUpdate.role = newRole;
     if (newPassword) {
       dataToUpdate.passwordHash = await bcrypt.hash(newPassword, 10);
     }
