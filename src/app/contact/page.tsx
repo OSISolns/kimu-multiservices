@@ -136,7 +136,7 @@ export default function Contact() {
                   <div>
                     <h3 className="text-lg font-semibold mb-2 mt-6">Follow us</h3>
                     <div className="flex space-x-4">
-                      <a href="https://facebook.com/KimuTransportLtd" target="_blank" rel="noopener noreferrer" aria-label="Facebook - Kimu Transport & Multiservices Ltd"
+                      <a href="https://www.facebook.com/profile.php?id=61577156153777" target="_blank" rel="noopener noreferrer" aria-label="Facebook - Kimu Transport & Multiservices Ltd"
                         title="Kimu Transport & Multiservices Ltd on Facebook"
                         className="rounded-full bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 transition-all p-3 text-2xl shadow-sm">
                         <FaFacebookF />
