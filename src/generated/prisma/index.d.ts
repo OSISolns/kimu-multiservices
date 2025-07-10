@@ -2066,6 +2066,7 @@ export namespace Prisma {
     doors: number | null
     description: string | null
     isAvailable: boolean | null
+    power: string | null
   }
 
   export type VehicleMaxAggregateOutputType = {
@@ -2084,6 +2085,7 @@ export namespace Prisma {
     doors: number | null
     description: string | null
     isAvailable: boolean | null
+    power: string | null
   }
 
   export type VehicleCountAggregateOutputType = {
@@ -2102,6 +2104,7 @@ export namespace Prisma {
     doors: number
     description: number
     isAvailable: number
+    power: number
     _all: number
   }
 
@@ -2134,6 +2137,7 @@ export namespace Prisma {
     doors?: true
     description?: true
     isAvailable?: true
+    power?: true
   }
 
   export type VehicleMaxAggregateInputType = {
@@ -2152,6 +2156,7 @@ export namespace Prisma {
     doors?: true
     description?: true
     isAvailable?: true
+    power?: true
   }
 
   export type VehicleCountAggregateInputType = {
@@ -2170,6 +2175,7 @@ export namespace Prisma {
     doors?: true
     description?: true
     isAvailable?: true
+    power?: true
     _all?: true
   }
 
@@ -2275,6 +2281,7 @@ export namespace Prisma {
     doors: number
     description: string
     isAvailable: boolean
+    power: string
     _count: VehicleCountAggregateOutputType | null
     _avg: VehicleAvgAggregateOutputType | null
     _sum: VehicleSumAggregateOutputType | null
@@ -2312,6 +2319,7 @@ export namespace Prisma {
     doors?: boolean
     description?: boolean
     isAvailable?: boolean
+    power?: boolean
   }, ExtArgs["result"]["vehicle"]>
 
   export type VehicleSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -2330,6 +2338,7 @@ export namespace Prisma {
     doors?: boolean
     description?: boolean
     isAvailable?: boolean
+    power?: boolean
   }, ExtArgs["result"]["vehicle"]>
 
   export type VehicleSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -2348,6 +2357,7 @@ export namespace Prisma {
     doors?: boolean
     description?: boolean
     isAvailable?: boolean
+    power?: boolean
   }, ExtArgs["result"]["vehicle"]>
 
   export type VehicleSelectScalar = {
@@ -2366,9 +2376,10 @@ export namespace Prisma {
     doors?: boolean
     description?: boolean
     isAvailable?: boolean
+    power?: boolean
   }
 
-  export type VehicleOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "image" | "type" | "category" | "price" | "year" | "engine" | "mileage" | "transmission" | "fuel" | "capacity" | "doors" | "description" | "isAvailable", ExtArgs["result"]["vehicle"]>
+  export type VehicleOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "image" | "type" | "category" | "price" | "year" | "engine" | "mileage" | "transmission" | "fuel" | "capacity" | "doors" | "description" | "isAvailable" | "power", ExtArgs["result"]["vehicle"]>
 
   export type $VehiclePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Vehicle"
@@ -2389,6 +2400,7 @@ export namespace Prisma {
       doors: number
       description: string
       isAvailable: boolean
+      power: string
     }, ExtArgs["result"]["vehicle"]>
     composites: {}
   }
@@ -2827,6 +2839,7 @@ export namespace Prisma {
     readonly doors: FieldRef<"Vehicle", 'Int'>
     readonly description: FieldRef<"Vehicle", 'String'>
     readonly isAvailable: FieldRef<"Vehicle", 'Boolean'>
+    readonly power: FieldRef<"Vehicle", 'String'>
   }
     
 
@@ -3231,7 +3244,8 @@ export namespace Prisma {
     capacity: 'capacity',
     doors: 'doors',
     description: 'description',
-    isAvailable: 'isAvailable'
+    isAvailable: 'isAvailable',
+    power: 'power'
   };
 
   export type VehicleScalarFieldEnum = (typeof VehicleScalarFieldEnum)[keyof typeof VehicleScalarFieldEnum]
@@ -3384,6 +3398,7 @@ export namespace Prisma {
     doors?: IntFilter<"Vehicle"> | number
     description?: StringFilter<"Vehicle"> | string
     isAvailable?: BoolFilter<"Vehicle"> | boolean
+    power?: StringFilter<"Vehicle"> | string
   }
 
   export type VehicleOrderByWithRelationInput = {
@@ -3402,6 +3417,7 @@ export namespace Prisma {
     doors?: SortOrder
     description?: SortOrder
     isAvailable?: SortOrder
+    power?: SortOrder
   }
 
   export type VehicleWhereUniqueInput = Prisma.AtLeast<{
@@ -3423,6 +3439,7 @@ export namespace Prisma {
     doors?: IntFilter<"Vehicle"> | number
     description?: StringFilter<"Vehicle"> | string
     isAvailable?: BoolFilter<"Vehicle"> | boolean
+    power?: StringFilter<"Vehicle"> | string
   }, "id">
 
   export type VehicleOrderByWithAggregationInput = {
@@ -3441,6 +3458,7 @@ export namespace Prisma {
     doors?: SortOrder
     description?: SortOrder
     isAvailable?: SortOrder
+    power?: SortOrder
     _count?: VehicleCountOrderByAggregateInput
     _avg?: VehicleAvgOrderByAggregateInput
     _max?: VehicleMaxOrderByAggregateInput
@@ -3467,6 +3485,7 @@ export namespace Prisma {
     doors?: IntWithAggregatesFilter<"Vehicle"> | number
     description?: StringWithAggregatesFilter<"Vehicle"> | string
     isAvailable?: BoolWithAggregatesFilter<"Vehicle"> | boolean
+    power?: StringWithAggregatesFilter<"Vehicle"> | string
   }
 
   export type UserCreateInput = {
@@ -3558,6 +3577,7 @@ export namespace Prisma {
     doors: number
     description: string
     isAvailable?: boolean
+    power: string
   }
 
   export type VehicleUncheckedCreateInput = {
@@ -3576,6 +3596,7 @@ export namespace Prisma {
     doors: number
     description: string
     isAvailable?: boolean
+    power: string
   }
 
   export type VehicleUpdateInput = {
@@ -3593,6 +3614,7 @@ export namespace Prisma {
     doors?: IntFieldUpdateOperationsInput | number
     description?: StringFieldUpdateOperationsInput | string
     isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    power?: StringFieldUpdateOperationsInput | string
   }
 
   export type VehicleUncheckedUpdateInput = {
@@ -3611,6 +3633,7 @@ export namespace Prisma {
     doors?: IntFieldUpdateOperationsInput | number
     description?: StringFieldUpdateOperationsInput | string
     isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    power?: StringFieldUpdateOperationsInput | string
   }
 
   export type VehicleCreateManyInput = {
@@ -3629,6 +3652,7 @@ export namespace Prisma {
     doors: number
     description: string
     isAvailable?: boolean
+    power: string
   }
 
   export type VehicleUpdateManyMutationInput = {
@@ -3646,6 +3670,7 @@ export namespace Prisma {
     doors?: IntFieldUpdateOperationsInput | number
     description?: StringFieldUpdateOperationsInput | string
     isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    power?: StringFieldUpdateOperationsInput | string
   }
 
   export type VehicleUncheckedUpdateManyInput = {
@@ -3664,6 +3689,7 @@ export namespace Prisma {
     doors?: IntFieldUpdateOperationsInput | number
     description?: StringFieldUpdateOperationsInput | string
     isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    power?: StringFieldUpdateOperationsInput | string
   }
 
   export type IntFilter<$PrismaModel = never> = {
@@ -3855,6 +3881,7 @@ export namespace Prisma {
     doors?: SortOrder
     description?: SortOrder
     isAvailable?: SortOrder
+    power?: SortOrder
   }
 
   export type VehicleAvgOrderByAggregateInput = {
@@ -3879,6 +3906,7 @@ export namespace Prisma {
     doors?: SortOrder
     description?: SortOrder
     isAvailable?: SortOrder
+    power?: SortOrder
   }
 
   export type VehicleMinOrderByAggregateInput = {
@@ -3897,6 +3925,7 @@ export namespace Prisma {
     doors?: SortOrder
     description?: SortOrder
     isAvailable?: SortOrder
+    power?: SortOrder
   }
 
   export type VehicleSumOrderByAggregateInput = {

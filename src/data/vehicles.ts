@@ -14,7 +14,7 @@ export type Vehicle = {
   doors: number;
   description: string;
   isAvailable: boolean;
-  power?: string;
+  power: string;
 };
 
 export const vehicles = [

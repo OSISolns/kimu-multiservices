@@ -143,7 +143,8 @@ exports.Prisma.VehicleScalarFieldEnum = {
   capacity: 'capacity',
   doors: 'doors',
   description: 'description',
-  isAvailable: 'isAvailable'
+  isAvailable: 'isAvailable',
+  power: 'power'
 };
 
 exports.Prisma.SortOrder = {

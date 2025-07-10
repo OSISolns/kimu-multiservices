@@ -41,4 +41,5 @@ model Vehicle {
   doors        Int
   description  String
   isAvailable  Boolean @default(true)
+  power        String
 }
