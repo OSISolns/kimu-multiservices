@@ -1,3 +1,21 @@
+export type Vehicle = {
+  id: number;
+  name: string;
+  image: string;
+  type: string;
+  category: string;
+  price: string;
+  year: number;
+  engine: string;
+  mileage: string;
+  transmission: string;
+  fuel: string;
+  capacity: string;
+  doors: number;
+  description: string;
+  isAvailable: boolean;
+};
+
 export const vehicles = [
   {
     id: 1,
