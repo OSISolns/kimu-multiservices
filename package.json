@@ -9,8 +9,9 @@
     "start": "node server.js",
     "lint": "next lint",
     "prod": "pm2 start server.js --name kimu-transport",
-    "seed": "ts-node --loader ts-node/esm prisma/seed.ts",
-    "postinstall": "prisma generate"
+    "seed": "node prisma/seed.cjs",
+    "postinstall": "prisma generate",
+    "vercel-build": "prisma generate && next build"
   },
   "dependencies": {
     "@prisma/client": "^6.10.1",

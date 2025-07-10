@@ -61,10 +61,10 @@ export default function AgentLogin() {
         localStorage.setItem('isAgent', 'true');
         router.push('/agent/dashboard');
       } else {
-        setError('Invalid code. Please try again.');
+        setError(data.error || 'Invalid code. Please try again. Make sure your device time is synchronized.');
       }
     } catch (e) {
-      setError('Error verifying code.');
+      setError('Error verifying code. Please check your connection and try again.');
     }
     setLoading(false);
   };
@@ -168,6 +168,17 @@ export default function AgentLogin() {
             <div className="mt-6 text-xs text-gray-500 text-center">
               Need help? Contact your administrator.<br/>
               Powered by Google Authenticator (TOTP)
+            </div>
+            
+            {/* Troubleshooting Tips */}
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+              <h4 className="text-xs font-semibold text-blue-800 mb-2">Troubleshooting Tips:</h4>
+              <ul className="text-xs text-blue-700 space-y-1">
+                <li>• Make sure your device time is synchronized</li>
+                <li>• Wait for the code to refresh (30-second intervals)</li>
+                <li>• Check that you're using the correct account in your authenticator app</li>
+                <li>• Try entering the code immediately when it appears</li>
+              </ul>
             </div>
           </>
         )}

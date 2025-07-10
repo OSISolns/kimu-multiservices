@@ -7,14 +7,16 @@ const prisma = new PrismaClient();
 async function main() {
   // Generate a unique TOTP secret for the agent
   const agentTotpSecret = speakeasy.generateSecret({ length: 20 }).base32;
+  const agentPassword = 'agent1@2025';
+  const agentHash = await bcrypt.hash(agentPassword, 10);
 
   // Upsert agent user
   await prisma.user.upsert({
     where: { username: 'agent1' },
-    update: { totpSecret: agentTotpSecret },
+    update: { passwordHash: agentHash, totpSecret: agentTotpSecret },
     create: {
       username: 'agent1',
-      passwordHash: 'demo', // Not used for TOTP, just a placeholder
+      passwordHash: agentHash,
       totpSecret: agentTotpSecret,
     },
   });
@@ -35,6 +37,8 @@ async function main() {
   });
 
   console.log('Seeded agent1 and admin user with TOTP secrets.');
+  console.log('Agent1 password: agent1@2025');
+  console.log('Admin password: kimu@2025');
 }
 
 main()

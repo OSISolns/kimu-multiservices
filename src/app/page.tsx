@@ -147,13 +147,6 @@ export default function Home() {
   const prevSlide = () => setCurrent((prev) => (prev - 1 + shuffledVehicles.length) % shuffledVehicles.length)
   const nextSlide = () => setCurrent((prev) => (prev + 1) % shuffledVehicles.length)
 
-  const handlePlay = (ref: React.RefObject<HTMLVideoElement>) => {
-    ref.current && ref.current.play()
-  }
-  const handlePause = (ref: React.RefObject<HTMLVideoElement>) => {
-    ref.current && ref.current.pause()
-  }
-
   const toggleFavorite = (vehicleId: number) => {
     setFavorites(prev => {
       const newFavorites = new Set(prev)
@@ -482,8 +475,6 @@ export default function Home() {
                         className="w-full h-full object-cover"
                         controls
                         poster="/car-1.jpeg"
-                        onMouseEnter={() => handlePlay(video1Ref)}
-                        onMouseLeave={() => handlePause(video1Ref)}
                         preload="metadata"
                       >
                         <source src="/VID1.mp4" type="video/mp4" />
@@ -496,8 +487,6 @@ export default function Home() {
                         className="w-full h-full object-cover"
                         controls
                         poster="/car-2.jpeg"
-                        onMouseEnter={() => handlePlay(video2Ref)}
-                        onMouseLeave={() => handlePause(video2Ref)}
                         preload="metadata"
                       >
                         <source src="/VID2.mp4" type="video/mp4" />
