@@ -26,7 +26,7 @@ const carImages = [
 
 const fallbackImage = '/vehicles/default.png'; // Make sure this exists or use another placeholder
 
-function getVehicleImage(image) {
+function getVehicleImage(image: string | undefined | null): string {
   if (typeof image === 'string' && image.trim().length > 0 && image.startsWith('/')) {
     return image;
   }

@@ -7,56 +7,37 @@ import AnimatedSection from '../../../components/AnimatedSection'
 import BookCarForm from './BookCarForm'
 import { useRef, useState, useEffect } from 'react'
 
-async function fetchBookings() {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001';
-    const res = await fetch(`${baseUrl}/api/bookings`, { 
-      cache: 'no-store',
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    });
-    if (!res.ok) {
-      console.error('Failed to fetch bookings:', res.status, res.statusText);
-      return [];
-    }
-    return res.json();
-  } catch (error) {
-    console.error('Error fetching bookings:', error);
-    return [];
-  }
-}
-
-async function fetchVehicles() {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001';
-    const res = await fetch(`${baseUrl}/api/vehicles`, {
-      cache: 'no-store',
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    });
-    if (!res.ok) {
-      console.error('Failed to fetch vehicles:', res.status, res.statusText);
-      return [];
-    }
-    return res.json();
-  } catch (error) {
-    console.error('Error fetching vehicles:', error);
-    return [];
-  }
-}
-
-export default async function CarRental() {
-  const bookings = await fetchBookings();
-  const vehicles = await fetchVehicles();
-  // Optionally, update availability based on bookings if needed
-  const availableVehicles = vehicles.filter((v: any) => v.isAvailable);
-  const rentedVehicles = vehicles.filter((v: any) => !v.isAvailable);
-
-  // Add state for selectedCar and ref for form
+export default function CarRental() {
+  const [vehicles, setVehicles] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCar, setSelectedCar] = useState<string | undefined>(undefined);
   const formRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      try {
+        const [vehiclesRes, bookingsRes] = await Promise.all([
+          fetch('/api/vehicles'),
+          fetch('/api/bookings'),
+        ]);
+        const vehiclesData = vehiclesRes.ok ? await vehiclesRes.json() : [];
+        const bookingsData = bookingsRes.ok ? await bookingsRes.json() : [];
+        setVehicles(vehiclesData);
+        setBookings(bookingsData);
+      } catch (err) {
+        setVehicles([]);
+        setBookings([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  const availableVehicles = vehicles.filter((v: any) => v.isAvailable);
+  const rentedVehicles = vehicles.filter((v: any) => !v.isAvailable);
 
   const handleBookThisCar = (carName: string) => {
     setSelectedCar(carName);
@@ -64,6 +45,10 @@ export default async function CarRental() {
       formRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
   };
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center text-xl">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen py-6 md:py-12 bg-gradient-to-br from-blue-50 to-white">
