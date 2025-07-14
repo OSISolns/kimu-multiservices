@@ -277,10 +277,17 @@ export default function AgentDashboard() {
   ];
 
   const handleVehicleInput = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
+    let newValue: string | boolean = value;
+    if (
+      e.target instanceof HTMLInputElement &&
+      e.target.type === 'checkbox'
+    ) {
+      newValue = e.target.checked;
+    }
     setVehicleForm(f => ({
       ...f,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: newValue,
     }));
   };
 
