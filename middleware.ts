@@ -26,6 +26,16 @@ export function middleware(request: NextRequest) {
     response.headers.set('Cache-Control', 'public, max-age=31536000, immutable')
   }
 
+  if (
+    request.nextUrl.protocol === 'http:' &&
+    process.env.NODE_ENV === 'production'
+  ) {
+    return NextResponse.redirect(
+      `https://${request.nextUrl.host}${request.nextUrl.pathname}`,
+      308
+    );
+  }
+
   return response
 }
 

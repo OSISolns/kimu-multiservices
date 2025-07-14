@@ -13,7 +13,7 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   generateEtags: false,
-  swcMinify: true,
+  //swcMinify: true,
   reactStrictMode: true,
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,

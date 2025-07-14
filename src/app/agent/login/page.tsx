@@ -82,7 +82,13 @@ export default function AgentLogin() {
         <Image src="/logo.png" alt="KIMU Logo" width={70} height={70} className="mb-4" />
         <h1 className="text-2xl font-bold mb-2 text-orange-600">KIMU Agent Login</h1>
         {step === 'credentials' && (
-          <>
+          <form
+            className="w-full"
+            onSubmit={e => {
+              e.preventDefault();
+              handleCredentials();
+            }}
+          >
             <p className="mb-6 text-gray-500 text-sm text-center">Enter your agent username and password to continue.</p>
             {error && (
               <div className="bg-red-100 text-red-700 p-4 rounded mb-4 w-full flex items-center gap-2">
@@ -108,17 +114,23 @@ export default function AgentLogin() {
               disabled={loading}
             />
             <button
-              onClick={handleCredentials}
+              type="submit"
               className="bg-blue-600 text-white px-4 py-3 rounded-lg w-full font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
               disabled={loading || !username || !password}
             >
               {loading && <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>}
               Next
             </button>
-          </>
+          </form>
         )}
         {step === 'code' && agent && (
-          <>
+          <form
+            className="w-full"
+            onSubmit={e => {
+              e.preventDefault();
+              handleLogin();
+            }}
+          >
             <p className="mb-6 text-gray-500 text-sm text-center">Enter the 6-digit code from your Google Authenticator app.</p>
             {(!agent.totpSecret || showQR) && (
               <div className="mb-6 flex flex-col items-center">
@@ -129,6 +141,7 @@ export default function AgentLogin() {
             )}
             <button
               className="mb-4 text-blue-600 underline text-sm hover:text-orange-600"
+              type="button"
               onClick={() => setShowQR(v => !v)}
             >
               {showQR ? 'Hide Setup QR Code' : 'Show QR code for setup'}
@@ -152,7 +165,7 @@ export default function AgentLogin() {
               autoFocus
             />
             <button
-              onClick={handleLogin}
+              type="submit"
               className="bg-blue-600 text-white px-4 py-3 rounded-lg w-full font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
               disabled={loading}
             >
@@ -161,6 +174,7 @@ export default function AgentLogin() {
             </button>
             <button
               className="mt-4 text-sm text-gray-500 underline"
+              type="button"
               onClick={() => { setStep('credentials'); setCode(''); setError(''); }}
             >
               Back to credentials
@@ -180,7 +194,7 @@ export default function AgentLogin() {
                 <li>• Try entering the code immediately when it appears</li>
               </ul>
             </div>
-          </>
+          </form>
         )}
       </div>
     </div>
