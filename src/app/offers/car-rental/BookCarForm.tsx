@@ -1,13 +1,13 @@
 'use client'
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-export default function BookCarForm({ vehicles }: { vehicles: any[] }) {
+export default function BookCarForm({ vehicles, selectedCar }: { vehicles: any[], selectedCar?: string }) {
   const [form, setForm] = useState({
     name: '',
     phone: '',
     nationality: '',
     idOrPassport: '',
-    carType: '',
+    carType: selectedCar || '',
     pickupDate: '',
     pickupTime: '',
     returnDate: '',
@@ -16,6 +16,13 @@ export default function BookCarForm({ vehicles }: { vehicles: any[] }) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+
+  // If selectedCar changes, update form.carType
+  useEffect(() => {
+    if (selectedCar) {
+      setForm(prev => ({ ...prev, carType: selectedCar }));
+    }
+  }, [selectedCar]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -43,7 +50,7 @@ export default function BookCarForm({ vehicles }: { vehicles: any[] }) {
       if (res.ok) {
         setSuccess(true);
         setForm({
-          name: '', phone: '', nationality: '', idOrPassport: '', carType: '', pickupDate: '', pickupTime: '', returnDate: '', returnTime: ''
+          name: '', phone: '', nationality: '', idOrPassport: '', carType: selectedCar || '', pickupDate: '', pickupTime: '', returnDate: '', returnTime: ''
         });
       } else {
         setError(data.error || 'Booking failed.');
@@ -82,7 +89,7 @@ export default function BookCarForm({ vehicles }: { vehicles: any[] }) {
         </div>
         <div className="flex flex-col gap-2">
           <label className="block text-sm font-medium mb-1">Car *</label>
-          <select name="carType" value={form.carType} onChange={handleChange} required className="w-full border rounded px-3 py-3 text-base focus:outline-blue-400">
+          <select name="carType" value={form.carType} onChange={handleChange} required className="w-full border rounded px-3 py-3 text-base focus:outline-blue-400" disabled={!!selectedCar}>
             <option value="">Select</option>
             {vehicles.map((v: any) => (
               <option key={v.id} value={v.name}>{v.name}</option>

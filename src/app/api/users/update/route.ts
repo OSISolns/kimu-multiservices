@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     }
     const dataToUpdate: { username: string; role?: string; passwordHash?: string; totpSecret?: string } = {
       username: newUsername,
-      totpSecret,
+      ...(typeof totpSecret === 'string' ? { totpSecret } : {}),
     };
     if (newRole) dataToUpdate.role = newRole;
     if (newPassword) {

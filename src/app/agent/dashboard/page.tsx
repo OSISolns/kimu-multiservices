@@ -2,9 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaCar, FaCalendarAlt, FaInbox, FaSignOutAlt, FaSave, FaSearch, FaMoneyBillWave, FaFileAlt, FaCarSide, FaCheck, FaClock, FaWhatsapp, FaPhone, FaTimes, FaEdit, FaTaxi, FaPlane, FaHotel, FaHandshake, FaExclamationTriangle, FaBell } from 'react-icons/fa';
-import { vehicles } from '../../../data/vehicles';
 import Pagination from '../../../components/Pagination';
-import { vehicles as staticVehicles } from '../../../data/vehicles';
 
 const statusColors: Record<string, string> = {
   'Pending': 'bg-purple-100 text-purple-700',
@@ -12,7 +10,7 @@ const statusColors: Record<string, string> = {
   'Canceled': 'bg-red-100 text-red-700',
 };
 
-function getPrice(carType: string) {
+function getPrice(carType: string, vehicles: any[]) {
   const v = vehicles.find(v => v.name === carType);
   if (!v) return 0;
   // Extract number from '120,000 RWF/day'
@@ -56,159 +54,57 @@ export default function AgentDashboard() {
     fuelEfficiency: '',
   });
   const [vehicleMsg, setVehicleMsg] = useState('');
-  const [vehicleList, setVehicleList] = useState(staticVehicles);
+  const [vehicleList, setVehicleList] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
+
+  const fetchBookings = () => {
+    const apiUrl = window.location.origin + '/api/bookings';
+    fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setBookings(data);
+        } else {
+          setBookings([]);
+        }
+        setTimeout(() => setIsLoaded(true), 100);
+      })
+      .catch(error => {
+        console.error('Error fetching bookings:', error);
+        setBookings([]);
+        setIsLoaded(true);
+      });
+  };
 
   useEffect(() => {
     const isAgent = localStorage.getItem('isAgent');
     if (!isAgent) {
       router.push('/agent/login');
     } else {
-      // Use absolute URL to ensure proper resolution
-      const apiUrl = window.location.origin + '/api/bookings';
-      
-      fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-        .then(res => {
-          if (!res.ok) {
-            throw new Error(`HTTP error! status: ${res.status}`);
-          }
-          return res.json();
-        })
-        .then(data => {
-          if (Array.isArray(data) && data.length > 0) {
-          setBookings(data);
-          } else {
-            // Use mock bookings if API returns empty
-            setBookings([
-              {
-                name: 'Jean Uwimana',
-                carType: 'Toyota Prado TXL',
-                phone: '+250788111222',
-                email: 'jean.uwimana@example.com',
-                type: 'Car Rental',
-                status: 'Active',
-                returnDate: '2024-06-25',
-                returnTime: '10:00',
-                returnConfirmed: false,
-              },
-              {
-                name: 'Alice Smith',
-                carType: 'Rav4 Full Electric',
-                phone: '+250788333444',
-                email: 'alice.smith@example.com',
-                type: 'Car Rental',
-                status: 'Pending',
-                returnDate: '2024-06-26',
-                returnTime: '15:00',
-                returnConfirmed: false,
-              },
-              {
-                name: 'Paul Mugisha',
-                carType: 'KIA Sorento',
-                phone: '+250788555666',
-                email: 'paul.mugisha@example.com',
-                type: 'Car Rental',
-                status: 'Completed',
-                returnDate: '2024-06-20',
-                returnTime: '12:00',
-                returnConfirmed: true,
-              },
-              {
-                name: 'Claudine Ingabire',
-                carType: 'Toyota Coaster',
-                phone: '+250788777888',
-                email: 'claudine.ingabire@example.com',
-                type: 'Car Rental',
-                status: 'Active',
-                returnDate: '2024-06-28',
-                returnTime: '09:00',
-                returnConfirmed: false,
-              },
-              {
-                name: 'Esther Uwimana',
-                carType: 'Hyundai Sonata',
-                phone: '+250788999000',
-                email: 'esther.uwimana@example.com',
-                type: 'Car Rental',
-                status: 'Pending',
-                returnDate: '2024-06-27',
-                returnTime: '11:30',
-                returnConfirmed: false,
-              },
-            ]);
-          }
-          // Trigger animations after data loads
-          setTimeout(() => setIsLoaded(true), 100);
-        })
-        .catch(error => {
-          console.error('Error fetching bookings:', error);
-          // Use mock bookings if API fails
-          setBookings([
-            {
-              name: 'Jean Uwimana',
-              carType: 'Toyota Prado TXL',
-              phone: '+250788111222',
-              email: 'jean.uwimana@example.com',
-              type: 'Car Rental',
-              status: 'Active',
-              returnDate: '2024-06-25',
-              returnTime: '10:00',
-              returnConfirmed: false,
-            },
-            {
-              name: 'Alice Smith',
-              carType: 'Rav4 Full Electric',
-              phone: '+250788333444',
-              email: 'alice.smith@example.com',
-              type: 'Car Rental',
-              status: 'Pending',
-              returnDate: '2024-06-26',
-              returnTime: '15:00',
-              returnConfirmed: false,
-            },
-            {
-              name: 'Paul Mugisha',
-              carType: 'KIA Sorento',
-              phone: '+250788555666',
-              email: 'paul.mugisha@example.com',
-              type: 'Car Rental',
-              status: 'Completed',
-              returnDate: '2024-06-20',
-              returnTime: '12:00',
-              returnConfirmed: true,
-            },
-            {
-              name: 'Claudine Ingabire',
-              carType: 'Toyota Coaster',
-              phone: '+250788777888',
-              email: 'claudine.ingabire@example.com',
-              type: 'Car Rental',
-              status: 'Active',
-              returnDate: '2024-06-28',
-              returnTime: '09:00',
-              returnConfirmed: false,
-            },
-            {
-              name: 'Esther Uwimana',
-              carType: 'Hyundai Sonata',
-              phone: '+250788999000',
-              email: 'esther.uwimana@example.com',
-              type: 'Car Rental',
-              status: 'Pending',
-              returnDate: '2024-06-27',
-              returnTime: '11:30',
-              returnConfirmed: false,
-            },
-          ]);
-          setIsLoaded(true);
-        });
+      fetchBookings();
     }
   }, [router]);
+
+  useEffect(() => {
+    fetch('/api/vehicles')
+      .then(res => res.json())
+      .then(data => {
+        setVehicleList(data);
+      })
+      .catch(err => {
+        console.error('Error fetching vehicles:', err);
+      });
+  }, []);
 
   function getInitials(name: string) {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
@@ -268,7 +164,7 @@ export default function AgentDashboard() {
   const pendingHotelBookings = hotelBookings.filter(b => b.status === 'Pending').length;
 
   // Calculate turnover (for car rentals only)
-  const turnover = carRentals.reduce((sum, b) => sum + getPrice(b.carType), 0);
+  const turnover = carRentals.reduce((sum, b) => sum + getPrice(b.carType, vehicleList), 0);
   const income = turnover;
 
   const stats = [
@@ -608,7 +504,7 @@ export default function AgentDashboard() {
               </thead>
               <tbody>
                 {paginatedBookings.map((b, i) => {
-                  const vehicle = vehicles.find(v => v.name === b.carType);
+                  const vehicle = vehicleList.find(v => v.name === b.carType);
                   const isOverdue = b.type === 'Car Rental' && !b.returnConfirmed && b.returnDate && b.returnTime && new Date() > new Date(`${b.returnDate}T${b.returnTime}`);
                   const clientName = b.name || b.guestName;
                   const clientEmail = b.email;
@@ -770,12 +666,13 @@ export default function AgentDashboard() {
             <div className="flex gap-4">
               <button
                 onClick={() => {
-                  // Handle return confirmation
+                  // Optimistically update local state
                   const updatedBookings = [...bookings];
                   updatedBookings[showConfirm.index].returnConfirmed = true;
+                  updatedBookings[showConfirm.index].status = 'Completed';
                   setBookings(updatedBookings);
                   setShowConfirm(null);
-                  
+
                   // Send return confirmation notification
                   fetch('/api/notifications/status-update', {
                     method: 'POST',
@@ -789,6 +686,9 @@ export default function AgentDashboard() {
                   }).catch(error => {
                     console.error('Error sending return confirmation notification:', error);
                   });
+
+                  // Re-fetch bookings for consistency
+                  fetchBookings();
                 }}
                 className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-300 hover:scale-105"
               >
@@ -827,8 +727,10 @@ export default function AgentDashboard() {
             <div className="flex gap-4">
               <button
                 onClick={() => {
-                  // Handle rental extension
+                  // Optimistically update local state if needed
                   setShowExtend(null);
+                  // Re-fetch bookings for consistency
+                  fetchBookings();
                 }}
                 className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-300 hover:scale-105"
               >

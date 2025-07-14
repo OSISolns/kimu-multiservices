@@ -1,26 +1,8 @@
-export type Vehicle = {
-  id: number;
-  name: string;
-  image: string;
-  type: string;
-  category: string;
-  price: string;
-  year: number;
-  engine: string;
-  mileage: string;
-  transmission: string;
-  fuel: string;
-  capacity: string;
-  doors: number;
-  description: string;
-  isAvailable: boolean;
-  power: string;
-  fuelEfficiency: string;
-};
+const { PrismaClient } = require('../src/generated/prisma');
+const prisma = new PrismaClient();
 
-export const vehicles = [
+const vehicles = [
   {
-    id: 1,
     name: 'Toyota Prado TXL',
     image: '/vehicles/TXL.png',
     type: 'SUV',
@@ -29,7 +11,7 @@ export const vehicles = [
     year: 2019,
     engine: '2800cc',
     mileage: '50,000km',
-      transmission: 'Automatic',
+    transmission: 'Automatic',
     fuel: 'Diesel',
     capacity: '7 Leather Seats',
     doors: 5,
@@ -39,7 +21,6 @@ export const vehicles = [
     fuelEfficiency: '',
   },
   {
-    id: 2,
     name: 'Toyota Coaster',
     image: '/vehicles/COASTER.png',
     type: 'Bus',
@@ -58,7 +39,6 @@ export const vehicles = [
     fuelEfficiency: '',
   },
   {
-    id: 3,
     name: 'Rav4 Full Electric',
     image: '/vehicles/RAV 4.png',
     type: 'SUV',
@@ -67,7 +47,7 @@ export const vehicles = [
     year: 2025,
     engine: 'Gas/Electric I-4',
     mileage: '33,000km',
-      transmission: 'Automatic',
+    transmission: 'Automatic',
     fuel: 'petrol-electric plug-in hybrid',
     capacity: '5 Seats',
     doors: 5,
@@ -77,7 +57,6 @@ export const vehicles = [
     fuelEfficiency: '',
   },
   {
-    id: 4,
     name: 'KIA Sorento',
     image: '/vehicles/SORENTO.png',
     type: 'SUV',
@@ -86,7 +65,7 @@ export const vehicles = [
     year: 2018,
     engine: '2.0L 4 Cylinders',
     mileage: '110,000km',
-      transmission: 'Automatic',
+    transmission: 'Automatic',
     fuel: 'Diesel',
     capacity: '5 Seats',
     doors: 5,
@@ -96,7 +75,6 @@ export const vehicles = [
     fuelEfficiency: '',
   },
   {
-    id: 5,
     name: 'Hyundai Sonata',
     image: '/vehicles/SONATA.png',
     type: 'Sedan',
@@ -105,7 +83,7 @@ export const vehicles = [
     year: 2012,
     engine: '1,999cc',
     mileage: '50,000km',
-      transmission: 'Automatic',
+    transmission: 'Automatic',
     fuel: 'Hybrid (Petrol)',
     capacity: '5 Seats',
     doors: 4,
@@ -115,7 +93,6 @@ export const vehicles = [
     fuelEfficiency: '',
   },
   {
-    id: 6,
     name: 'Toyota Noah',
     image: '/vehicles/NOAH.png',
     type: 'Minivan',
@@ -134,7 +111,6 @@ export const vehicles = [
     fuelEfficiency: '',
   },
   {
-    id: 7,
     name: 'Hyundai Tucson',
     image: '/vehicles/TUCSON.png',
     type: 'SUV',
@@ -143,7 +119,7 @@ export const vehicles = [
     year: 2013,
     engine: '1,995cc',
     mileage: '33,000km',
-      transmission: 'Automatic',
+    transmission: 'Automatic',
     fuel: 'Diesel',
     capacity: '5 Seats',
     doors: 4,
@@ -153,7 +129,6 @@ export const vehicles = [
     fuelEfficiency: '',
   },
   {
-    id: 8,
     name: 'Toyota Levin',
     image: '/vehicles/LEVIN.png',
     type: 'Sedan',
@@ -162,7 +137,7 @@ export const vehicles = [
     year: 2022,
     engine: '1.8L 99HP L4',
     mileage: '62,700km',
-      transmission: 'Automatic',
+    transmission: 'Automatic',
     fuel: 'Gasoline + Electric',
     capacity: '5 Seats',
     doors: 4,
@@ -172,7 +147,6 @@ export const vehicles = [
     fuelEfficiency: '',
   },
   {
-    id: 9,
     name: 'Toyota Prius',
     image: '/vehicles/PRIUS.png',
     type: 'Sedan',
@@ -181,7 +155,7 @@ export const vehicles = [
     year: 2010,
     engine: '1,798cc',
     mileage: '130,004km',
-      transmission: 'Automatic',
+    transmission: 'Automatic',
     fuel: 'Hybrid (Petrol)',
     capacity: '5 Seats',
     doors: 4,
@@ -191,7 +165,6 @@ export const vehicles = [
     fuelEfficiency: '',
   },
   {
-    id: 10,
     name: 'Kia K5 Optima',
     image: '/vehicles/KI 5.png',
     type: 'Sedan',
@@ -200,7 +173,7 @@ export const vehicles = [
     year: 2015,
     engine: '1,999cc',
     mileage: '76,500km',
-      transmission: 'Automatic',
+    transmission: 'Automatic',
     fuel: 'Hybrid (Petrol)',
     capacity: '5 Seats',
     doors: 4,
@@ -211,7 +184,19 @@ export const vehicles = [
   },
 ];
 
-export function getVehiclesWithAvailability(bookings: any[] = []) {
-  // For now, all vehicles are available
-  return vehicles.map(vehicle => ({ ...vehicle, isAvailable: true }));
-} 
+async function main() {
+  await prisma.vehicle.createMany({
+    data: vehicles,
+    skipDuplicates: true,
+  });
+  console.log('Seeded all vehicles.');
+}
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  }); 

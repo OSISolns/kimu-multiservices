@@ -1,7 +1,6 @@
 'use client'
 import Link from 'next/link'
 import Image from 'next/image'
-import { vehicles, getVehiclesWithAvailability } from '../../data/vehicles'
 import { FaMapMarkerAlt, FaCalendarAlt, FaChevronLeft, FaChevronRight, FaCar, FaTaxi, FaPlane, FaHotel, FaHandshake } from 'react-icons/fa'
 import { useState, useEffect, useRef } from 'react'
 
@@ -108,6 +107,7 @@ const tabs = [
 ];
 
 export default function Offers() {
+  const [vehicles, setVehicles] = useState<any[]>([]);
   const [vehiclesWithAvailability, setVehiclesWithAvailability] = useState<any[]>([]);
   const [selectedCar, setSelectedCar] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -119,15 +119,14 @@ export default function Offers() {
   const [submitMessage, setSubmitMessage] = useState('');
 
   useEffect(() => {
-    fetch('/api/bookings')
+    fetch('/api/vehicles')
       .then(res => res.json())
       .then(data => {
-        const vehiclesWithAvail = getVehiclesWithAvailability(data);
-        setVehiclesWithAvailability(vehiclesWithAvail);
+        setVehicles(data);
+        setVehiclesWithAvailability(data);
       })
       .catch(err => {
-        console.error('Error fetching bookings:', err);
-        setVehiclesWithAvailability(vehicles.map(v => ({ ...v, isAvailable: true })));
+        console.error('Error fetching vehicles:', err);
       });
   }, []);
 

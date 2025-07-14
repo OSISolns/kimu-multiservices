@@ -2,12 +2,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { FaCar, FaGasPump, FaUsers, FaSnowflake, FaMapMarkedAlt } from 'react-icons/fa'
 import AnimatedSection from '../../../components/AnimatedSection'
-import { vehicles, getVehiclesWithAvailability } from '../../../data/vehicles'
 import BookCarForm from './BookCarForm'
+import { useRef, useState, useEffect } from 'react'
 
 async function fetchBookings() {
   try {
-    // Use absolute URL for server-side fetch
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001';
     const res = await fetch(`${baseUrl}/api/bookings`, { 
       cache: 'no-store',
@@ -26,11 +25,43 @@ async function fetchBookings() {
   }
 }
 
+async function fetchVehicles() {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001';
+    const res = await fetch(`${baseUrl}/api/vehicles`, {
+      cache: 'no-store',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    if (!res.ok) {
+      console.error('Failed to fetch vehicles:', res.status, res.statusText);
+      return [];
+    }
+    return res.json();
+  } catch (error) {
+    console.error('Error fetching vehicles:', error);
+    return [];
+  }
+}
+
 export default async function CarRental() {
   const bookings = await fetchBookings();
-  const vehiclesWithAvailability = getVehiclesWithAvailability(bookings);
-  const availableVehicles = vehiclesWithAvailability.filter(v => v.isAvailable);
-  const rentedVehicles = vehiclesWithAvailability.filter(v => !v.isAvailable);
+  const vehicles = await fetchVehicles();
+  // Optionally, update availability based on bookings if needed
+  const availableVehicles = vehicles.filter((v: any) => v.isAvailable);
+  const rentedVehicles = vehicles.filter((v: any) => !v.isAvailable);
+
+  // Add state for selectedCar and ref for form
+  const [selectedCar, setSelectedCar] = useState<string | undefined>(undefined);
+  const formRef = useRef<HTMLDivElement>(null);
+
+  const handleBookThisCar = (carName: string) => {
+    setSelectedCar(carName);
+    setTimeout(() => {
+      formRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
 
   return (
     <div className="min-h-screen py-6 md:py-12 bg-gradient-to-br from-blue-50 to-white">
@@ -124,12 +155,12 @@ export default async function CarRental() {
                       </div>
                       <span className="text-xs md:text-sm text-gray-600">(15 reviews)</span>
                     </div>
-                    <Link 
-                      href={`/contact?vehicle=${vehicle.id}`}
-                      className="bg-orange-600 text-white px-4 py-2 md:px-6 md:py-2 rounded-lg hover:bg-orange-700 transition-colors duration-300 block text-center text-sm md:text-base"
+                    <button
+                      className="bg-orange-600 text-white px-4 py-2 md:px-6 md:py-2 rounded-lg hover:bg-orange-700 transition-colors duration-300 block text-center text-sm md:text-base w-full mt-2"
+                      onClick={() => handleBookThisCar(vehicle.name)}
                     >
-                      Book Now
-                    </Link>
+                      Book This Car
+                    </button>
                   </div>
                 </div>
               </div>
@@ -138,9 +169,9 @@ export default async function CarRental() {
         </AnimatedSection>
 
         {/* Book a Car Form */}
-        <AnimatedSection className="mt-16">
+        <AnimatedSection className="mt-16" ref={formRef}>
           <h2 className="text-3xl font-bold mb-8 text-center">Book a Car</h2>
-          <BookCarForm vehicles={availableVehicles} />
+          <BookCarForm vehicles={availableVehicles} selectedCar={selectedCar} />
         </AnimatedSection>
 
         {/* Currently Rented Vehicles */}

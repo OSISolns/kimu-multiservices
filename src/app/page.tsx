@@ -3,7 +3,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
 import AnimatedSection from '../components/AnimatedSection'
-import { vehicles, getVehiclesWithAvailability } from '../data/vehicles'
 
 const carImages = [
   '/car-1.jpeg',
@@ -25,46 +24,44 @@ const carImages = [
   '/car-17.jpg',
 ]
 
-// Enhanced car data with additional features
-const enhancedVehicles = vehicles.map(vehicle => ({
-  ...vehicle,
-  specs: {
-    seats: Math.floor(Math.random() * 4) + 4, // 4-7 seats
-    transmission: Math.random() > 0.5 ? 'Automatic' : 'Manual',
-    fuelType: ['Petrol', 'Diesel', 'Hybrid'][Math.floor(Math.random() * 3)],
-    year: 2020 + Math.floor(Math.random() * 4), // 2020-2023
-    mileage: Math.floor(Math.random() * 50000) + 10000, // 10k-60k km
-  },
-  rating: (Math.random() * 2 + 3).toFixed(1), // 3.0-5.0
-  reviews: Math.floor(Math.random() * 50) + 10, // 10-60 reviews
-  availability: Math.random() > 0.2, // 80% available
-  specialOffer: Math.random() > 0.7 ? ['Weekend Discount', 'Long-term Rental', 'New Customer'] : null,
-  features: ['AC', 'Bluetooth', 'GPS', 'Backup Camera', 'Leather Seats'].slice(0, Math.floor(Math.random() * 3) + 2),
-}))
+const fallbackImage = '/vehicles/default.png'; // Make sure this exists or use another placeholder
+
+function getVehicleImage(image) {
+  if (typeof image === 'string' && image.trim().length > 0 && image.startsWith('/')) {
+    return image;
+  }
+  return fallbackImage;
+}
 
 export default function Home() {
+  const [vehicles, setVehicles] = useState<any[]>([]);
   const [current, setCurrent] = useState(0)
-  const [shuffledVehicles, setShuffledVehicles] = useState<typeof vehicles>([])
+  const [shuffledVehicles, setShuffledVehicles] = useState<any[]>([])
   const [favorites, setFavorites] = useState<Set<string>>(new Set())
-  const [selectedCar, setSelectedCar] = useState<typeof vehicles[0] | null>(null)
+  const [selectedCar, setSelectedCar] = useState<any | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [bookings, setBookings] = useState<any[]>([])
   const [vehiclesWithAvailability, setVehiclesWithAvailability] = useState<any[]>([])
   const video1Ref = useRef<HTMLVideoElement>(null)
   const video2Ref = useRef<HTMLVideoElement>(null)
 
-  // Fetch bookings and update vehicle availability
   useEffect(() => {
+    fetch('/api/vehicles')
+      .then(res => res.json())
+      .then(data => {
+        setVehicles(data);
+        setVehiclesWithAvailability(data);
+      })
+      .catch(err => {
+        console.error('Error fetching vehicles:', err);
+      });
     fetch('/api/bookings')
       .then(res => res.json())
       .then(data => {
         setBookings(data);
-        const vehiclesWithAvail = getVehiclesWithAvailability(data);
-        setVehiclesWithAvailability(vehiclesWithAvail);
       })
       .catch(err => {
         console.error('Error fetching bookings:', err);
-        setVehiclesWithAvailability(vehicles.map(v => ({ ...v, isAvailable: true })));
       });
   }, []);
 
@@ -94,7 +91,7 @@ export default function Home() {
     }
   }
 
-  const openCarModal = (car: typeof vehicles[0]) => {
+  const openCarModal = (car: any) => {
     try {
       console.log('Opening modal for car:', car)
       setSelectedCar(car)
@@ -160,6 +157,23 @@ export default function Home() {
   }
 
   const currentVehicle = shuffledVehicles[current]
+
+  // Enhanced car data with additional features (use vehicles from state)
+  const enhancedVehicles = vehicles.map(vehicle => ({
+    ...vehicle,
+    specs: {
+      seats: Math.floor(Math.random() * 4) + 4, // 4-7 seats
+      transmission: Math.random() > 0.5 ? 'Automatic' : 'Manual',
+      fuelType: ['Petrol', 'Diesel', 'Hybrid'][Math.floor(Math.random() * 3)],
+      year: 2020 + Math.floor(Math.random() * 4), // 2020-2023
+      mileage: Math.floor(Math.random() * 50000) + 10000, // 10k-60k km
+    },
+    rating: (Math.random() * 2 + 3).toFixed(1), // 3.0-5.0
+    reviews: Math.floor(Math.random() * 50) + 10, // 10-60 reviews
+    availability: Math.random() > 0.2, // 80% available
+    specialOffer: Math.random() > 0.7 ? ['Weekend Discount', 'Long-term Rental', 'New Customer'] : null,
+    features: ['AC', 'Bluetooth', 'GPS', 'Backup Camera', 'Leather Seats'].slice(0, Math.floor(Math.random() * 3) + 2),
+  }));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-gray-100 text-gray-900">
@@ -237,13 +251,13 @@ export default function Home() {
                   
                   <div className="relative flex flex-col items-center">
                     {/* Enhanced Slide */}
-                    {shuffledVehicles.length > 0 && shuffledVehicles[current] && (
+                    {shuffledVehicles.length > 0 && shuffledVehicles[current] && shuffledVehicles[current].image ? (
                       <div className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden transition-all duration-700 ease-in-out">
                         {/* Image Section with Overlay */}
                         <div className="relative h-80 bg-gradient-to-br from-blue-50 to-gray-50">
                           <Image
-                            src={shuffledVehicles[current].image}
-                            alt={shuffledVehicles[current].name}
+                            src={getVehicleImage(shuffledVehicles[current].image)}
+                            alt={shuffledVehicles[current].name || 'Vehicle'}
                             fill
                             className="object-contain p-8 transition-all duration-700 ease-in-out cursor-pointer hover:scale-105"
                             loading="eager"
@@ -367,7 +381,7 @@ export default function Home() {
                           </div>
                         </div>
                       </div>
-                    )}
+                    ) : null}
                     
                     {/* Enhanced Navigation */}
                     <div className="flex justify-between items-center w-full max-w-2xl mt-8">
@@ -382,7 +396,7 @@ export default function Home() {
                       </button>
                       
                       <div className="flex gap-2">
-                        {shuffledVehicles.slice(0, 8).map((_, idx) => (
+                        {shuffledVehicles && Array.isArray(shuffledVehicles) && shuffledVehicles.length > 0 && shuffledVehicles.slice(0, 8).map((_, idx) => (
                           <button
                             key={idx}
                             onClick={() => setCurrent(idx)}
@@ -400,7 +414,7 @@ export default function Home() {
                         aria-label="Next car"
                       >
                         <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M9 6l6 6-6 6" />
+                          <path d="M9 18l6-6-6-6" />
                         </svg>
                       </button>
                     </div>
@@ -433,8 +447,8 @@ export default function Home() {
                           <div className="flex items-center gap-4">
                             <div className="relative w-20 h-20 bg-gray-50 rounded-lg overflow-hidden">
                               <Image
-                                src={shuffledVehicles[(current + 1) % shuffledVehicles.length].image}
-                                alt={shuffledVehicles[(current + 1) % shuffledVehicles.length].name}
+                                src={getVehicleImage(shuffledVehicles[(current + 1) % shuffledVehicles.length].image)}
+                                alt={shuffledVehicles[(current + 1) % shuffledVehicles.length].name || 'Vehicle'}
                                 fill
                                 className="object-contain p-2"
                                 sizes="80px"
@@ -557,190 +571,65 @@ export default function Home() {
 
       {/* Car Details Modal */}
       {isModalOpen && selectedCar && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900">Car Details</h2>
-              <button
-                onClick={closeCarModal}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-                aria-label="Close modal"
-              >
-                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Modal Content */}
-            <div className="p-6">
-              {(() => {
-                try {
-                  return (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                      {/* Left Column - Image and Basic Info */}
-                      <div>
-                        <div className="relative h-80 bg-gradient-to-br from-blue-50 to-gray-50 rounded-xl overflow-hidden mb-6">
-                          <Image
-                            src={selectedCar.image}
-                            alt={selectedCar.name}
-                            fill
-                            className="object-contain p-8"
-                            sizes="(max-width: 1024px) 100vw, 50vw"
-                          />
-                          <div className="absolute top-4 left-4 flex gap-2">
-                            <span className="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-                              {selectedCar.category}
-                            </span>
-                            {getSpecialOffer() && (
-                              <span className="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-pulse">
-                                {getSpecialOffer()}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Basic Info */}
-                        <div className="space-y-4">
-                          <h3 className="text-3xl font-bold text-gray-900">{selectedCar.name}</h3>
-                          <div className="flex items-center gap-4">
-                            <span className="text-3xl font-bold text-orange-500">{selectedCar.price}</span>
-                            <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-semibold">
-                              {selectedCar.type}
-                            </span>
-                          </div>
-                          <p className="text-gray-600 leading-relaxed">{selectedCar.description}</p>
-                        </div>
-                      </div>
-
-                      {/* Right Column - Detailed Specs */}
-                      <div className="space-y-6">
-                        {/* Rating and Reviews */}
-                        <div className="bg-yellow-50 rounded-xl p-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-yellow-600 text-xl">★</span>
-                            <span className="text-lg font-semibold text-gray-700">{(Math.random() * 2 + 3).toFixed(1)}</span>
-                            <span className="text-sm text-gray-500">({Math.floor(Math.random() * 50) + 10} reviews)</span>
-                          </div>
-                          <p className="text-sm text-gray-600">Excellent choice for your journey</p>
-                        </div>
-
-                        {/* Technical Specifications */}
-                        <div>
-                          <h4 className="text-lg font-semibold text-gray-900 mb-4">Technical Specifications</h4>
-                          <div className="grid grid-cols-2 gap-4">
-                            {(() => {
-                              return (
-                                <>
-                                  <div className="bg-gray-50 rounded-lg p-3">
-                                    <div className="text-sm text-gray-500">Engine</div>
-                                    <div className="font-semibold text-gray-900">{selectedCar.engine}</div>
-                                  </div>
-                                  <div className="bg-gray-50 rounded-lg p-3">
-                                    <div className="text-sm text-gray-500">Power</div>
-                                    <div className="font-semibold text-gray-900">{selectedCar.power} HP</div>
-                                  </div>
-                                  <div className="bg-gray-50 rounded-lg p-3">
-                                    <div className="text-sm text-gray-500">Fuel Efficiency</div>
-                                    <div className="font-semibold text-gray-900">{selectedCar.fuelEfficiency} km/L</div>
-                                  </div>
-                                  <div className="bg-gray-50 rounded-lg p-3">
-                                    <div className="text-sm text-gray-500">Mileage</div>
-                                    <div className="font-semibold text-gray-900">{selectedCar.mileage.toLocaleString()} km</div>
-                                  </div>
-                                </>
-                              )
-                            })()}
-                          </div>
-                        </div>
-
-                        {/* Features */}
-                        <div>
-                          <h4 className="text-lg font-semibold text-gray-900 mb-4">Features & Amenities</h4>
-                          <div className="space-y-3">
-                            {(() => {
-                              const detailedFeatures = getDetailedFeatures()
-                              return Object.entries(detailedFeatures).map(([category, features]) => (
-                                <div key={category}>
-                                  <h5 className="text-sm font-semibold text-gray-700 mb-2 capitalize">{category}</h5>
-                                  <div className="flex flex-wrap gap-2">
-                                    {features.slice(0, 3).map((feature, idx) => (
-                                      <span key={idx} className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium">
-                                        {feature}
-                                      </span>
-                                    ))}
-                                  </div>
-                                </div>
-                              ))
-                            })()}
-                          </div>
-                        </div>
-
-                        {/* Rental Terms */}
-                        <div className="bg-blue-50 rounded-xl p-4">
-                          <h4 className="text-lg font-semibold text-gray-900 mb-3">Rental Terms</h4>
-                          <div className="space-y-2 text-sm text-gray-700">
-                            <div className="flex justify-between">
-                              <span>Minimum Rental:</span>
-                              <span className="font-semibold">1 Day</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Driver Included:</span>
-                              <span className="font-semibold text-green-600">Yes</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Insurance:</span>
-                              <span className="font-semibold text-green-600">Included</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Fuel Policy:</span>
-                              <span className="font-semibold">Full to Full</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                } catch (error) {
-                  console.error('Error rendering modal content:', error)
-                  return (
-                    <div className="text-center py-8">
-                      <p className="text-red-600">Error loading car details. Please try again.</p>
-                      <button
-                        onClick={closeCarModal}
-                        className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg"
-                      >
-                        Close
-                      </button>
-                    </div>
-                  )
-                }
-              })()}
-
-              {/* Modal Footer */}
-              <div className="flex gap-4 mt-8 pt-6 border-t border-gray-200">
-                <Link
-                  href={`/rent-a-car?vehicle=${selectedCar.id}`}
-                  className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center"
-                >
-                  Rent This Car
-                </Link>
-                <button
-                  onClick={() => toggleFavorite(selectedCar.id)}
-                  className="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors flex items-center gap-2"
-                >
-                  <svg width="20" height="20" fill={favorites.has(selectedCar.id.toString()) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                  </svg>
-                  {favorites.has(selectedCar.id.toString()) ? 'Saved' : 'Save'}
-                </button>
-                <button
-                  onClick={closeCarModal}
-                  className="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
-                >
-                  Close
-                </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 relative">
+            <button
+              onClick={closeCarModal}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold"
+              aria-label="Close"
+            >
+              &times;
+            </button>
+            <div className="flex flex-col md:flex-row gap-8">
+              <div className="relative w-full md:w-1/2 h-64 bg-gray-50 rounded-xl overflow-hidden">
+                {selectedCar.image ? (
+                  <Image
+                    src={getVehicleImage(selectedCar.image)}
+                    alt={selectedCar.name || 'Vehicle'}
+                    fill
+                    className="object-contain p-4"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400">No image</div>
+                )}
+              </div>
+              <div className="flex-1 flex flex-col gap-4">
+                <h2 className="text-2xl font-bold text-blue-900 mb-2">{selectedCar.name || 'Vehicle'}</h2>
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-xl font-bold text-orange-500">{selectedCar.price || 'N/A'}</span>
+                  <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-semibold">
+                    {selectedCar.type || 'N/A'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <div className="bg-gray-50 rounded-lg p-2 text-center">
+                    <div className="text-base font-bold text-blue-600">{selectedCar.capacity || 'N/A'}</div>
+                    <div className="text-xs text-gray-500">Seats</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-2 text-center">
+                    <div className="text-sm font-bold text-blue-600">{selectedCar.transmission || 'N/A'}</div>
+                    <div className="text-xs text-gray-500">Transmission</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-2 text-center">
+                    <div className="text-sm font-bold text-blue-600">{selectedCar.fuel || 'N/A'}</div>
+                    <div className="text-xs text-gray-500">Fuel</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-2 text-center">
+                    <div className="text-sm font-bold text-blue-600">{selectedCar.year || 'N/A'}</div>
+                    <div className="text-xs text-gray-500">Year</div>
+                  </div>
+                </div>
+                <div className="mb-2">
+                  <div className="text-sm font-semibold text-gray-700 mb-1">Features:</div>
+                  <div className="flex flex-wrap gap-2">
+                    {(selectedCar.features || []).map((feature: string, idx: number) => (
+                      <span key={idx} className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium">
+                        {feature}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-gray-600 text-sm leading-relaxed">{selectedCar.description || 'No description available.'}</p>
               </div>
             </div>
           </div>

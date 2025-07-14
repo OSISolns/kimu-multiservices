@@ -1,6 +1,5 @@
 "use client"
 import { useState, useEffect } from 'react';
-import { vehicles } from '../../data/vehicles';
 import Image from 'next/image';
 
 interface FormData {
@@ -111,6 +110,7 @@ export default function RentCarForm() {
   const [selectedVehicleDetails, setSelectedVehicleDetails] = useState<any>(null);
   const [totalPrice, setTotalPrice] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [vehicles, setVehicles] = useState<any[]>([]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -144,10 +144,19 @@ export default function RentCarForm() {
   // Update selected vehicle details when vehicle changes
   useEffect(() => {
     if (form.selectedVehicle) {
-      const vehicle = vehicles.find(v => v.name === form.selectedVehicle);
-      setSelectedVehicleDetails(vehicle);
+      fetch(`/api/vehicles/${form.selectedVehicle}`)
+        .then(res => res.json())
+        .then(data => setSelectedVehicleDetails(data))
+        .catch(err => console.error('Error fetching vehicle details:', err));
     }
   }, [form.selectedVehicle]);
+
+  useEffect(() => {
+    fetch('/api/vehicles')
+      .then(res => res.json())
+      .then(data => setVehicles(data))
+      .catch(err => console.error('Error fetching vehicles:', err));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
