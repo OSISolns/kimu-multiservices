@@ -1,6 +1,7 @@
 const { PrismaClient } = require('../src/generated/prisma');
 const speakeasy = require('speakeasy');
 const bcrypt = require('bcryptjs');
+const { vehicles } = require('../src/data/vehicles');
 
 const prisma = new PrismaClient();
 
@@ -39,6 +40,16 @@ async function main() {
   console.log('Seeded agent1 and admin user with TOTP secrets.');
   console.log('Agent1 password: agent1@2025');
   console.log('Admin password: kimu@2025');
+
+  // Seed vehicles
+  for (const vehicle of vehicles) {
+    await prisma.vehicle.upsert({
+      where: { id: vehicle.id },
+      update: vehicle,
+      create: vehicle,
+    });
+  }
+  console.log('Seeded vehicles.');
 }
 
 main()

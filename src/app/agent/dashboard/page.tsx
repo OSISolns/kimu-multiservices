@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FaCar, FaCalendarAlt, FaInbox, FaSignOutAlt, FaSave, FaSearch, FaMoneyBillWave, FaFileAlt, FaCarSide, FaCheck, FaClock, FaWhatsapp, FaPhone, FaTimes, FaEdit, FaTaxi, FaPlane, FaHotel, FaHandshake, FaExclamationTriangle, FaBell } from 'react-icons/fa';
 import { vehicles } from '../../../data/vehicles';
 import Pagination from '../../../components/Pagination';
+import { vehicles as staticVehicles } from '../../../data/vehicles';
 
 const statusColors: Record<string, string> = {
   'Pending': 'bg-purple-100 text-purple-700',
@@ -35,6 +36,27 @@ export default function AgentDashboard() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [showAddVehicle, setShowAddVehicle] = useState(false);
+  const [vehicleForm, setVehicleForm] = useState({
+    name: '',
+    image: '',
+    type: '',
+    category: '',
+    price: '',
+    year: '',
+    engine: '',
+    mileage: '',
+    transmission: '',
+    fuel: '',
+    capacity: '',
+    doors: '',
+    description: '',
+    isAvailable: true,
+    power: '',
+    fuelEfficiency: '',
+  });
+  const [vehicleMsg, setVehicleMsg] = useState('');
+  const [vehicleList, setVehicleList] = useState(staticVehicles);
 
   useEffect(() => {
     const isAgent = localStorage.getItem('isAgent');
@@ -252,6 +274,43 @@ export default function AgentDashboard() {
     { label: 'Turnover', value: formatRWF(turnover), change: '', color: 'purple', trend: 'up' },
     { label: 'Income', value: formatRWF(income), change: '', color: 'green', trend: 'up' },
   ];
+
+  const handleVehicleInput = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type, checked } = e.target;
+    setVehicleForm(f => ({
+      ...f,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
+
+  const handleAddVehicle = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setVehicleMsg('');
+    try {
+      const res = await fetch('/api/vehicles/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...vehicleForm,
+          year: Number(vehicleForm.year),
+          doors: Number(vehicleForm.doors),
+        }),
+      });
+      if (res.ok) {
+        const { vehicle } = await res.json();
+        setVehicleMsg('Vehicle added!');
+        setVehicleForm({
+          name: '', image: '', type: '', category: '', price: '', year: '', engine: '', mileage: '', transmission: '', fuel: '', capacity: '', doors: '', description: '', isAvailable: true, power: '', fuelEfficiency: '',
+        });
+        setShowAddVehicle(false);
+        setVehicleList(prev => [...prev, vehicle]);
+      } else {
+        setVehicleMsg('Failed to add vehicle.');
+      }
+    } catch {
+      setVehicleMsg('Error adding vehicle.');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -487,6 +546,38 @@ export default function AgentDashboard() {
             </div>
           </div>
         </div>
+        {/* Add Vehicle Button and Form */}
+        <button
+          className="mb-4 px-4 py-2 bg-blue-600 text-white rounded"
+          onClick={() => setShowAddVehicle(v => !v)}
+        >
+          {showAddVehicle ? 'Cancel' : 'Add New Vehicle'}
+        </button>
+        {showAddVehicle && (
+          <form onSubmit={handleAddVehicle} className="mb-6 p-4 bg-gray-50 rounded shadow flex flex-col gap-2">
+            <input name="name" value={vehicleForm.name} onChange={handleVehicleInput} placeholder="Name" required className="p-2 border rounded" />
+            <input name="image" value={vehicleForm.image} onChange={handleVehicleInput} placeholder="Image URL" className="p-2 border rounded" />
+            <input name="type" value={vehicleForm.type} onChange={handleVehicleInput} placeholder="Type" className="p-2 border rounded" />
+            <input name="category" value={vehicleForm.category} onChange={handleVehicleInput} placeholder="Category" className="p-2 border rounded" />
+            <input name="price" value={vehicleForm.price} onChange={handleVehicleInput} placeholder="Price" className="p-2 border rounded" />
+            <input name="year" value={vehicleForm.year} onChange={handleVehicleInput} placeholder="Year" type="number" className="p-2 border rounded" />
+            <input name="engine" value={vehicleForm.engine} onChange={handleVehicleInput} placeholder="Engine" className="p-2 border rounded" />
+            <input name="mileage" value={vehicleForm.mileage} onChange={handleVehicleInput} placeholder="Mileage" className="p-2 border rounded" />
+            <input name="transmission" value={vehicleForm.transmission} onChange={handleVehicleInput} placeholder="Transmission" className="p-2 border rounded" />
+            <input name="fuel" value={vehicleForm.fuel} onChange={handleVehicleInput} placeholder="Fuel" className="p-2 border rounded" />
+            <input name="capacity" value={vehicleForm.capacity} onChange={handleVehicleInput} placeholder="Capacity" className="p-2 border rounded" />
+            <input name="doors" value={vehicleForm.doors} onChange={handleVehicleInput} placeholder="Doors" type="number" className="p-2 border rounded" />
+            <textarea name="description" value={vehicleForm.description} onChange={handleVehicleInput} placeholder="Description" className="p-2 border rounded" />
+            <input name="power" value={vehicleForm.power} onChange={handleVehicleInput} placeholder="Power" className="p-2 border rounded" />
+            <input name="fuelEfficiency" value={vehicleForm.fuelEfficiency} onChange={handleVehicleInput} placeholder="Fuel Efficiency" className="p-2 border rounded" />
+            <label className="flex items-center gap-2">
+              <input type="checkbox" name="isAvailable" checked={vehicleForm.isAvailable} onChange={handleVehicleInput} />
+              Available
+            </label>
+            <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">Add Vehicle</button>
+            {vehicleMsg && <div className="text-sm text-center text-red-600">{vehicleMsg}</div>}
+          </form>
+        )}
         {/* Car Listings Table */}
         <div className={`bg-white rounded-2xl shadow p-8 max-w-full mx-auto transition-all duration-700 hover:shadow-xl ${
           isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
