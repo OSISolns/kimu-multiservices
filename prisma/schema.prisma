@@ -1,46 +1,40 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  username     String   @unique
-  passwordHash String
-  role         String   @default("agent")
-  createdAt    DateTime @default(now())
-  totpSecret   String?
-  emailNotifications   Boolean @default(false)
-  whatsappNotifications Boolean @default(false)
+  id                    Int      @id @default(autoincrement())
+  username              String   @unique
+  passwordHash          String
+  role                  String   @default("agent")
+  createdAt             DateTime @default(now())
+  totpSecret            String?
+  emailNotifications    Boolean  @default(false)
+  whatsappNotifications Boolean  @default(false)
 }
 
 model Vehicle {
-  id          Int      @id @default(autoincrement())
-  name        String
-  image       String
-  type        String
-  category    String
-  price       String
-  year        Int
-  engine      String
-  mileage     String
-  transmission String
-  fuel        String
-  capacity    String
-  doors       Int
-  description String
-  isAvailable Boolean  @default(true)
-  power       String
+  id             Int     @id @default(autoincrement())
+  name           String
+  image          String
+  type           String
+  category       String
+  price          String
+  year           Int
+  engine         String
+  mileage        String
+  transmission   String
+  fuel           String
+  capacity       String
+  doors          Int
+  description    String
+  isAvailable    Boolean @default(true)
+  power          String
   fuelEfficiency String
 }

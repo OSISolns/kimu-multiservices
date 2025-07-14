@@ -35,12 +35,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 6.10.1
- * Query Engine version: 9b628578b3b7cae625e8c927178f15a170e74a9c
+ * Prisma Client JS version: 6.11.1
+ * Query Engine version: f40f79ec31188888a2e33acda0ecc8fd10a853a9
  */
 Prisma.prismaVersion = {
-  client: "6.10.1",
-  engine: "9b628578b3b7cae625e8c927178f15a170e74a9c"
+  client: "6.11.1",
+  engine: "f40f79ec31188888a2e33acda0ecc8fd10a853a9"
 }
 
 Prisma.PrismaClientKnownRequestError = PrismaClientKnownRequestError;
@@ -87,6 +87,9 @@ Prisma.NullTypes = {
  * Enums
  */
 exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
+  ReadUncommitted: 'ReadUncommitted',
+  ReadCommitted: 'ReadCommitted',
+  RepeatableRead: 'RepeatableRead',
   Serializable: 'Serializable'
 });
 
@@ -124,6 +127,11 @@ exports.Prisma.VehicleScalarFieldEnum = {
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
 };
 
 exports.Prisma.NullsOrder = {
@@ -169,13 +177,12 @@ const config = {
     "schemaEnvPath": "../../../.env"
   },
   "relativePath": "../../../prisma",
-  "clientVersion": "6.10.1",
-  "engineVersion": "9b628578b3b7cae625e8c927178f15a170e74a9c",
+  "clientVersion": "6.11.1",
+  "engineVersion": "f40f79ec31188888a2e33acda0ecc8fd10a853a9",
   "datasourceNames": [
     "db"
   ],
-  "activeProvider": "sqlite",
-  "postinstall": false,
+  "activeProvider": "postgresql",
   "inlineDatasources": {
     "db": {
       "url": {
@@ -184,9 +191,9 @@ const config = {
       }
     }
   },
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"sqlite\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel User {\n  id                    Int      @id @default(autoincrement())\n  username              String   @unique\n  passwordHash          String\n  role                  String   @default(\"agent\")\n  createdAt             DateTime @default(now())\n  totpSecret            String?\n  emailNotifications    Boolean  @default(false)\n  whatsappNotifications Boolean  @default(false)\n}\n\nmodel Vehicle {\n  id             Int     @id @default(autoincrement())\n  name           String\n  image          String\n  type           String\n  category       String\n  price          String\n  year           Int\n  engine         String\n  mileage        String\n  transmission   String\n  fuel           String\n  capacity       String\n  doors          Int\n  description    String\n  isAvailable    Boolean @default(true)\n  power          String\n  fuelEfficiency String\n}\n",
-  "inlineSchemaHash": "e13beb35974d5e8c13e7c60e4ff6fedff7497357a384f7474f4208ce2b082f73",
-  "copyEngine": true
+  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel User {\n  id                    Int      @id @default(autoincrement())\n  username              String   @unique\n  passwordHash          String\n  role                  String   @default(\"agent\")\n  createdAt             DateTime @default(now())\n  totpSecret            String?\n  emailNotifications    Boolean  @default(false)\n  whatsappNotifications Boolean  @default(false)\n}\n\nmodel Vehicle {\n  id             Int     @id @default(autoincrement())\n  name           String\n  image          String\n  type           String\n  category       String\n  price          String\n  year           Int\n  engine         String\n  mileage        String\n  transmission   String\n  fuel           String\n  capacity       String\n  doors          Int\n  description    String\n  isAvailable    Boolean @default(true)\n  power          String\n  fuelEfficiency String\n}\n",
+  "inlineSchemaHash": "02447469ad407a2ea7f062218c36327a2672b84d0c3113b3cb688b0a8bf02524",
+  "copyEngine": false
 }
 
 const fs = require('fs')
@@ -223,9 +230,3 @@ const PrismaClient = getPrismaClient(config)
 exports.PrismaClient = PrismaClient
 Object.assign(exports, Prisma)
 
-// file annotations for bundling tools to include these files
-path.join(__dirname, "query_engine-windows.dll.node");
-path.join(process.cwd(), "src/generated/prisma/query_engine-windows.dll.node")
-// file annotations for bundling tools to include these files
-path.join(__dirname, "schema.prisma");
-path.join(process.cwd(), "src/generated/prisma/schema.prisma")
