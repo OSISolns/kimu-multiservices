@@ -1,14 +1,20 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaCalendarAlt, FaCar, FaTaxi, FaPlane, FaHotel, FaHandshake } from 'react-icons/fa';
 
-const bookings = [
-  { date: '2024-06-10', type: 'Rental', client: 'Jean Uwimana', car: 'Toyota Prado TXL', time: '08:00' },
-  { date: '2024-06-11', type: 'Rental', client: 'Alice Smith', car: 'Hyundai Sonata', time: '09:00' },
-  { date: '2024-06-12', type: 'Taxi', client: 'Paul Mugisha', car: '', time: '14:00' },
-  { date: '2024-06-12', type: 'Hotel', client: 'Claudine Ingabire', car: '', time: '15:00' },
-  { date: '2024-06-13', type: 'Transfer', client: 'Linda Mukamana', car: '', time: '08:30' },
-];
+interface Booking {
+  id: number;
+  type: string;
+  name: string | null;
+  phone: string | null;
+  carType: string | null;
+  pickupDate: string | null;
+  pickupTime: string | null;
+  returnDate: string | null;
+  returnTime: string | null;
+  status: string;
+  createdAt: string;
+}
 
 function getMonthDays(year: number, month: number) {
   const days = [];
@@ -22,21 +28,54 @@ function getMonthDays(year: number, month: number) {
 const todayStr = new Date().toISOString().slice(0, 10);
 
 export default function AgentCalendarPage() {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth());
   const [year, setYear] = useState(now.getFullYear());
+  
   const days = getMonthDays(year, month);
-  const monthBookings = bookings.filter(b => new Date(b.date).getMonth() === month && new Date(b.date).getFullYear() === year);
-  const bookingsByDay: Record<number, typeof bookings> = {};
-  monthBookings.forEach(b => {
-    const day = new Date(b.date).getDate();
-    if (!bookingsByDay[day]) bookingsByDay[day] = [];
-    bookingsByDay[day].push(b);
-  });
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-  const todayBookings = bookings.filter(b => b.date === todayStr);
-  const upcomingBookings = bookings.filter(b => b.date > todayStr).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 5);
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const response = await fetch('/api/bookings');
+        if (!response.ok) throw new Error('Failed to fetch bookings');
+        const data = await response.json();
+        setBookings(data);
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
+        setBookings([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, []);
+
+  // Filter bookings for current month
+  const monthBookings = bookings.filter(b => {
+    if (!b.pickupDate) return false;
+    const bookingDate = new Date(b.pickupDate);
+    return bookingDate.getMonth() === month && bookingDate.getFullYear() === year;
+  });
+
+  const bookingsByDay: Record<number, Booking[]> = {};
+  monthBookings.forEach(b => {
+    if (b.pickupDate) {
+      const day = new Date(b.pickupDate).getDate();
+      if (!bookingsByDay[day]) bookingsByDay[day] = [];
+      bookingsByDay[day].push(b);
+    }
+  });
+
+  const todayBookings = bookings.filter(b => b.pickupDate === todayStr);
+  const upcomingBookings = bookings
+    .filter(b => b.pickupDate && b.pickupDate > todayStr)
+    .sort((a, b) => (a.pickupDate || '').localeCompare(b.pickupDate || ''))
+    .slice(0, 5);
 
   return (
     <div className="min-h-screen bg-blue-50 py-10 px-4">
@@ -65,12 +104,11 @@ export default function AgentCalendarPage() {
                     <div className="flex flex-col gap-1 w-full">
                       {bookingsByDay[d].map((b, idx) => (
                         <div key={idx} className="flex items-center gap-1 text-xs bg-blue-200 rounded px-1 py-0.5">
-                          {b.type === 'Rental' && <FaCar className="text-blue-600" />}
-                          {b.type === 'Taxi' && <FaTaxi className="text-orange-500" />}
-                          {b.type === 'Transfer' && <FaPlane className="text-blue-500" />}
+                          {b.type === 'Car Rental' && <FaCar className="text-blue-600" />}
+                          {b.type === 'Taxi Service' && <FaTaxi className="text-orange-500" />}
+                          {b.type === 'Airport Transfer' && <FaPlane className="text-blue-500" />}
                           {b.type === 'Hotel' && <FaHotel className="text-orange-500" />}
-                          {b.type === 'Sales' && <FaHandshake className="text-blue-500" />}
-                          <span>{b.client}</span>
+                          <span>{b.name || 'Unknown'}</span>
                         </div>
                       ))}
                     </div>
@@ -87,13 +125,12 @@ export default function AgentCalendarPage() {
                 <ul className="space-y-2">
                   {todayBookings.map((b, i) => (
                     <li key={i} className="bg-blue-100 rounded p-2 flex items-center gap-2">
-                      {b.type === 'Rental' && <FaCar className="text-blue-600" />}
-                      {b.type === 'Taxi' && <FaTaxi className="text-orange-500" />}
-                      {b.type === 'Transfer' && <FaPlane className="text-blue-500" />}
+                      {b.type === 'Car Rental' && <FaCar className="text-blue-600" />}
+                      {b.type === 'Taxi Service' && <FaTaxi className="text-orange-500" />}
+                      {b.type === 'Airport Transfer' && <FaPlane className="text-blue-500" />}
                       {b.type === 'Hotel' && <FaHotel className="text-orange-500" />}
-                      {b.type === 'Sales' && <FaHandshake className="text-blue-500" />}
-                      <span className="font-semibold">{b.client}</span>
-                      <span className="ml-auto text-xs text-gray-600">{b.time}</span>
+                      <span className="font-semibold">{b.name || 'Unknown'}</span>
+                      <span className="ml-auto text-xs text-gray-600">{b.pickupTime || ''}</span>
                     </li>
                   ))}
                 </ul>
@@ -105,13 +142,12 @@ export default function AgentCalendarPage() {
                 <ul className="space-y-2">
                   {upcomingBookings.map((b, i) => (
                     <li key={i} className="bg-yellow-100 rounded p-2 flex items-center gap-2">
-                      {b.type === 'Rental' && <FaCar className="text-blue-600" />}
-                      {b.type === 'Taxi' && <FaTaxi className="text-orange-500" />}
-                      {b.type === 'Transfer' && <FaPlane className="text-blue-500" />}
+                      {b.type === 'Car Rental' && <FaCar className="text-blue-600" />}
+                      {b.type === 'Taxi Service' && <FaTaxi className="text-orange-500" />}
+                      {b.type === 'Airport Transfer' && <FaPlane className="text-blue-500" />}
                       {b.type === 'Hotel' && <FaHotel className="text-orange-500" />}
-                      {b.type === 'Sales' && <FaHandshake className="text-blue-500" />}
-                      <span className="font-semibold">{b.client}</span>
-                      <span className="ml-auto text-xs text-gray-600">{b.date} {b.time}</span>
+                      <span className="font-semibold">{b.name || 'Unknown'}</span>
+                      <span className="ml-auto text-xs text-gray-600">{b.pickupDate} {b.pickupTime || ''}</span>
                     </li>
                   ))}
                 </ul>

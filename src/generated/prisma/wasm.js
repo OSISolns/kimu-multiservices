@@ -151,6 +151,52 @@ exports.Prisma.VehicleScalarFieldEnum = {
   fuelEfficiency: 'fuelEfficiency'
 };
 
+exports.Prisma.BookingScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  name: 'name',
+  phone: 'phone',
+  nationality: 'nationality',
+  idOrPassport: 'idOrPassport',
+  carType: 'carType',
+  pickupDate: 'pickupDate',
+  pickupTime: 'pickupTime',
+  returnDate: 'returnDate',
+  returnTime: 'returnTime',
+  rentalDays: 'rentalDays',
+  returnConfirmed: 'returnConfirmed',
+  fullTank: 'fullTank',
+  status: 'status',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.NotificationScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  message: 'message',
+  type: 'type',
+  read: 'read',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ActivityLogScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  action: 'action',
+  details: 'details',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.SystemLogScalarFieldEnum = {
+  id: 'id',
+  action: 'action',
+  details: 'details',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -169,7 +215,11 @@ exports.Prisma.NullsOrder = {
 
 exports.Prisma.ModelName = {
   User: 'User',
-  Vehicle: 'Vehicle'
+  Vehicle: 'Vehicle',
+  Booking: 'Booking',
+  Notification: 'Notification',
+  ActivityLog: 'ActivityLog',
+  SystemLog: 'SystemLog'
 };
 
 /**

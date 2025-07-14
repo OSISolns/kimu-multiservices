@@ -38,3 +38,49 @@ model Vehicle {
   power          String
   fuelEfficiency String
 }
+
+model Booking {
+  id              Int      @id @default(autoincrement())
+  type            String
+  name            String?
+  phone           String?
+  nationality     String?
+  idOrPassport    String?
+  carType         String?
+  pickupDate      String?
+  pickupTime      String?
+  returnDate      String?
+  returnTime      String?
+  rentalDays      Int?
+  returnConfirmed Boolean  @default(false)
+  fullTank        Boolean  @default(false)
+  status          String   @default("Active")
+  createdAt       DateTime @default(now())
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  message   String
+  type      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  action    String
+  details   String?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+}
+
+model SystemLog {
+  id        Int      @id @default(autoincrement())
+  action    String
+  details   String?
+  createdBy Int?
+  createdAt DateTime @default(now())
+}

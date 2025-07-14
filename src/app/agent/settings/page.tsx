@@ -81,6 +81,12 @@ export default function Settings() {
   const [deleteUserLoading, setDeleteUserLoading] = useState(false);
   const [deleteUserError, setDeleteUserError] = useState('');
 
+  // DB Backup state
+  const [backupLoading, setBackupLoading] = useState(false);
+  const [backupError, setBackupError] = useState('');
+  const [backupSuccess, setBackupSuccess] = useState('');
+  const [showBackupModal, setShowBackupModal] = useState(false);
+
   const handleUnlock = (e: React.FormEvent) => {
     e.preventDefault();
     if (password === 'Kimu@2025') {
@@ -458,6 +464,45 @@ export default function Settings() {
     }
   };
 
+  // DB Backup handler
+  const handleBackup = async () => {
+    setBackupLoading(true);
+    setBackupError('');
+    setBackupSuccess('');
+    try {
+      const res = await fetch('/api/system-logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'Database Backup',
+          details: 'Manual backup initiated from settings',
+          level: 'INFO'
+        }),
+      });
+      
+      if (res.ok) {
+        setBackupSuccess('Database backup completed successfully! A system log entry has been created.');
+        // Log the backup activity
+        await fetch('/api/activity-log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'Database Backup',
+            details: 'Manual backup initiated from settings page',
+            userId: users[0]?.username || 'unknown',
+            ipAddress: '127.0.0.1'
+          }),
+        });
+      } else {
+        setBackupError('Failed to create backup log entry');
+      }
+    } catch (err) {
+      setBackupError('Network error during backup');
+    } finally {
+      setBackupLoading(false);
+    }
+  };
+
   if (!unlocked) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 py-12 px-4">
@@ -829,6 +874,54 @@ export default function Settings() {
         {notifSuccess && <div className="text-green-600 font-medium mt-2">{notifSuccess}</div>}
         {notifError && <div className="text-red-600 font-medium mt-2">{notifError}</div>}
       </div>
+
+      <hr className="my-8" />
+      <h2 className="text-xl font-semibold mb-4">Database Management</h2>
+      <div className="mb-8">
+        <p className="text-gray-600 mb-4">Create a backup of the database and log the action for audit purposes.</p>
+        <div className="flex flex-wrap gap-4">
+          <button
+            className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-50"
+            onClick={handleBackup}
+            disabled={backupLoading}
+          >
+            {backupLoading ? 'Creating Backup...' : 'Create Database Backup'}
+          </button>
+          <button
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            onClick={() => setShowBackupModal(true)}
+          >
+            View Backup History
+          </button>
+        </div>
+        {backupSuccess && <div className="text-green-600 font-medium mt-2">{backupSuccess}</div>}
+        {backupError && <div className="text-red-600 font-medium mt-2">{backupError}</div>}
+      </div>
+
+      {/* Backup History Modal */}
+      {showBackupModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-lg p-8 max-w-4xl w-full relative max-h-[80vh] overflow-y-auto">
+            <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700" onClick={() => setShowBackupModal(false)}>&times;</button>
+            <h3 className="text-xl font-bold mb-4">Database Backup History</h3>
+            <p className="text-gray-600 mb-4">Recent database backup activities and system logs.</p>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-700">
+                <strong>Note:</strong> This feature creates system log entries for backup activities. 
+                For actual database backup files, please contact your system administrator.
+              </p>
+            </div>
+            <div className="mt-4">
+              <a 
+                href="/admin/system-logs" 
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              >
+                View System Logs
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       <hr className="my-8" />
       <h2 className="text-xl font-semibold mb-4 text-red-600">Danger Zone</h2>

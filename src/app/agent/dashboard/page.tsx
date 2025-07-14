@@ -1,7 +1,7 @@
 "use client"
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FaCar, FaCalendarAlt, FaInbox, FaSignOutAlt, FaSave, FaSearch, FaMoneyBillWave, FaFileAlt, FaCarSide, FaCheck, FaClock, FaWhatsapp, FaPhone, FaTimes, FaEdit, FaTaxi, FaPlane, FaHotel, FaHandshake, FaExclamationTriangle, FaBell } from 'react-icons/fa';
+import { FaCar, FaCalendarAlt, FaInbox, FaSignOutAlt, FaSave, FaSearch, FaMoneyBillWave, FaFileAlt, FaCarSide, FaCheck, FaClock, FaWhatsapp, FaPhone, FaTimes, FaEdit, FaTaxi, FaPlane, FaHotel, FaHandshake, FaExclamationTriangle, FaBell, FaHistory } from 'react-icons/fa';
 import Pagination from '../../../components/Pagination';
 
 const statusColors: Record<string, string> = {
@@ -58,32 +58,32 @@ export default function AgentDashboard() {
   const [uploading, setUploading] = useState(false);
 
   const fetchBookings = () => {
-    const apiUrl = window.location.origin + '/api/bookings';
-    fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-      .then(res => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        return res.json();
+      const apiUrl = window.location.origin + '/api/bookings';
+      fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       })
-      .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
+        .then(res => {
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          return res.json();
+        })
+        .then(data => {
+          if (Array.isArray(data) && data.length > 0) {
           setBookings(data);
-        } else {
+          } else {
           setBookings([]);
-        }
-        setTimeout(() => setIsLoaded(true), 100);
-      })
-      .catch(error => {
-        console.error('Error fetching bookings:', error);
+          }
+          setTimeout(() => setIsLoaded(true), 100);
+        })
+        .catch(error => {
+          console.error('Error fetching bookings:', error);
         setBookings([]);
-        setIsLoaded(true);
-      });
+          setIsLoaded(true);
+        });
   };
 
   useEffect(() => {
@@ -243,25 +243,26 @@ export default function AgentDashboard() {
         </div>
         <nav className="flex-1 flex flex-col justify-between">
           <div>
+          <ul className="space-y-2">
+            <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg bg-purple-50 text-purple-700 font-semibold transition-all duration-300 hover:scale-105" href="#"><FaCar /> Dashboard</a></li>
+            <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105" href="/agent/calendar"><FaCalendarAlt /> Calendar</a></li>
+          </ul>
+          <div className="mt-8">
+            <div className="text-xs text-gray-400 mb-2">REPORT</div>
             <ul className="space-y-2">
-              <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg bg-purple-50 text-purple-700 font-semibold transition-all duration-300 hover:scale-105" href="#"><FaCar /> Dashboard</a></li>
-              <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105" href="/agent/calendar"><FaCalendarAlt /> Calendar</a></li>
+              <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105" href="/agent/transactions"><FaMoneyBillWave /> Transactions</a></li>
+              <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105" href="/agent/reports"><FaFileAlt /> Reports</a></li>
+              <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105" href="/agent/activity-logs"><FaHistory /> Activity Logs</a></li>
             </ul>
-            <div className="mt-8">
-              <div className="text-xs text-gray-400 mb-2">REPORT</div>
-              <ul className="space-y-2">
-                <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105" href="/agent/transactions"><FaMoneyBillWave /> Transactions</a></li>
-                <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105" href="/agent/reports"><FaFileAlt /> Reports</a></li>
-              </ul>
-            </div>
-            <div className="mt-8">
-              <div className="text-xs text-gray-400 mb-2">OTHER SERVICES</div>
-              <ul className="space-y-2">
-                <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all duration-300 hover:scale-105" href="/agent/taxi"><FaTaxi className="text-blue-600" /> Premium Taxi Services</a></li>
-                <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all duration-300 hover:scale-105" href="/agent/airport-transfers"><FaPlane className="text-blue-600" /> Airport Transfers</a></li>
-                <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all duration-300 hover:scale-105" href="/agent/hotel-accommodation"><FaHotel className="text-orange-500" /> Hotel Accommodation</a></li>
-                <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all duration-300 hover:scale-105" href="/agent/automotive-sales"><FaHandshake className="text-blue-600" /> Automotive Sales & Consultancy</a></li>
-              </ul>
+          </div>
+          <div className="mt-8">
+            <div className="text-xs text-gray-400 mb-2">OTHER SERVICES</div>
+            <ul className="space-y-2">
+              <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all duration-300 hover:scale-105" href="/agent/taxi"><FaTaxi className="text-blue-600" /> Premium Taxi Services</a></li>
+              <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all duration-300 hover:scale-105" href="/agent/airport-transfers"><FaPlane className="text-blue-600" /> Airport Transfers</a></li>
+              <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all duration-300 hover:scale-105" href="/agent/hotel-accommodation"><FaHotel className="text-orange-500" /> Hotel Accommodation</a></li>
+              <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all duration-300 hover:scale-105" href="/agent/automotive-sales"><FaHandshake className="text-blue-600" /> Automotive Sales & Consultancy</a></li>
+            </ul>
             </div>
           </div>
           <div className="flex flex-col items-center justify-center flex-1">
@@ -597,36 +598,36 @@ export default function AgentDashboard() {
                         </span>
                       </td>
                       <td className="py-6 px-6 align-middle">
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          <button
-                            title="Confirm Return"
-                            className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
-                            onClick={e => { e.stopPropagation(); setShowConfirm({index: startIndex + i, open: true}); setFullTankChecked(false); }}
-                          >
-                            <FaCheck />
-                          </button>
-                          <button
-                            title="Extend Rental"
-                            className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
-                            onClick={e => { e.stopPropagation(); setShowExtend({index: startIndex + i, open: true}); }}
-                          >
-                            <FaEdit />
-                          </button>
-                          <button
-                            title="Send WhatsApp"
-                            className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
-                            onClick={e => { e.stopPropagation(); window.open(`https://wa.me/${b.phone.replace(/\D/g, '')}?text=Hello ${clientName}, regarding your ${b.type.toLowerCase()}...`, '_blank'); }}
-                          >
-                            <FaWhatsapp />
-                          </button>
-                          <button
-                            title="Call"
-                            className="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
-                            onClick={e => { e.stopPropagation(); window.open(`tel:${b.phone}`, '_blank'); }}
-                          >
-                            <FaPhone />
-                          </button>
-                        </div>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            <button
+                              title="Confirm Return"
+                              className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
+                              onClick={e => { e.stopPropagation(); setShowConfirm({index: startIndex + i, open: true}); setFullTankChecked(false); }}
+                            >
+                              <FaCheck />
+                            </button>
+                            <button
+                              title="Extend Rental"
+                              className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
+                              onClick={e => { e.stopPropagation(); setShowExtend({index: startIndex + i, open: true}); }}
+                            >
+                              <FaEdit />
+                            </button>
+                            <button
+                              title="Send WhatsApp"
+                              className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
+                              onClick={e => { e.stopPropagation(); window.open(`https://wa.me/${b.phone.replace(/\D/g, '')}?text=Hello ${clientName}, regarding your ${b.type.toLowerCase()}...`, '_blank'); }}
+                            >
+                              <FaWhatsapp />
+                            </button>
+                            <button
+                              title="Call"
+                              className="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
+                              onClick={e => { e.stopPropagation(); window.open(`tel:${b.phone}`, '_blank'); }}
+                            >
+                              <FaPhone />
+                            </button>
+                          </div>
                       </td>
                     </tr>
                   );
@@ -672,7 +673,7 @@ export default function AgentDashboard() {
                   updatedBookings[showConfirm.index].status = 'Completed';
                   setBookings(updatedBookings);
                   setShowConfirm(null);
-
+                  
                   // Send return confirmation notification
                   fetch('/api/notifications/status-update', {
                     method: 'POST',
