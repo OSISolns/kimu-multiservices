@@ -1,3 +1,5 @@
+"use client"
+
 import Image from 'next/image'
 import Link from 'next/link'
 import { FaCar, FaGasPump, FaUsers, FaSnowflake, FaMapMarkedAlt } from 'react-icons/fa'
@@ -96,7 +98,7 @@ export default async function CarRental() {
         <AnimatedSection>
           <h2 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-center">Available Vehicles</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
-            {availableVehicles.map((vehicle) => (
+            {availableVehicles.map((vehicle: any) => (
               <div key={vehicle.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col">
                 <div className="relative h-40 md:h-48 w-full">
                   <Image
@@ -169,17 +171,19 @@ export default async function CarRental() {
         </AnimatedSection>
 
         {/* Book a Car Form */}
-        <AnimatedSection className="mt-16" ref={formRef}>
-          <h2 className="text-3xl font-bold mb-8 text-center">Book a Car</h2>
-          <BookCarForm vehicles={availableVehicles} selectedCar={selectedCar} />
-        </AnimatedSection>
+        <div ref={formRef}>
+          <AnimatedSection className="mt-16">
+            <h2 className="text-3xl font-bold mb-8 text-center">Book a Car</h2>
+            <BookCarForm vehicles={availableVehicles} selectedCar={selectedCar} />
+          </AnimatedSection>
+        </div>
 
         {/* Currently Rented Vehicles */}
         {rentedVehicles.length > 0 && (
           <AnimatedSection className="mt-16">
             <h2 className="text-3xl font-bold mb-8 text-center text-gray-600">Currently Rented</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {rentedVehicles.map((vehicle) => (
+              {rentedVehicles.map((vehicle: any) => (
                 <div key={vehicle.id} className="bg-gray-100 rounded-xl shadow-lg overflow-hidden opacity-75">
                   <div className="relative h-48">
                     <Image
