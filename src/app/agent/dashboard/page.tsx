@@ -57,6 +57,7 @@ export default function AgentDashboard() {
   });
   const [vehicleMsg, setVehicleMsg] = useState('');
   const [vehicleList, setVehicleList] = useState(staticVehicles);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     const isAgent = localStorage.getItem('isAgent');
@@ -312,6 +313,23 @@ export default function AgentDashboard() {
     }
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch('/api/vehicles/upload', {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await res.json();
+    if (data.success) {
+      setVehicleForm(f => ({ ...f, image: data.url }));
+    }
+    setUploading(false);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
@@ -320,26 +338,36 @@ export default function AgentDashboard() {
           <img src="/logo.png" alt="KIMU Transport Logo" className="w-12 h-12 animate-pulse" />
           <span className="font-bold text-xl text-orange-700">KIMU Transport & Multiservices</span>
         </div>
-        <nav className="flex-1">
-          <ul className="space-y-2">
-            <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg bg-purple-50 text-purple-700 font-semibold transition-all duration-300 hover:scale-105" href="#"><FaCar /> Dashboard</a></li>
-            <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105" href="/agent/calendar"><FaCalendarAlt /> Calendar</a></li>
-          </ul>
-          <div className="mt-8">
-            <div className="text-xs text-gray-400 mb-2">REPORT</div>
+        <nav className="flex-1 flex flex-col justify-between">
+          <div>
             <ul className="space-y-2">
-              <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105" href="/agent/transactions"><FaMoneyBillWave /> Transactions</a></li>
-              <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105" href="/agent/reports"><FaFileAlt /> Reports</a></li>
+              <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg bg-purple-50 text-purple-700 font-semibold transition-all duration-300 hover:scale-105" href="#"><FaCar /> Dashboard</a></li>
+              <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105" href="/agent/calendar"><FaCalendarAlt /> Calendar</a></li>
             </ul>
+            <div className="mt-8">
+              <div className="text-xs text-gray-400 mb-2">REPORT</div>
+              <ul className="space-y-2">
+                <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105" href="/agent/transactions"><FaMoneyBillWave /> Transactions</a></li>
+                <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105" href="/agent/reports"><FaFileAlt /> Reports</a></li>
+              </ul>
+            </div>
+            <div className="mt-8">
+              <div className="text-xs text-gray-400 mb-2">OTHER SERVICES</div>
+              <ul className="space-y-2">
+                <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all duration-300 hover:scale-105" href="/agent/taxi"><FaTaxi className="text-blue-600" /> Premium Taxi Services</a></li>
+                <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all duration-300 hover:scale-105" href="/agent/airport-transfers"><FaPlane className="text-blue-600" /> Airport Transfers</a></li>
+                <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all duration-300 hover:scale-105" href="/agent/hotel-accommodation"><FaHotel className="text-orange-500" /> Hotel Accommodation</a></li>
+                <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all duration-300 hover:scale-105" href="/agent/automotive-sales"><FaHandshake className="text-blue-600" /> Automotive Sales & Consultancy</a></li>
+              </ul>
+            </div>
           </div>
-          <div className="mt-8">
-            <div className="text-xs text-gray-400 mb-2">OTHER SERVICES</div>
-            <ul className="space-y-2">
-              <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all duration-300 hover:scale-105" href="/agent/taxi"><FaTaxi className="text-blue-600" /> Premium Taxi Services</a></li>
-              <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all duration-300 hover:scale-105" href="/agent/airport-transfers"><FaPlane className="text-blue-600" /> Airport Transfers</a></li>
-              <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all duration-300 hover:scale-105" href="/agent/hotel-accommodation"><FaHotel className="text-orange-500" /> Hotel Accommodation</a></li>
-              <li><a className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition-all duration-300 hover:scale-105" href="/agent/automotive-sales"><FaHandshake className="text-blue-600" /> Automotive Sales & Consultancy</a></li>
-            </ul>
+          <div className="flex flex-col items-center justify-center flex-1">
+            <button
+              className="px-4 py-2 bg-blue-600 text-white rounded w-full"
+              onClick={() => setShowAddVehicle(true)}
+            >
+              Add New Vehicle
+            </button>
           </div>
         </nav>
         <div className="mt-auto pt-8 flex flex-col gap-2">
@@ -546,38 +574,6 @@ export default function AgentDashboard() {
             </div>
           </div>
         </div>
-        {/* Add Vehicle Button and Form */}
-        <button
-          className="mb-4 px-4 py-2 bg-blue-600 text-white rounded"
-          onClick={() => setShowAddVehicle(v => !v)}
-        >
-          {showAddVehicle ? 'Cancel' : 'Add New Vehicle'}
-        </button>
-        {showAddVehicle && (
-          <form onSubmit={handleAddVehicle} className="mb-6 p-4 bg-gray-50 rounded shadow flex flex-col gap-2">
-            <input name="name" value={vehicleForm.name} onChange={handleVehicleInput} placeholder="Name" required className="p-2 border rounded" />
-            <input name="image" value={vehicleForm.image} onChange={handleVehicleInput} placeholder="Image URL" className="p-2 border rounded" />
-            <input name="type" value={vehicleForm.type} onChange={handleVehicleInput} placeholder="Type" className="p-2 border rounded" />
-            <input name="category" value={vehicleForm.category} onChange={handleVehicleInput} placeholder="Category" className="p-2 border rounded" />
-            <input name="price" value={vehicleForm.price} onChange={handleVehicleInput} placeholder="Price" className="p-2 border rounded" />
-            <input name="year" value={vehicleForm.year} onChange={handleVehicleInput} placeholder="Year" type="number" className="p-2 border rounded" />
-            <input name="engine" value={vehicleForm.engine} onChange={handleVehicleInput} placeholder="Engine" className="p-2 border rounded" />
-            <input name="mileage" value={vehicleForm.mileage} onChange={handleVehicleInput} placeholder="Mileage" className="p-2 border rounded" />
-            <input name="transmission" value={vehicleForm.transmission} onChange={handleVehicleInput} placeholder="Transmission" className="p-2 border rounded" />
-            <input name="fuel" value={vehicleForm.fuel} onChange={handleVehicleInput} placeholder="Fuel" className="p-2 border rounded" />
-            <input name="capacity" value={vehicleForm.capacity} onChange={handleVehicleInput} placeholder="Capacity" className="p-2 border rounded" />
-            <input name="doors" value={vehicleForm.doors} onChange={handleVehicleInput} placeholder="Doors" type="number" className="p-2 border rounded" />
-            <textarea name="description" value={vehicleForm.description} onChange={handleVehicleInput} placeholder="Description" className="p-2 border rounded" />
-            <input name="power" value={vehicleForm.power} onChange={handleVehicleInput} placeholder="Power" className="p-2 border rounded" />
-            <input name="fuelEfficiency" value={vehicleForm.fuelEfficiency} onChange={handleVehicleInput} placeholder="Fuel Efficiency" className="p-2 border rounded" />
-            <label className="flex items-center gap-2">
-              <input type="checkbox" name="isAvailable" checked={vehicleForm.isAvailable} onChange={handleVehicleInput} />
-              Available
-            </label>
-            <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">Add Vehicle</button>
-            {vehicleMsg && <div className="text-sm text-center text-red-600">{vehicleMsg}</div>}
-          </form>
-        )}
         {/* Car Listings Table */}
         <div className={`bg-white rounded-2xl shadow p-8 max-w-full mx-auto transition-all duration-700 hover:shadow-xl ${
           isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
@@ -696,87 +692,38 @@ export default function AgentDashboard() {
                            b.status === 'Confirmed' ? 'Confirmed' :
                            b.status || 'Pending'}
                         </span>
-                        {b.type === 'Car Rental' && !b.returnConfirmed && (
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            <button
-                              title="Confirm Return"
-                              className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
-                              onClick={e => { e.stopPropagation(); setShowConfirm({index: startIndex + i, open: true}); setFullTankChecked(false); }}
-                            >
-                              <FaCheck />
-                            </button>
-                            <button
-                              title="Extend Rental"
-                              className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
-                              onClick={e => { e.stopPropagation(); setShowExtend({index: startIndex + i, open: true}); }}
-                            >
-                              <FaEdit />
-                            </button>
-                            <button
-                              title="Send WhatsApp"
-                              className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
-                              onClick={e => { e.stopPropagation(); window.open(`https://wa.me/${b.phone.replace(/\D/g, '')}?text=Hello ${clientName}, regarding your ${b.type.toLowerCase()}...`, '_blank'); }}
-                            >
-                              <FaWhatsapp />
-                            </button>
-                            <button
-                              title="Call"
-                              className="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
-                              onClick={e => { e.stopPropagation(); window.open(`tel:${b.phone}`, '_blank'); }}
-                            >
-                              <FaPhone />
-                            </button>
-                          </div>
-                        )}
-                        {b.type === 'Hotel' && b.status === 'Pending' && (
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            <button
-                              title="Confirm Booking"
-                              className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
-                              onClick={async (e) => { 
-                                e.stopPropagation(); 
-                                const updatedBookings = [...bookings];
-                                updatedBookings[startIndex + i].status = 'Confirmed';
-                                setBookings(updatedBookings);
-                                
-                                // Send status update notification
-                                try {
-                                  const response = await fetch('/api/notifications/status-update', {
-                                    method: 'POST',
-                                    headers: {
-                                      'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify({
-                                      booking: updatedBookings[startIndex + i],
-                                      status: 'Confirmed'
-                                    })
-                                  });
-                                  if (!response.ok) {
-                                    console.error('Failed to send status update notification');
-                                  }
-                                } catch (error) {
-                                  console.error('Error sending status update notification:', error);
-                                }
-                              }}
-                            >
-                              <FaCheck />
-                            </button>
-                            <button
-                              title="Send WhatsApp"
-                              className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
-                              onClick={e => { e.stopPropagation(); window.open(`https://wa.me/${b.phone.replace(/\D/g, '')}?text=Hello ${clientName}, regarding your hotel booking...`, '_blank'); }}
-                            >
-                              <FaWhatsapp />
-                            </button>
-                            <button
-                              title="Call"
-                              className="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
-                              onClick={e => { e.stopPropagation(); window.open(`tel:${b.phone}`, '_blank'); }}
-                            >
-                              <FaPhone />
-                            </button>
-                          </div>
-                        )}
+                      </td>
+                      <td className="py-6 px-6 align-middle">
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          <button
+                            title="Confirm Return"
+                            className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
+                            onClick={e => { e.stopPropagation(); setShowConfirm({index: startIndex + i, open: true}); setFullTankChecked(false); }}
+                          >
+                            <FaCheck />
+                          </button>
+                          <button
+                            title="Extend Rental"
+                            className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
+                            onClick={e => { e.stopPropagation(); setShowExtend({index: startIndex + i, open: true}); }}
+                          >
+                            <FaEdit />
+                          </button>
+                          <button
+                            title="Send WhatsApp"
+                            className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
+                            onClick={e => { e.stopPropagation(); window.open(`https://wa.me/${b.phone.replace(/\D/g, '')}?text=Hello ${clientName}, regarding your ${b.type.toLowerCase()}...`, '_blank'); }}
+                          >
+                            <FaWhatsapp />
+                          </button>
+                          <button
+                            title="Call"
+                            className="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs transition-all duration-300 hover:scale-110 shadow-sm"
+                            onClick={e => { e.stopPropagation(); window.open(`tel:${b.phone}`, '_blank'); }}
+                          >
+                            <FaPhone />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -887,6 +834,45 @@ export default function AgentDashboard() {
                 Cancel
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showAddVehicle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40" onClick={() => setShowAddVehicle(false)}>
+          <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-lg relative" onClick={e => e.stopPropagation()}>
+            <button className="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-2xl" onClick={() => setShowAddVehicle(false)}>&times;</button>
+            <h2 className="text-xl font-bold mb-4">Add New Vehicle</h2>
+            <form onSubmit={handleAddVehicle} className="flex flex-col gap-2">
+              <input name="name" value={vehicleForm.name} onChange={handleVehicleInput} placeholder="Name" required className="p-2 border rounded" />
+              <div className="flex flex-col gap-2">
+                <label className="font-semibold">Vehicle Image</label>
+                <input type="file" accept="image/*" onChange={handleImageUpload} className="p-2 border rounded" />
+                {uploading && <div className="text-sm text-blue-600">Uploading...</div>}
+                {vehicleForm.image && (
+                  <img src={vehicleForm.image} alt="Preview" className="w-32 h-20 object-contain rounded shadow mb-2" />
+                )}
+              </div>
+              <input name="type" value={vehicleForm.type} onChange={handleVehicleInput} placeholder="Type" className="p-2 border rounded" />
+              <input name="category" value={vehicleForm.category} onChange={handleVehicleInput} placeholder="Category" className="p-2 border rounded" />
+              <input name="price" value={vehicleForm.price} onChange={handleVehicleInput} placeholder="Price" className="p-2 border rounded" />
+              <input name="year" value={vehicleForm.year} onChange={handleVehicleInput} placeholder="Year" type="number" className="p-2 border rounded" />
+              <input name="engine" value={vehicleForm.engine} onChange={handleVehicleInput} placeholder="Engine" className="p-2 border rounded" />
+              <input name="mileage" value={vehicleForm.mileage} onChange={handleVehicleInput} placeholder="Mileage" className="p-2 border rounded" />
+              <input name="transmission" value={vehicleForm.transmission} onChange={handleVehicleInput} placeholder="Transmission" className="p-2 border rounded" />
+              <input name="fuel" value={vehicleForm.fuel} onChange={handleVehicleInput} placeholder="Fuel" className="p-2 border rounded" />
+              <input name="capacity" value={vehicleForm.capacity} onChange={handleVehicleInput} placeholder="Capacity" className="p-2 border rounded" />
+              <input name="doors" value={vehicleForm.doors} onChange={handleVehicleInput} placeholder="Doors" type="number" className="p-2 border rounded" />
+              <textarea name="description" value={vehicleForm.description} onChange={handleVehicleInput} placeholder="Description" className="p-2 border rounded" />
+              <input name="power" value={vehicleForm.power} onChange={handleVehicleInput} placeholder="Power" className="p-2 border rounded" />
+              <input name="fuelEfficiency" value={vehicleForm.fuelEfficiency} onChange={handleVehicleInput} placeholder="Fuel Efficiency" className="p-2 border rounded" />
+              <label className="flex items-center gap-2">
+                <input type="checkbox" name="isAvailable" checked={vehicleForm.isAvailable} onChange={handleVehicleInput} />
+                Available
+              </label>
+              <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">Add Vehicle</button>
+              {vehicleMsg && <div className="text-sm text-center text-red-600">{vehicleMsg}</div>}
+            </form>
           </div>
         </div>
       )}
