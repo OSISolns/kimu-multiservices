@@ -6,10 +6,11 @@ const prisma = new PrismaClient()
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
+    const { id: idParam } = await params
+    const id = parseInt(idParam)
     const data = await req.json()
     
     const notification = await prisma.notification.update({
@@ -43,10 +44,11 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
+    const { id: idParam } = await params
+    const id = parseInt(idParam)
     
     const notification = await prisma.notification.findUnique({
       where: { id }
