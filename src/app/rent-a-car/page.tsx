@@ -110,128 +110,128 @@ export default function RentCarForm() {
         </div>
         <div className="bg-white rounded-xl shadow-lg p-3 sm:p-6 md:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
+                  <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name *</label>
-              <input
+                    <input
                 name="name"
                 value={form.name}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address *</label>
-              <input
-                name="email"
-                type="email"
-                value={form.email}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number *</label>
-              <input
-                name="phone"
-                type="tel"
-                value={form.phone}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Pickup Date *</label>
-                <input
-                  name="pickupDate"
-                  type="date"
-                  value={form.pickupDate}
-                  onChange={handleChange}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Return Date *</label>
-                <input
-                  name="returnDate"
-                  type="date"
-                  value={form.returnDate}
-                  onChange={handleChange}
-                  min={form.pickupDate || new Date().toISOString().split('T')[0]}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Select Vehicle *</label>
-              <select
-                name="selectedVehicle"
-                value={form.selectedVehicle}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              >
-                <option value="">Choose your vehicle</option>
-                {vehicles.map((vehicle) => (
-                  <option key={vehicle.id} value={vehicle.id}>
-                    {vehicle.name} - {vehicle.price} ({vehicle.category})
-                  </option>
-                ))}
-              </select>
-            </div>
-            {selectedVehicleDetails && (
-              <div className="bg-gray-50 rounded-lg p-4 mb-2">
-                <div className="flex items-center gap-4">
-                  <div className="relative w-20 h-20 bg-white rounded-lg overflow-hidden">
-                    <Image
-                      src={selectedVehicleDetails.image}
-                      alt={selectedVehicleDetails.name}
-                      fill
-                      className="object-contain p-2"
+                      onChange={handleChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
                     />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">{selectedVehicleDetails.name}</h3>
-                    <p className="text-sm text-gray-600">{selectedVehicleDetails.category} • {selectedVehicleDetails.type}</p>
-                    <p className="text-lg font-bold text-blue-600">{selectedVehicleDetails.price}</p>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address *</label>
+                    <input
+                      name="email"
+                      type="email"
+                      value={form.email}
+                      onChange={handleChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
                   </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number *</label>
+                    <input
+                      name="phone"
+                      type="tel"
+                      value={form.phone}
+                      onChange={handleChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Pickup Date *</label>
+                    <input
+                      name="pickupDate"
+                      type="date"
+                      value={form.pickupDate}
+                      onChange={handleChange}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Return Date *</label>
+                    <input
+                      name="returnDate"
+                      type="date"
+                      value={form.returnDate}
+                      onChange={handleChange}
+                      min={form.pickupDate || new Date().toISOString().split('T')[0]}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Select Vehicle *</label>
+                  <select
+                    name="selectedVehicle"
+                    value={form.selectedVehicle}
+                    onChange={handleChange}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  >
+                    <option value="">Choose your vehicle</option>
+                    {vehicles.map((vehicle) => (
+                      <option key={vehicle.id} value={vehicle.id}>
+                        {vehicle.name} - {vehicle.price} ({vehicle.category})
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              </div>
-            )}
-            <div>
-              <label className="flex items-start">
-                <input
-                  name="agreeToTerms"
-                  type="checkbox"
-                  checked={form.agreeToTerms}
-                  onChange={handleChange}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1"
-                  required
-                />
-                <span className="ml-2 text-sm text-gray-700">
-                  I agree to the <a href="/terms-and-conditions" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Terms and Conditions</a> *
-                </span>
-              </label>
-            </div>
+                {selectedVehicleDetails && (
+              <div className="bg-gray-50 rounded-lg p-4 mb-2">
+                    <div className="flex items-center gap-4">
+                      <div className="relative w-20 h-20 bg-white rounded-lg overflow-hidden">
+                        <Image
+                          src={selectedVehicleDetails.image}
+                          alt={selectedVehicleDetails.name}
+                          fill
+                          className="object-contain p-2"
+                        />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{selectedVehicleDetails.name}</h3>
+                        <p className="text-sm text-gray-600">{selectedVehicleDetails.category} • {selectedVehicleDetails.type}</p>
+                        <p className="text-lg font-bold text-blue-600">{selectedVehicleDetails.price}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                  <div>
+                  <label className="flex items-start">
+                    <input
+                      name="agreeToTerms"
+                      type="checkbox"
+                      checked={form.agreeToTerms}
+                      onChange={handleChange}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1"
+                      required
+                    />
+                    <span className="ml-2 text-sm text-gray-700">
+                  I agree to the <a href="/terms-and-conditions" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Terms and Conditions</a> and <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Privacy Policy</a> *
+                    </span>
+                  </label>
+                </div>
             {errorMessage && (
               <div className="bg-red-100 text-red-700 px-4 py-3 rounded mb-4 text-center font-semibold text-sm">
                 {errorMessage}
               </div>
             )}
             <div className="flex justify-end pt-4">
-              <button
-                type="submit"
+                <button
+                  type="submit"
                 disabled={loading}
-                className="bg-green-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors ml-auto disabled:opacity-50"
-              >
+                  className="bg-green-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors ml-auto disabled:opacity-50"
+                >
                 {loading ? 'Processing...' : 'Book Now'}
-              </button>
+                </button>
             </div>
           </form>
         </div>
