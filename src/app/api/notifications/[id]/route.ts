@@ -6,14 +6,15 @@ const prisma = new PrismaClient()
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
+    const { id } = await params;
+    const parsedId = parseInt(id);
     const data = await req.json()
     
     const notification = await prisma.notification.update({
-      where: { id },
+      where: { id: parsedId },
       data: {
         ...(data.read !== undefined && { read: data.read }),
         ...(data.message && { message: data.message }),
@@ -26,7 +27,7 @@ export async function PATCH(
       userId: notification.userId || undefined,
       action: data.read !== undefined ? ActivityActions.NOTIFICATION_READ : ActivityActions.NOTIFICATION_CREATED,
       details: {
-        notificationId: id,
+        notificationId: parsedId,
         action: data.read !== undefined ? 'marked as read' : 'updated',
         read: data.read
       },
@@ -43,17 +44,18 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
+    const { id } = await params;
+    const parsedId = parseInt(id);
     
     const notification = await prisma.notification.findUnique({
-      where: { id }
+      where: { id: parsedId }
     })
     
     await prisma.notification.delete({
-      where: { id }
+      where: { id: parsedId }
     })
     
     // Log activity
@@ -61,7 +63,7 @@ export async function DELETE(
       userId: notification?.userId || undefined,
       action: ActivityActions.NOTIFICATION_DELETED,
       details: {
-        notificationId: id,
+        notificationId: parsedId,
         message: notification?.message
       },
       ipAddress: getIpAddress(req),
