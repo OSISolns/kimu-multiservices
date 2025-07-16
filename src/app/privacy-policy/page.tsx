@@ -11,7 +11,7 @@ export default function PrivacyPolicy() {
       <section className="mb-6">
         <h2 className="text-xl font-semibold mb-2">2. Information We Collect</h2>
         <ul className="list-disc pl-6 text-gray-700">
-          <li>Personal details (name, email, phone number, address, date of birth, driver's license, etc.)</li>
+          <li>Personal details (name, email, phone number, address, date of birth, driver&apos;s license, etc.)</li>
           <li>Booking and rental information</li>
           <li>Payment details (only as required for processing transactions)</li>
           <li>Website usage data (IP address, browser type, device information, cookies, etc.)</li>
