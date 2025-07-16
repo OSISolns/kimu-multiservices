@@ -7,9 +7,9 @@ export default function TermsAndConditions() {
       <section className="mb-6">
         <h2 className="text-xl font-semibold mb-2">1. Rental Requirements</h2>
         <ul className="list-disc pl-6 text-gray-700">
-          <li>Renter must be at least 21 years old and possess a valid driver's license.</li>
-          <li>International renters must present a valid passport and driver's license.</li>
-          <li>All information provided must be accurate and complete.</li>
+          <li>Renter must be at least 21 years old and possess a valid driver&apos;s license.</li>
+          <li>International renters must present a valid passport and driver&apos;s license.</li>
+          <li>All information provided must be accurate and up-to-date.</li>
         </ul>
       </section>
       <section className="mb-6">
