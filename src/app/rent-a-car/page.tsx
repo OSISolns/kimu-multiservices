@@ -215,7 +215,7 @@ export default function RentCarForm() {
                   required
                 />
                 <span className="ml-2 text-sm text-gray-700">
-                  I agree to the <a href="#" className="text-blue-600 hover:underline">Terms and Conditions</a> *
+                  I agree to the <a href="/terms-and-conditions" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Terms and Conditions</a> *
                 </span>
               </label>
             </div>
