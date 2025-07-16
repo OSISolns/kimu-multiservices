@@ -12,21 +12,21 @@ const AGENT_EMAILS = [
 
 interface BookingData {
   id: number;
-  type: 'Car Rental' | 'Hotel';
-  name?: string;
-  guestName?: string;
-  phone: string;
-  carType?: string;
-  roomType?: string;
-  pickupDate?: string;
-  pickupTime?: string;
-  returnDate?: string;
-  returnTime?: string;
-  checkInDate?: string;
-  checkOutDate?: string;
-  guests?: string;
-  nationality?: string;
-  createdAt: string;
+  type: string;
+  name?: string | null;
+  guestName?: string | null;
+  phone: string | null;
+  carType?: string | null;
+  roomType?: string | null;
+  pickupDate?: string | null;
+  pickupTime?: string | null;
+  returnDate?: string | null;
+  returnTime?: string | null;
+  checkInDate?: string | null;
+  checkOutDate?: string | null;
+  guests?: string | null;
+  nationality?: string | null;
+  createdAt: string | Date;
 }
 
 export async function sendBookingNotification(booking: BookingData) {

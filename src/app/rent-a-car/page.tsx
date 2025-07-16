@@ -1,6 +1,7 @@
 "use client"
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 interface FormData {
   // Personal Information
@@ -111,6 +112,14 @@ export default function RentCarForm() {
   const [totalPrice, setTotalPrice] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [vehicles, setVehicles] = useState<any[]>([]);
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [waForm, setWaForm] = useState({
+    name: '',
+    carId: '',
+    days: 1,
+    message: ''
+  });
+  const waModalRef = useRef<HTMLDivElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -120,6 +129,11 @@ export default function RentCarForm() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+  };
+
+  const handleWaFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setWaForm(prev => ({ ...prev, [name]: value }));
   };
 
   // Calculate total price based on selections
@@ -217,6 +231,29 @@ export default function RentCarForm() {
   else if (currentStep === 4) canProceed = true;
   else if (currentStep === 5) canProceed = !!isStep5Valid;
 
+  const handleWaModalOpen = () => {
+    setWaForm({
+      name: `${form.firstName} ${form.lastName}`.trim(),
+      carId: form.selectedVehicle,
+      days: 1,
+      message: ''
+    });
+    setShowWhatsAppModal(true);
+  };
+
+  const handleWaModalClose = () => setShowWhatsAppModal(false);
+
+  const handleWaSend = (e: React.FormEvent) => {
+    e.preventDefault();
+    const car = vehicles.find(v => v.id == waForm.carId)?.name || 'a car';
+    const msg =
+      waForm.name && waForm.carId && waForm.days
+        ? `Hello my name is ${waForm.name}, I would like to rent ${car} for ${waForm.days} day${waForm.days > 1 ? 's' : ''}. ${waForm.message}`
+        : 'Hello, I would like to book a car via WhatsApp.';
+    window.open(`https://wa.me/250798284312?text=${encodeURIComponent(msg)}`, '_blank');
+    setShowWhatsAppModal(false);
+  };
+
   if (success) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-2 sm:p-4">
@@ -245,6 +282,98 @@ export default function RentCarForm() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 py-4 sm:py-8">
       <div className="max-w-2xl sm:max-w-4xl md:max-w-6xl mx-auto px-2 sm:px-4 md:px-8">
+        {/* WhatsApp Booking Button */}
+        <style>{`
+          @keyframes pulse-whatsapp {
+            0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(34,197,94,0); }
+            100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+          }
+        `}</style>
+        <div className="flex justify-end mb-4">
+          <button
+            type="button"
+            onClick={handleWaModalOpen}
+            className="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded shadow transition animate-pulse-whatsapp"
+            style={{ animation: 'pulse-whatsapp 1.5s infinite' }}
+          >
+            Book via WhatsApp
+          </button>
+        </div>
+        {/* WhatsApp Modal */}
+        {showWhatsAppModal && (
+          <div ref={waModalRef} className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
+              <button
+                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                onClick={handleWaModalClose}
+                aria-label="Close"
+              >
+                &times;
+              </button>
+              <h2 className="text-lg font-bold mb-4">Book via WhatsApp</h2>
+              <form onSubmit={handleWaSend} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Your Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={waForm.name}
+                    onChange={handleWaFormChange}
+                    className="w-full border rounded p-2"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Select Car</label>
+                  <select
+                    name="carId"
+                    value={waForm.carId}
+                    onChange={handleWaFormChange}
+                    className="w-full border rounded p-2"
+                    required
+                  >
+                    <option value="">Choose a car</option>
+                    {vehicles.map(vehicle => (
+                      <option key={vehicle.id} value={vehicle.id}>
+                        {vehicle.name} - {vehicle.price}{vehicle.category ? ` (${vehicle.category})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Number of Days</label>
+                  <input
+                    type="number"
+                    name="days"
+                    min={1}
+                    value={waForm.days}
+                    onChange={handleWaFormChange}
+                    className="w-full border rounded p-2"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">What do you want?</label>
+                  <textarea
+                    name="message"
+                    value={waForm.message}
+                    onChange={handleWaFormChange}
+                    className="w-full border rounded p-2"
+                    rows={2}
+                    placeholder="Any special requests or info?"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded shadow transition"
+                >
+                  Send via WhatsApp
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
         {/* Header */}
         <div className="text-center mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">Rent a Car</h1>
@@ -526,7 +655,7 @@ export default function RentCarForm() {
                   >
                     <option value="">Choose your vehicle</option>
                     {vehicles.map((vehicle) => (
-                      <option key={vehicle.id} value={vehicle.name}>
+                      <option key={vehicle.id} value={vehicle.id}>
                         {vehicle.name} - {vehicle.price} ({vehicle.category})
                       </option>
                     ))}

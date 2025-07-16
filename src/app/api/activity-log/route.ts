@@ -39,13 +39,7 @@ export async function GET(req: NextRequest) {
         where,
         orderBy: { createdAt: 'desc' },
         skip,
-        take: limit,
-        include: {
-          // Include user info if you want to show username
-          // user: {
-          //   select: { username: true }
-          // }
-        }
+        take: limit
       }),
       prisma.activityLog.count({ where })
     ])

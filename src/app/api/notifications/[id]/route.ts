@@ -6,7 +6,7 @@ const prisma = new PrismaClient()
 
 export async function PATCH(
   req: NextRequest,
-  context: { params: Record<string, string> }
+  context: any
 ) {
   try {
     const id = parseInt(context.params.id)
@@ -24,7 +24,7 @@ export async function PATCH(
     // Log activity
     await logActivity({
       userId: notification.userId || undefined,
-      action: data.read !== undefined ? ActivityActions.NOTIFICATION_READ : ActivityActions.NOTIFICATION_UPDATED,
+      action: data.read !== undefined ? ActivityActions.NOTIFICATION_READ : ActivityActions.NOTIFICATION_CREATED,
       details: {
         notificationId: id,
         action: data.read !== undefined ? 'marked as read' : 'updated',
@@ -43,7 +43,7 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  context: { params: Record<string, string> }
+  context: any
 ) {
   try {
     const id = parseInt(context.params.id)

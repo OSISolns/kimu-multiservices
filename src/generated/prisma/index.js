@@ -233,6 +233,7 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
@@ -243,7 +244,7 @@ const config = {
   },
   "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel User {\n  id                    Int      @id @default(autoincrement())\n  username              String   @unique\n  passwordHash          String\n  role                  String   @default(\"agent\")\n  createdAt             DateTime @default(now())\n  totpSecret            String?\n  emailNotifications    Boolean  @default(false)\n  whatsappNotifications Boolean  @default(false)\n}\n\nmodel Vehicle {\n  id             Int     @id @default(autoincrement())\n  name           String\n  image          String\n  type           String\n  category       String\n  price          String\n  year           Int\n  engine         String\n  mileage        String\n  transmission   String\n  fuel           String\n  capacity       String\n  doors          Int\n  description    String\n  isAvailable    Boolean @default(true)\n  power          String\n  fuelEfficiency String\n}\n\nmodel Booking {\n  id              Int      @id @default(autoincrement())\n  type            String\n  name            String?\n  phone           String?\n  nationality     String?\n  idOrPassport    String?\n  carType         String?\n  pickupDate      String?\n  pickupTime      String?\n  returnDate      String?\n  returnTime      String?\n  rentalDays      Int?\n  returnConfirmed Boolean  @default(false)\n  fullTank        Boolean  @default(false)\n  status          String   @default(\"Active\")\n  createdAt       DateTime @default(now())\n}\n\nmodel Notification {\n  id        Int      @id @default(autoincrement())\n  userId    Int?\n  message   String\n  type      String\n  read      Boolean  @default(false)\n  createdAt DateTime @default(now())\n}\n\nmodel ActivityLog {\n  id        Int      @id @default(autoincrement())\n  userId    Int?\n  action    String\n  details   String?\n  ipAddress String?\n  userAgent String?\n  createdAt DateTime @default(now())\n}\n\nmodel SystemLog {\n  id        Int      @id @default(autoincrement())\n  action    String\n  details   String?\n  createdBy Int?\n  createdAt DateTime @default(now())\n}\n",
   "inlineSchemaHash": "0fd61829678bc337b6e6cdc99bf4168587722860fd899352570b0be5263cd424",
-  "copyEngine": false
+  "copyEngine": true
 }
 
 const fs = require('fs')
@@ -280,3 +281,9 @@ const PrismaClient = getPrismaClient(config)
 exports.PrismaClient = PrismaClient
 Object.assign(exports, Prisma)
 
+// file annotations for bundling tools to include these files
+path.join(__dirname, "query_engine-windows.dll.node");
+path.join(process.cwd(), "src/generated/prisma/query_engine-windows.dll.node")
+// file annotations for bundling tools to include these files
+path.join(__dirname, "schema.prisma");
+path.join(process.cwd(), "src/generated/prisma/schema.prisma")

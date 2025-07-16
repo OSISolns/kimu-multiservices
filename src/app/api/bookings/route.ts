@@ -3,14 +3,33 @@ import { PrismaClient } from '@/generated/prisma'
 import { sendBookingNotification, sendBookingStatusUpdate } from '../../services/notifications'
 import { logActivity, ActivityActions, getIpAddress, getUserAgent } from '../../services/activityLog'
 
-const prisma = new PrismaClient()
+const globalForPrisma = global as unknown as { prisma: PrismaClient }
+const prisma = globalForPrisma.prisma || new PrismaClient()
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const bookings = await prisma.booking.findMany({
-      orderBy: { createdAt: 'desc' }
+    const { searchParams } = new URL(req.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '50')
+    const skip = (page - 1) * limit
+    const [bookings, total] = await Promise.all([
+      prisma.booking.findMany({
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit
+      }),
+      prisma.booking.count()
+    ])
+    return NextResponse.json({
+      bookings,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
     })
-    return NextResponse.json(bookings)
   } catch (error) {
     console.error('Error fetching bookings:', error)
     return NextResponse.json({ error: 'Failed to fetch bookings' }, { status: 500 })
@@ -96,7 +115,27 @@ export async function POST(req: NextRequest) {
       
       return NextResponse.json({ success: true, booking: newBooking })
     } else {
-      return NextResponse.json({ success: false, error: 'Invalid booking type' }, { status: 400 })
+      // Generic handler for other booking types
+      const newBooking = await prisma.booking.create({
+        data: {
+          type: data.type,
+          name: data.name || data.guestName || null,
+          phone: data.phone || null,
+          nationality: data.nationality || null,
+          idOrPassport: data.idOrPassport || null,
+          carType: data.carType || null,
+          pickupDate: data.pickupDate || data.checkInDate || null,
+          pickupTime: data.pickupTime || null,
+          returnDate: data.returnDate || data.checkOutDate || null,
+          returnTime: data.returnTime || null,
+          rentalDays: data.rentalDays || null,
+          returnConfirmed: false,
+          fullTank: false,
+          status: 'Active'
+        }
+      })
+      // Optionally: log activity, send notification, etc.
+      return NextResponse.json({ success: true, booking: newBooking })
     }
   } catch (error) {
     console.error('Error creating booking:', error)
