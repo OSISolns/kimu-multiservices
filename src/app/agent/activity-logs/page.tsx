@@ -57,7 +57,7 @@ export default function ActivityLogsPage() {
 
   useEffect(() => {
     fetchActivityLogs();
-  }, [filters]);
+  }, [filters, fetchActivityLogs]);
 
   const handleFilterChange = (key: string, value: string | number) => {
     setFilters(prev => ({ ...prev, [key]: value, page: 1 }));

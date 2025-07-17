@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
+import Image from 'next/image';
 
 export default function Settings() {
   const [unlocked, setUnlocked] = useState(false);
@@ -507,7 +508,7 @@ export default function Settings() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 py-12 px-4">
         <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md flex flex-col items-center">
-          <img src="/logo.png" alt="Company Logo" className="h-16 mb-4" />
+          <Image src="/logo.png" alt="Company Logo" width={64} height={64} className="h-16 mb-4" />
           <h1 className="text-2xl font-bold mb-4 text-orange-600">Agent Settings</h1>
           <p className="mb-6 text-gray-500 text-sm text-center">This page is protected. Please enter the password to continue.</p>
           <form onSubmit={handleUnlock} className="w-full flex flex-col gap-4">
