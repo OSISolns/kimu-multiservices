@@ -5,72 +5,79 @@ import { logActivity, ActivityActions, getIpAddress, getUserAgent } from '../../
 const prisma = new PrismaClient()
 
 export async function PATCH(
-  req: NextRequest,
-  context: { params: Record<string, string> }
+  request: NextRequest,
+  { params }: { params: { id: string } }
 ) {
   try {
-    const id = parseInt(context.params.id)
-    const data = await req.json()
-    
+    const id = parseInt(params.id)
+    const data = await request.json()
+
     const notification = await prisma.notification.update({
       where: { id },
       data: {
         ...(data.read !== undefined && { read: data.read }),
         ...(data.message && { message: data.message }),
-        ...(data.type && { type: data.type })
-      }
+        ...(data.type && { type: data.type }),
+      },
     })
-    
-    // Log activity
+
     await logActivity({
       userId: notification.userId || undefined,
-      action: data.read !== undefined ? ActivityActions.NOTIFICATION_READ : ActivityActions.NOTIFICATION_UPDATED,
+      action:
+        data.read !== undefined
+          ? ActivityActions.NOTIFICATION_READ
+          : ActivityActions.NOTIFICATION_UPDATED,
       details: {
         notificationId: id,
         action: data.read !== undefined ? 'marked as read' : 'updated',
-        read: data.read
+        read: data.read,
       },
-      ipAddress: getIpAddress(req),
-      userAgent: getUserAgent(req)
+      ipAddress: getIpAddress(request),
+      userAgent: getUserAgent(request),
     })
-    
+
     return NextResponse.json({ success: true, notification })
   } catch (error) {
     console.error('Error updating notification:', error)
-    return NextResponse.json({ success: false, error: 'Failed to update notification' }, { status: 500 })
+    return NextResponse.json(
+      { success: false, error: 'Failed to update notification' },
+      { status: 500 }
+    )
   }
 }
 
 export async function DELETE(
-  req: NextRequest,
-  context: { params: Record<string, string> }
+  request: NextRequest,
+  { params }: { params: { id: string } }
 ) {
   try {
-    const id = parseInt(context.params.id)
-    
+    const id = parseInt(params.id)
+
     const notification = await prisma.notification.findUnique({
-      where: { id }
+      where: { id },
     })
-    
+
     await prisma.notification.delete({
-      where: { id }
+      where: { id },
     })
-    
-    // Log activity
+
     await logActivity({
       userId: notification?.userId || undefined,
       action: ActivityActions.NOTIFICATION_DELETED,
       details: {
         notificationId: id,
-        message: notification?.message
+        message: notification?.message,
       },
-      ipAddress: getIpAddress(req),
-      userAgent: getUserAgent(req)
+      ipAddress: getIpAddress(request),
+      userAgent: getUserAgent(request),
     })
-    
+
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting notification:', error)
-    return NextResponse.json({ success: false, error: 'Failed to delete notification' }, { status: 500 })
+    return NextResponse.json(
+      { success: false, error: 'Failed to delete notification' },
+      { status: 500 }
+    )
   }
-} 
+}
