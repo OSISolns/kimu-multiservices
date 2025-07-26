@@ -1,24 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@/generated/prisma'
-import { logActivity, ActivityActions, getIpAddress, getUserAgent } from '../../../services/activityLog'
+import {
+  logActivity,
+  ActivityActions,
+  getIpAddress,
+  getUserAgent
+} from '../../../services/activityLog'
 
 const prisma = new PrismaClient()
 
 export async function PATCH(
-  request: NextRequest,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const id = parseInt(params.id)
-    const data = await request.json()
+    const data = await req.json()
 
     const notification = await prisma.notification.update({
       where: { id },
       data: {
         ...(data.read !== undefined && { read: data.read }),
         ...(data.message && { message: data.message }),
-        ...(data.type && { type: data.type }),
-      },
+        ...(data.type && { type: data.type })
+      }
     })
 
     await logActivity({
@@ -30,10 +35,10 @@ export async function PATCH(
       details: {
         notificationId: id,
         action: data.read !== undefined ? 'marked as read' : 'updated',
-        read: data.read,
+        read: data.read
       },
-      ipAddress: getIpAddress(request),
-      userAgent: getUserAgent(request),
+      ipAddress: getIpAddress(req),
+      userAgent: getUserAgent(req)
     })
 
     return NextResponse.json({ success: true, notification })
@@ -47,18 +52,18 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  request: NextRequest,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const id = parseInt(params.id)
 
     const notification = await prisma.notification.findUnique({
-      where: { id },
+      where: { id }
     })
 
     await prisma.notification.delete({
-      where: { id },
+      where: { id }
     })
 
     await logActivity({
@@ -66,10 +71,10 @@ export async function DELETE(
       action: ActivityActions.NOTIFICATION_DELETED,
       details: {
         notificationId: id,
-        message: notification?.message,
+        message: notification?.message
       },
-      ipAddress: getIpAddress(request),
-      userAgent: getUserAgent(request),
+      ipAddress: getIpAddress(req),
+      userAgent: getUserAgent(req)
     })
 
     return NextResponse.json({ success: true })
