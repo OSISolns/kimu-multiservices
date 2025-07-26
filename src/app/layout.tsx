@@ -85,7 +85,6 @@ export default function RootLayout({
                 <h3 className="text-xl font-bold mb-4">Contact Us</h3>
                 <p>Phone: +250 798 284 312</p>
                 <p>Phone: +250 788 447 574</p>
-                <p>Phone: +250 788 354 654</p>
                 <p>Email: kimutransport6@gmail.com</p>
                 <p>Address: KG 24 Avenue</p>
               </div>
