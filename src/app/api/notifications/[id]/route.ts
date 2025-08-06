@@ -32,7 +32,7 @@ export async function PATCH(
       action:
         data.read !== undefined
           ? ActivityActions.NOTIFICATION_READ
-          : ActivityActions.NOTIFICATION_UPDATED,
+          : ActivityActions.NOTIFICATION_CREATED,
       details: {
         notificationId: parsedId,
         action: data.read !== undefined ? 'marked as read' : 'updated',
