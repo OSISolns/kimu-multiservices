@@ -41,28 +41,33 @@ var bcrypt = require('bcryptjs');
 var prisma = new PrismaClient();
 function main() {
     return __awaiter(this, void 0, void 0, function () {
-        var agentTotpSecret, adminTotpSecret, adminPassword, adminHash;
+        var agentTotpSecret, agentHash, adminTotpSecret, adminPassword, adminHash, accountantTotpSecret, accountantHash, accountantPassword;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     agentTotpSecret = speakeasy.generateSecret({ length: 20 }).base32;
+                    // Hash agent password
+                    return [4 /*yield*/, bcrypt.hash('agent1@2025', 10)];
+                case 1:
+                    agentHash = _a.sent();
                     // Upsert agent user
                     return [4 /*yield*/, prisma.user.upsert({
                             where: { username: 'agent1' },
-                            update: { totpSecret: agentTotpSecret },
+                            update: { passwordHash: agentHash, totpSecret: agentTotpSecret, role: 'staff' },
                             create: {
                                 username: 'agent1',
-                                passwordHash: 'demo', // Not used for TOTP, just a placeholder
+                                passwordHash: agentHash,
+                                role: 'staff',
                                 totpSecret: agentTotpSecret,
                             },
                         })];
-                case 1:
+                case 2:
                     // Upsert agent user
                     _a.sent();
                     adminTotpSecret = speakeasy.generateSecret({ length: 20 }).base32;
                     adminPassword = 'kimu@2025';
                     return [4 /*yield*/, bcrypt.hash(adminPassword, 10)];
-                case 2:
+                case 3:
                     adminHash = _a.sent();
                     return [4 /*yield*/, prisma.user.upsert({
                             where: { username: 'admin' },
@@ -74,9 +79,26 @@ function main() {
                                 totpSecret: adminTotpSecret,
                             },
                         })];
-                case 3:
+                case 4:
                     _a.sent();
-                    console.log('Seeded agent1 and admin user with TOTP secrets.');
+                    accountantTotpSecret = speakeasy.generateSecret({ length: 20 }).base32;
+                    accountantPassword = 'accountant@2025';
+                    return [4 /*yield*/, bcrypt.hash(accountantPassword, 10)];
+                case 5:
+                    accountantHash = _a.sent();
+                    return [4 /*yield*/, prisma.user.upsert({
+                            where: { username: 'accountant' },
+                            update: { passwordHash: accountantHash, role: 'accountant', totpSecret: accountantTotpSecret },
+                            create: {
+                                username: 'accountant',
+                                passwordHash: accountantHash,
+                                role: 'accountant',
+                                totpSecret: accountantTotpSecret,
+                            },
+                        })];
+                case 6:
+                    _a.sent();
+                    console.log('Seeded agent1, admin, and accountant users with TOTP secrets.');
                     return [2 /*return*/];
             }
         });

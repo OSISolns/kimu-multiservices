@@ -11,8 +11,10 @@ datasource db {
 model User {
   id                    Int      @id @default(autoincrement())
   username              String   @unique
+  fullName              String?
   passwordHash          String
   role                  String   @default("agent")
+  profilePicture        String?
   createdAt             DateTime @default(now())
   totpSecret            String?
   emailNotifications    Boolean  @default(false)
@@ -83,4 +85,17 @@ model SystemLog {
   details   String?
   createdBy Int?
   createdAt DateTime @default(now())
+}
+
+model Payment {
+  id            Int      @id @default(autoincrement())
+  bookingId     Int
+  bookingType   String // e.g. "Car Rental", "Hotel", "Taxi"
+  amount        Float
+  currency      String   @default("RWF")
+  paymentMethod String // "cash", "card", "mobile_money", "bank_transfer"
+  status        String // "pending", "completed", "failed", "refunded"
+  transactionId String?
+  paymentDate   DateTime @default(now())
+  userId        Int?
 }

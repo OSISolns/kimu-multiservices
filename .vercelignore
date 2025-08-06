@@ -1,0 +1,2 @@
+# Exclude the Convex app directory from Vercel deployment
+accounting_and_finance_management_app/ 

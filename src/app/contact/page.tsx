@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import Head from 'next/head'
 import AnimatedSection from '../../components/AnimatedSection'
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaTiktok } from 'react-icons/fa6'
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaTiktok, FaCar, FaHotel, FaYoutube } from 'react-icons/fa6'
+import Image from 'next/image'
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -105,7 +106,26 @@ export default function Contact() {
         <meta property="og:url" content="https://kimu.osisolutions.pro/contact" />
         <meta property="og:image" content="/logo.png" />
       </Head>
-      <div className="min-h-screen py-12 bg-gradient-to-br from-blue-50 to-white">
+      <div className="min-h-screen relative overflow-hidden py-12">
+        {/* Animated Background */}
+        <div className="absolute inset-0 -z-10 animate-fade-in">
+          <svg width="100%" height="100%" className="w-full h-full" style={{ position: 'absolute', top: 0, left: 0 }}>
+            <circle cx="20%" cy="20%" r="120" fill="#e0f2fe" opacity="0.5">
+              <animate attributeName="r" values="120;140;120" dur="6s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="80%" cy="80%" r="100" fill="#fef9c3" opacity="0.4">
+              <animate attributeName="r" values="100;120;100" dur="7s" repeatCount="indefinite" />
+            </circle>
+          </svg>
+          {/* Car Icon Animation */}
+          <FaCar className="text-blue-200 absolute left-10 top-10 text-[120px] animate-bounce-slow" style={{ filter: 'blur(1px)' }} />
+          {/* Hotel Icon Animation */}
+          <FaHotel className="text-yellow-200 absolute right-10 bottom-10 text-[100px] animate-bounce-slower" style={{ filter: 'blur(1px)' }} />
+          {/* Company Logo Animation */}
+          <div className="absolute right-10 top-10 animate-fade-scale">
+            <Image src="/logo.png" alt="Company Logo" width={90} height={90} className="opacity-60" style={{ filter: 'blur(0.5px)' }} />
+          </div>
+        </div>
         <div className="container mx-auto px-4">
           <h1 className="text-4xl font-bold text-center mb-12">Contact Us</h1>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -151,9 +171,10 @@ export default function Contact() {
                         className="rounded-full bg-black hover:bg-pink-600 hover:text-white text-white transition-all p-3 text-2xl shadow-sm">
                         <FaTiktok />
                       </a>
-                      <a href="https://linkedin.com/company/kimu-rw" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"
-                        className="rounded-full bg-blue-100 hover:bg-blue-800 hover:text-white text-blue-800 transition-all p-3 text-2xl shadow-sm">
-                        <FaLinkedinIn />
+                      <a href="https://www.youtube.com/@kimu_transport" target="_blank" rel="noopener noreferrer" aria-label="YouTube - Kimu Transport & Multiservices Ltd"
+                        title="Kimu Transport & Multiservices Ltd on YouTube"
+                        className="rounded-full bg-red-100 hover:bg-red-600 hover:text-white text-red-600 transition-all p-3 text-2xl shadow-sm">
+                        <FaYoutube />
                       </a>
                     </div>
                   </div>

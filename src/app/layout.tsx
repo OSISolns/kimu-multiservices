@@ -4,6 +4,7 @@ import './globals.css'
 import Image from 'next/image'
 import FloatingBackground from '@/components/FloatingBackground'
 import MobileNav from '@/components/MobileNav'
+import { UserProvider } from './UserContext'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -49,6 +50,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+        <UserProvider>
         <FloatingBackground />
         <header className="bg-white shadow-md">
           <nav className="container mx-auto px-4 py-4">
@@ -78,14 +80,13 @@ export default function RootLayout({
           </nav>
         </header>
         <main>{children}</main>
-        <footer className="bg-blue-700 text-white py-8">
+        <footer className="bg-blue-700 text-white py-8 relative overflow-hidden">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div>
                 <h3 className="text-xl font-bold mb-4">Contact Us</h3>
                 <p>Phone: +250 798 284 312</p>
                 <p>Phone: +250 788 447 574</p>
-                <p>Phone: +250 788 354 654</p>
                 <p>Email: kimutransport6@gmail.com</p>
                 <p>Address: KG 24 Avenue</p>
               </div>
@@ -113,7 +114,18 @@ export default function RootLayout({
               <p>Copyright © {new Date().getFullYear()} KIMU Transport & Multiservices | Powered by <a href="https://osisolutions.pro" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-orange-300">OSI SOLUTIONS LTD</a></p>
             </div>
           </div>
+          {/* Faint Logo Silhouette */}
+          <div className="absolute right-0 top-1/2 transform -translate-y-1/2 opacity-40 pointer-events-none">
+            <Image 
+              src="/logo.png" 
+              alt="KIMU Logo Silhouette" 
+              width={300} 
+              height={300}
+              className="filter brightness-0 invert opacity-90"
+            />
+          </div>
         </footer>
+        </UserProvider>
       </body>
     </html>
   )

@@ -5,9 +5,19 @@ import speakeasy from 'speakeasy';
 
 const prisma = new PrismaClient();
 
+// Add a reusable role-checking utility
+function hasRole(user: any, allowedRoles: string[]) {
+  return allowedRoles.includes(user.role);
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { id, username, newUsername, newRole, newPassword } = await req.json();
+    const username = req.headers.get('x-username');
+    const user = username ? await prisma.user.findUnique({ where: { username } }) : null;
+    if (!user || !hasRole(user, ['admin'])) {
+      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+    }
+    const { id, newUsername, newRole, newPassword } = await req.json();
     if (!id && !username) {
       return NextResponse.json({ error: 'Missing user identifier' }, { status: 400 });
     }
@@ -22,7 +32,7 @@ export async function POST(req: NextRequest) {
       }
     }
     // Fetch the user to check for TOTP secret
-    const userRecord = await prisma.user.findUnique({ where: id ? { id } : { username } });
+    const userRecord = await prisma.user.findUnique({ where: id ? { id } : { username: username! } });
     let totpSecret = userRecord?.totpSecret;
     if (!totpSecret) {
       totpSecret = speakeasy.generateSecret({ length: 20, name: `KIMU:${newUsername}`, issuer: 'KIMU' }).base32;
@@ -36,7 +46,7 @@ export async function POST(req: NextRequest) {
       dataToUpdate.passwordHash = await bcrypt.hash(newPassword, 10);
     }
     const updated = await prisma.user.update({
-      where: id ? { id } : { username },
+      where: id ? { id } : { username: username! },
       data: dataToUpdate,
     });
     return NextResponse.json({ user: { id: updated.id, username: updated.username, role: updated.role, totpSecret: updated.totpSecret } });

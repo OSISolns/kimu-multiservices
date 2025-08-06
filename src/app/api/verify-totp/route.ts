@@ -26,11 +26,14 @@ export async function POST(req: NextRequest) {
       secret: user.totpSecret,
       encoding: 'base32',
       token: code,
-      window: 2, // Allow 2 time steps (60 seconds) before and after current time
+      window: 5, // Allow 5 time steps (150 seconds) before and after current time
     });
     
     // Log for debugging (remove in production)
     console.log(`TOTP verification for ${username}: ${valid ? 'SUCCESS' : 'FAILED'}`);
+    console.log(`Secret: ${user.totpSecret}`);
+    console.log(`Code provided: ${code}`);
+    console.log(`Current time: ${new Date().toISOString()}`);
     
     return NextResponse.json({ valid });
   } catch (e) {

@@ -7,6 +7,11 @@ const globalForPrisma = global as unknown as { prisma: PrismaClient }
 const prisma = globalForPrisma.prisma || new PrismaClient()
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
+// Add a reusable role-checking utility
+function hasRole(user: any, allowedRoles: string[]) {
+  return allowedRoles.includes(user.role);
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
@@ -38,7 +43,17 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const username = req.headers.get('x-username');
+    const user = username ? await prisma.user.findUnique({ where: { username } }) : null;
+    if (!user || !hasRole(user, ['staff', 'admin', 'transport-officer'])) {
+      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+    }
     const data = await req.json()
+    
+    // Add validation for required 'type' field
+    if (!data.type) {
+      return NextResponse.json({ success: false, error: "Booking 'type' is required." }, { status: 400 });
+    }
     
     if (data.type === 'Car Rental') {
       if (!data.idOrPassport || !data.nationality) {

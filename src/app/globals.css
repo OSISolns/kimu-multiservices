@@ -17,6 +17,29 @@
       transform: translateY(0);
     }
   }
+
+  @keyframes bounce-slow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-16px); }
+  }
+  @keyframes bounce-slower {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  .animate-bounce-slow {
+    animation: bounce-slow 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+  .animate-bounce-slower {
+    animation: bounce-slower 8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+
+  @keyframes fade-scale {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.08); }
+  }
+  .animate-fade-scale {
+    animation: fade-scale 7s ease-in-out infinite;
+  }
 }
 
 /* You can add your custom global styles below */ 

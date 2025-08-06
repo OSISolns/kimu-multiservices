@@ -184,9 +184,28 @@ const vehicles = [
   },
 ];
 
+function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+const expandedVehicles = [];
+expandedVehicles.forEach(base => {
+  const count = randomInt(10, 15);
+  for (let i = 0; i < count; i++) {
+    expandedVehicles.push({
+      ...base,
+      year: randomInt(2010, 2025),
+      mileage: `${randomInt(20000, 200000)}km`,
+      isAvailable: Math.random() > 0.2,
+      // Optionally, add a unique suffix to name to avoid duplicates
+      name: `${base.name} #${i+1}`,
+    });
+  }
+});
+
 async function main() {
   await prisma.vehicle.createMany({
-    data: vehicles,
+    data: expandedVehicles,
     skipDuplicates: true,
   });
   console.log('Seeded all vehicles.');

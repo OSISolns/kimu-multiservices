@@ -1,6 +1,8 @@
 "use client"
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { FaCar, FaHotel } from 'react-icons/fa';
 
 interface FormData {
   name: string;
@@ -10,6 +12,34 @@ interface FormData {
   returnDate: string;
   selectedVehicle: string;
   agreeToTerms: boolean;
+  idOrPassport: string;
+  nationality: string;
+  otherNationality: string;
+}
+
+function HotelPromptModal({ onProceed, onClose }: { onProceed: () => void, onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-xs w-full mx-2 p-6 text-center animate-fade-in">
+        <h3 className="text-lg font-bold text-blue-900 mb-2">Booking Confirmed!</h3>
+        <p className="text-sm text-gray-700 mb-4">Would you like to see our hotel/accommodation offers?</p>
+        <div className="flex gap-2 justify-center">
+          <button
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            onClick={onProceed}
+          >
+            Yes, show me hotels
+          </button>
+          <button
+            className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+            onClick={onClose}
+          >
+            No, thanks
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function RentCarForm() {
@@ -21,12 +51,22 @@ export default function RentCarForm() {
     returnDate: '',
     selectedVehicle: '',
     agreeToTerms: false,
+    idOrPassport: '',
+    nationality: '',
+    otherNationality: '',
   });
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [selectedVehicleDetails, setSelectedVehicleDetails] = useState<any>(null);
+  const router = useRouter();
+  const [showHotelPrompt, setShowHotelPrompt] = useState(false);
+
+  const countryList = [
+    'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan',
+    'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bhutan', 'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Cabo Verde', 'Cambodia', 'Cameroon', 'Canada', 'Central African Republic', 'Chad', 'Chile', 'China', 'Colombia', 'Comoros', 'Congo', 'Costa Rica', 'Croatia', 'Cuba', 'Cyprus', 'Czech Republic', 'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic', 'East Timor', 'Ecuador', 'Egypt', 'El Salvador', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Eswatini', 'Ethiopia', 'Fiji', 'Finland', 'France', 'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Greece', 'Grenada', 'Guatemala', 'Guinea', 'Guinea-Bissau', 'Guyana', 'Haiti', 'Honduras', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland', 'Israel', 'Italy', 'Jamaica', 'Japan', 'Jordan', 'Kazakhstan', 'Kenya', 'Kiribati', 'Kuwait', 'Kyrgyzstan', 'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein', 'Lithuania', 'Luxembourg', 'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta', 'Marshall Islands', 'Mauritania', 'Mauritius', 'Mexico', 'Micronesia', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Morocco', 'Mozambique', 'Myanmar', 'Namibia', 'Nauru', 'Nepal', 'Netherlands', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'North Korea', 'North Macedonia', 'Norway', 'Oman', 'Pakistan', 'Palau', 'Palestine', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Philippines', 'Poland', 'Portugal', 'Qatar', 'Romania', 'Russia', 'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Vincent and the Grenadines', 'Samoa', 'San Marino', 'Sao Tome and Principe', 'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia', 'South Africa', 'South Korea', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname', 'Sweden', 'Switzerland', 'Syria', 'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand', 'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Turkmenistan', 'Tuvalu', 'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States', 'Uruguay', 'Uzbekistan', 'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe'
+  ];
 
   useEffect(() => {
     fetch('/api/vehicles')
@@ -58,13 +98,18 @@ export default function RentCarForm() {
     setLoading(true);
     setErrorMessage(null);
     try {
+      const payload = { ...form, type: 'Car Rental' };
+      if (form.nationality === 'Other') {
+        payload.otherNationality = form.otherNationality;
+      }
       const response = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       const result = await response.json();
       if (response.ok) {
+        setShowHotelPrompt(true);
         setSuccess(true);
       } else {
         setErrorMessage(result.error || 'There was an error submitting your booking. Please try again.');
@@ -102,7 +147,26 @@ export default function RentCarForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 py-4 sm:py-8">
+    <div className="min-h-screen relative overflow-hidden py-4 sm:py-8">
+      {/* Animated Background */}
+      <div className="absolute inset-0 -z-10 animate-fade-in">
+        <svg width="100%" height="100%" className="w-full h-full" style={{ position: 'absolute', top: 0, left: 0 }}>
+          <circle cx="20%" cy="20%" r="120" fill="#e0f2fe" opacity="0.5">
+            <animate attributeName="r" values="120;140;120" dur="6s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="80%" cy="80%" r="100" fill="#fef9c3" opacity="0.4">
+            <animate attributeName="r" values="100;120;100" dur="7s" repeatCount="indefinite" />
+          </circle>
+        </svg>
+        {/* Car Icon Animation */}
+        <FaCar className="text-blue-200 absolute left-10 top-10 text-[120px] animate-bounce-slow" style={{ filter: 'blur(1px)' }} />
+        {/* Hotel Icon Animation */}
+        <FaHotel className="text-yellow-200 absolute right-10 bottom-10 text-[100px] animate-bounce-slower" style={{ filter: 'blur(1px)' }} />
+        {/* Company Logo Animation */}
+        <div className="absolute right-10 top-10 animate-fade-scale">
+          <Image src="/logo.png" alt="Company Logo" width={90} height={90} className="opacity-60" style={{ filter: 'blur(0.5px)' }} />
+        </div>
+      </div>
       <div className="max-w-xl mx-auto px-2 sm:px-4 md:px-8">
         <div className="text-center mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">Rent a Car</h1>
@@ -142,6 +206,48 @@ export default function RentCarForm() {
                       required
                     />
                   </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Passport or National ID card <span className="text-red-500">*</span></label>
+                    <input
+                      name="idOrPassport"
+                      value={form.idOrPassport}
+                      onChange={handleChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                      placeholder="Enter Passport or National ID card number"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Nationality <span className="text-red-500">*</span></label>
+                    <select
+                      name="nationality"
+                      value={form.nationality}
+                      onChange={handleChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    >
+                      <option value="">Select</option>
+                      <option value="Rwandan">Rwandan</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  {form.nationality === 'Other' && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Select your country <span className="text-red-500">*</span></label>
+                      <select
+                        name="otherNationality"
+                        value={form.otherNationality}
+                        onChange={handleChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      >
+                        <option value="">Select country</option>
+                        {countryList.filter(c => c !== 'Rwanda').map(country => (
+                          <option key={country} value={country}>{country}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Pickup Date *</label>
@@ -234,6 +340,15 @@ export default function RentCarForm() {
                 </button>
             </div>
           </form>
+          {showHotelPrompt && (
+            <HotelPromptModal
+              onProceed={() => {
+                setShowHotelPrompt(false);
+                router.push('/offers?showHotel=true');
+              }}
+              onClose={() => setShowHotelPrompt(false)}
+            />
+          )}
         </div>
       </div>
     </div>
