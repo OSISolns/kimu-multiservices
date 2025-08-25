@@ -38,8 +38,6 @@ const nextConfig = {
   experimental: {
     optimizeCss: true,
     scrollRestoration: true,
-    // Disable Turbopack
-    turbo: false,
   },
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production', // Remove console.log in production

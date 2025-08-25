@@ -21,6 +21,7 @@ export default function StaffLogin() {
   const [showQR, setShowQR] = useState(false);
   const [showTrustPrompt, setShowTrustPrompt] = useState(false);
   const [trustDevice, setTrustDevice] = useState(false);
+  const [isFirstTimeDevice, setIsFirstTimeDevice] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const router = useRouter();
@@ -47,6 +48,27 @@ export default function StaffLogin() {
         return;
       }
       const data = await res.json();
+      
+      // If user doesn't have TOTP set up, generate one automatically
+      if (!data.totpSecret) {
+        try {
+          const totpSetupRes = await fetch('/api/users/totp-setup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username }),
+          });
+          
+          if (totpSetupRes.ok) {
+            const totpData = await totpSetupRes.json();
+            // Update the staff data with the new TOTP secret
+            data.totpSecret = totpData.secret;
+            console.log(`Generated TOTP secret for ${username}`);
+          }
+        } catch (totpError) {
+          console.warn('Error setting up TOTP:', totpError);
+        }
+      }
+      
       setStaff(data);
 
       // Check if device is trusted (skip TOTP if trusted)
@@ -68,13 +90,25 @@ export default function StaffLogin() {
                 console.log(`Device is trusted for ${username}, skipping TOTP`);
                 await loginDirectly(data);
                 return;
+              } else {
+                // Device is not trusted - this is a first-time device
+                setIsFirstTimeDevice(true);
+                // For first-time devices, always show QR code if TOTP is not set up
+                if (!data.totpSecret) {
+                  setShowQR(true);
+                }
               }
             }
           } catch (trustError) {
             console.warn('Error checking trusted device:', trustError);
             // Continue with normal TOTP flow if trust check fails
+            setIsFirstTimeDevice(true);
           }
+        } else {
+          setIsFirstTimeDevice(true);
         }
+      } else {
+        setIsFirstTimeDevice(true);
       }
 
       // Continue with TOTP verification
@@ -337,20 +371,43 @@ export default function StaffLogin() {
               handleLogin();
             }}
           >
-            <p className="mb-6 text-gray-500 text-sm text-center">Enter the 6-digit code from your Google Authenticator app.</p>
+            {isFirstTimeDevice && !staff.totpSecret ? (
+              <div className="mb-6 text-center">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                  <h3 className="text-lg font-semibold text-blue-800 mb-2">🔐 First-Time Device Setup</h3>
+                  <p className="text-blue-700 text-sm">This is your first time logging in on this device. Please set up two-factor authentication to continue.</p>
+                </div>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                  <h4 className="text-md font-semibold text-green-800 mb-2">📱 Setup Instructions</h4>
+                  <ol className="text-green-700 text-sm text-left list-decimal list-inside space-y-1">
+                    <li>Download Google Authenticator or any TOTP app</li>
+                    <li>Scan the QR code below with your app</li>
+                    <li>Enter the 6-digit code that appears in your app</li>
+                    <li>Optionally trust this device for future logins</li>
+                  </ol>
+                </div>
+              </div>
+            ) : (
+              <p className="mb-6 text-gray-500 text-sm text-center">Enter the 6-digit code from your Google Authenticator app.</p>
+            )}
             {(!staff.totpSecret || showQR) && (
               <div className="mb-6 flex flex-col items-center">
                 <QRCodeCanvas value={otpauthUrl} size={180} />
                 <p className="mt-2 text-xs text-gray-600 text-center">Scan this QR code with Google Authenticator or any TOTP app.<br/>Account: <span className="font-mono">{staff.username}</span></p>
                 <p className="mt-1 text-xs text-gray-500">If you need the secret: <span className="font-mono">{staff.totpSecret || 'PLACEHOLDER'}</span></p>
-            <button
-                className="text-blue-600 underline text-[10px] hover:text-orange-600 mt-2"
-              type="button"
-              onClick={() => setShowQR(v => !v)}
-            >
-              {showQR ? 'Hide Setup QR Code' : 'Show QR code for setup'}
-            </button>
-            </div>
+                {isFirstTimeDevice && !staff.totpSecret && (
+                  <p className="mt-2 text-xs text-blue-600 font-medium">✨ QR code automatically shown for first-time setup</p>
+                )}
+                {staff.totpSecret && (
+                  <button
+                    className="text-blue-600 underline text-[10px] hover:text-orange-600 mt-2"
+                    type="button"
+                    onClick={() => setShowQR(v => !v)}
+                  >
+                    {showQR ? 'Hide Setup QR Code' : 'Show QR code for setup'}
+                  </button>
+                )}
+              </div>
             )}
             {error && (
               <div className="bg-red-100 text-red-700 p-4 rounded mb-4 w-full flex items-center gap-2">
@@ -378,6 +435,26 @@ export default function StaffLogin() {
               {loading && <LoadingSpinner size="xs" inline variant="spinner" color="blue" />}
               Login
             </button>
+            
+            {/* Trust Device Option for First-Time Devices */}
+            {isFirstTimeDevice && (
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={trustDevice}
+                    onChange={(e) => setTrustDevice(e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">
+                    🔒 Trust this device for 30 days (skip 2FA on future logins)
+                  </span>
+                </label>
+                <p className="text-xs text-gray-500 mt-1 ml-6">
+                  This will remember this device and skip two-factor authentication for the next 30 days.
+                </p>
+              </div>
+            )}
             <button
               className="mt-4 text-sm text-gray-500 underline"
               type="button"
