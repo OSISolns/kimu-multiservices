@@ -468,16 +468,16 @@ export default function VehiclesPage() {
         }
       `}</style>
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 shadow-soft border-b border-blue-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Vehicle Management</h1>
-              <p className="text-sm text-gray-600">Manage your fleet of vehicles</p>
+          <div className="flex items-center justify-between h-20">
+            <div className="animate-slide-down">
+              <h1 className="text-4xl font-bold text-gradient mb-1">Vehicle Management</h1>
+              <p className="text-lg text-gray-600">Manage your fleet of vehicles with style</p>
             </div>
             <button
               onClick={() => openModal(null, 'add')}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+              className="btn-primary hover-lift animate-bounce-gentle"
             >
               <FaPlus className="text-sm" />
               Add Vehicle
@@ -489,54 +489,54 @@ export default function VehiclesPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="card card-hover animate-slide-up animation-delay-200">
             <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <FaCar className="text-blue-600 text-xl" />
+              <div className="p-3 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl shadow-soft">
+                <FaCar className="text-blue-600 text-2xl" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Vehicles</p>
-                <p className="text-2xl font-bold text-gray-900">{vehicles.length}</p>
+                <p className="text-3xl font-bold text-gradient">{vehicles.length}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="card card-hover animate-slide-up animation-delay-400">
             <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <FaCheckCircle className="text-green-600 text-xl" />
+              <div className="p-3 bg-gradient-to-br from-green-100 to-green-200 rounded-2xl shadow-soft">
+                <FaCheckCircle className="text-green-600 text-2xl" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Available</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-3xl font-bold text-gradient">
                   {vehicles.filter(v => v.isAvailable).length}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="card card-hover animate-slide-up animation-delay-2000">
             <div className="flex items-center">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <FaTools className="text-yellow-600 text-xl" />
+              <div className="p-3 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-2xl shadow-soft">
+                <FaTools className="text-yellow-600 text-2xl" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">In Maintenance</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-3xl font-bold text-gradient">
                   {vehicles.filter(v => v.status === 'Maintenance').length}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="card card-hover animate-slide-up animation-delay-4000">
             <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <FaCar className="text-blue-600 text-xl" />
+              <div className="p-3 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl shadow-soft">
+                <FaCar className="text-blue-600 text-2xl" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Currently Rented</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-3xl font-bold text-gradient">
                   {vehicles.filter(v => v.status === 'Rented').length}
                 </p>
               </div>
@@ -545,14 +545,14 @@ export default function VehiclesPage() {
         </div>
 
         {/* Search and Filters */}
-        <div className="bg-white rounded-lg shadow mb-8">
-          <div className="p-6">
+        <div className="card card-hover mb-8 animate-slide-up animation-delay-600">
+          <div className="p-8">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-              <h2 className="text-lg font-semibold text-gray-900">Vehicle Inventory</h2>
+              <h2 className="text-2xl font-bold text-gradient">Vehicle Inventory</h2>
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="btn-secondary hover-lift"
                 >
                   <FaFilter className="text-sm" />
                   {showFilters ? 'Hide' : 'Show'} Filters
@@ -561,7 +561,7 @@ export default function VehiclesPage() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  className="input-enhanced px-4 py-2 text-sm"
                 >
                   <option value="name">Name</option>
                   <option value="price">Price</option>
@@ -572,32 +572,32 @@ export default function VehiclesPage() {
                 
                 <button
                   onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                  className="px-3 py-2 text-gray-500 hover:text-gray-700"
+                  className="p-3 text-gray-400 hover:text-blue-600 hover:scale-110 transition-all duration-300 rounded-2xl hover:bg-blue-50"
                 >
-                  {sortOrder === 'asc' ? <FaSortUp /> : <FaSortDown />}
+                  {sortOrder === 'asc' ? <FaSortUp className="text-xl" /> : <FaSortDown className="text-xl" />}
                 </button>
               </div>
             </div>
 
             {/* Search */}
             <div className="relative mb-6">
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-500 text-lg" />
               <input
                 type="text"
                 placeholder="Search vehicles by name, description, or license plate..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="input-enhanced pl-12 pr-4 py-4 text-lg hover-glow focus:scale-[1.02]"
               />
             </div>
 
             {/* Filters */}
             {showFilters && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-3xl border border-blue-100 animate-scale-in">
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  className="input-enhanced text-sm hover-glow"
                 >
                   <option value="">All Categories</option>
                   <option value="Economy">Economy</option>
@@ -609,7 +609,7 @@ export default function VehiclesPage() {
                 <select
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  className="input-enhanced text-sm hover-glow"
                 >
                   <option value="">All Statuses</option>
                   <option value="Available">Available</option>
@@ -620,7 +620,7 @@ export default function VehiclesPage() {
 
                 <button
                   onClick={clearFilters}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm"
+                  className="btn-danger hover-lift"
                 >
                   Clear Filters
                 </button>
@@ -635,107 +635,113 @@ export default function VehiclesPage() {
 
         {/* Vehicles Grid */}
         {filteredVehicles.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <FaCar className="text-4xl text-gray-400" />
+          <div className="text-center py-20 animate-slide-up">
+            <div className="w-32 h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-8 shadow-soft animate-pulse-soft">
+              <FaCar className="text-6xl text-gray-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No vehicles found</h3>
-            <p className="text-gray-600 mb-6">Try adjusting your search criteria</p>
+            <h3 className="text-3xl font-bold text-gradient mb-3">No vehicles found</h3>
+            <p className="text-lg text-gray-600 mb-8">Try adjusting your search criteria</p>
             <button
               onClick={clearFilters}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              className="btn-primary hover-lift animate-bounce-gentle"
             >
               Clear All Filters
             </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-            {currentVehicles.map((vehicle) => (
-              <div key={vehicle.id} className="bg-white rounded-lg shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
-                <div className="relative h-48 bg-gradient-to-br from-gray-50 to-white rounded-t-lg">
+            {currentVehicles.map((vehicle, index) => (
+              <div 
+                key={vehicle.id} 
+                className="card card-hover animate-slide-up"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className="relative h-48 bg-gradient-to-br from-gray-50 to-white rounded-t-3xl overflow-hidden">
                   <Image
                     src={vehicle.image}
                     alt={vehicle.name}
                     fill
-                    className="object-contain p-4"
+                    className="object-contain p-4 hover:scale-110 transition-transform duration-500"
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                   />
-                  <div className="absolute top-2 left-2 flex flex-col gap-1">
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(vehicle.status)}`}>
+                  <div className="absolute top-3 left-3 flex flex-col gap-2">
+                    <span className={`status-badge ${vehicle.status.toLowerCase().replace(' ', '-')} hover-bounce`}>
                       {vehicle.status}
                     </span>
                     {isFirstVehicleOfBrand(vehicle) && (
-                      <span className="px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 border border-yellow-300">
+                      <span className="status-badge warning hover-bounce">
                         🛡️ Brand Rep
                       </span>
                     )}
                   </div>
-                  <div className="absolute top-2 right-2">
-                    {getStatusIcon(vehicle.status)}
+                  <div className="absolute top-3 right-3">
+                    <div className="p-2 bg-white/90 backdrop-blur-sm rounded-2xl shadow-soft">
+                      {getStatusIcon(vehicle.status)}
+                    </div>
                   </div>
-                  {/* Image overlay - show lock icon for first vehicle of each brand */}
+                  {/* Image overlay - show lock icon for first vehicle of brand */}
                   {isFirstVehicleOfBrand(vehicle) && (
-                    <div className="absolute bottom-2 right-2">
-                      <div className="p-2 bg-yellow-100 border border-yellow-300 rounded-full shadow-lg" title="Brand representative image - cannot be changed">
-                        <FaShieldAlt className="text-yellow-600 text-sm" />
+                    <div className="absolute bottom-3 right-3">
+                      <div className="p-3 bg-yellow-100/90 backdrop-blur-sm border border-yellow-300 rounded-2xl shadow-soft hover:scale-110 transition-transform duration-300" title="Brand representative image - cannot be changed">
+                        <FaShieldAlt className="text-yellow-600 text-lg" />
                       </div>
                     </div>
                   )}
                 </div>
 
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-1">{vehicle.name}</h3>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-gradient mb-3 line-clamp-1 hover:scale-105 transition-transform duration-300">{vehicle.name}</h3>
                   
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-lg font-bold text-blue-600">{vehicle.price}</span>
-                    <span className="text-sm text-gray-500">per day</span>
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-2xl font-bold text-gradient">{vehicle.price}</span>
+                    <span className="text-sm text-gray-500 font-medium">per day</span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 mb-3 text-xs text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <FaCalendar className="text-gray-400" />
-                      <span>{vehicle.year}</span>
+                  <div className="grid grid-cols-2 gap-3 mb-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-300">
+                      <FaCalendar className="text-blue-500" />
+                      <span className="font-medium">{vehicle.year}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <FaRoad className="text-gray-400" />
-                      <span>{vehicle.mileage}</span>
+                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-300">
+                      <FaRoad className="text-green-500" />
+                      <span className="font-medium">{vehicle.mileage}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <FaGasPump className="text-gray-400" />
-                      <span>{vehicle.fuel}</span>
+                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-300">
+                      <FaGasPump className="text-yellow-500" />
+                      <span className="font-medium">{vehicle.fuel}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <FaCog className="text-gray-400" />
-                      <span>{vehicle.transmission}</span>
+                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-300">
+                      <FaCog className="text-purple-500" />
+                      <span className="font-medium">{vehicle.transmission}</span>
                     </div>
                   </div>
 
                   {vehicle.licensePlate && (
-                    <div className="text-xs text-gray-500 mb-3">
-                      Plate: {vehicle.licensePlate}
+                    <div className="text-sm text-gray-600 mb-4 p-2 bg-blue-50 rounded-xl border border-blue-100">
+                      <span className="font-semibold text-blue-700">Plate:</span> {vehicle.licensePlate}
                     </div>
                   )}
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <button
                       onClick={() => openModal(vehicle, 'view')}
-                      className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm flex items-center justify-center gap-1"
+                      className="flex-1 btn-secondary hover-lift text-sm py-3"
                     >
-                      <FaEye className="text-xs" />
+                      <FaEye className="text-sm" />
                       View
                     </button>
                     <button
                       onClick={() => openModal(vehicle, 'edit')}
-                      className="flex-1 bg-blue-100 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-200 transition-colors text-sm flex items-center justify-center gap-1"
+                      className="flex-1 btn-primary hover-lift text-sm py-3"
                     >
-                      <FaEdit className="text-xs" />
+                      <FaEdit className="text-sm" />
                       Edit
                     </button>
                     <button
                       onClick={() => handleDelete(vehicle)}
-                      className="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm flex items-center justify-center gap-1"
+                      className="flex-1 btn-danger hover-lift text-sm py-3"
                     >
-                      <FaTrash className="text-xs" />
+                      <FaTrash className="text-sm" />
                       Delete
                     </button>
                   </div>

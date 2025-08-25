@@ -8,24 +8,22 @@ import Image from 'next/image';
 
 interface Booking {
   id: number;
-  customerName: string;
-  customerPhone: string;
-  customerEmail: string;
-  pickupLocation: string;
-  dropoffLocation: string;
+  type: string;
+  name: string;
+  email: string | null;
+  phone: string;
+  nationality: string;
+  idOrPassport: string;
+  carType: string;
   pickupDate: string;
+  pickupTime: string;
   returnDate: string;
-  vehicleId: number;
+  returnTime: string;
+  rentalDays: number;
+  returnConfirmed: boolean;
+  fullTank: boolean;
   status: string;
-  totalAmount: number;
   createdAt: string;
-  vehicle?: {
-    make: string;
-    model: string;
-    year: number;
-    licensePlate: string;
-    imageUrl?: string;
-  };
 }
 
 export default function BookingsPage() {
@@ -41,13 +39,14 @@ export default function BookingsPage() {
     
     try {
       const response = await fetch('/api/bookings');
-        if (response.ok) {
+      if (response.ok) {
         const data = await response.json();
+        console.log('Bookings API response:', data); // Debug log
         setBookings(data.bookings || []);
-        }
-      } catch (error) {
+      }
+    } catch (error) {
       console.error('Error fetching bookings:', error);
-      } finally {
+    } finally {
       setLoading(false);
     }
   }, [user?.username]);
@@ -95,15 +94,16 @@ export default function BookingsPage() {
   }
 
   const filteredBookings = bookings.filter(booking => {
-    const matchesFilter = filter === 'all' || booking.status === filter;
-      const matchesSearch = 
-      booking.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.customerPhone.includes(searchTerm) ||
-      booking.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (booking.vehicle?.licensePlate || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filter === 'all' || booking.status.toLowerCase() === filter.toLowerCase();
+    const matchesSearch = 
+      booking.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.phone.includes(searchTerm) ||
+      (booking.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.carType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.nationality.toLowerCase().includes(searchTerm.toLowerCase());
     
     return matchesFilter && matchesSearch;
-    });
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -141,7 +141,7 @@ export default function BookingsPage() {
             <div className="flex-1">
               <input
                 type="text"
-                placeholder="Search by customer name, phone, email, or license plate..."
+                placeholder="Search by customer name, phone, email, car type, or nationality..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -186,18 +186,24 @@ export default function BookingsPage() {
               </div>
                         <div className="flex-1">
                           <h3 className="text-lg font-semibold text-gray-900">
-                            {booking.customerName}
+                            {booking.name}
                           </h3>
                           <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
                             <span className="flex items-center">
                               <FaPhone className="mr-2" />
-                              {booking.customerPhone}
-                        </span>
+                              {booking.phone}
+                            </span>
+                            {booking.email && (
+                              <span className="flex items-center">
+                                <FaEnvelope className="mr-2" />
+                                {booking.email}
+                              </span>
+                            )}
                             <span className="flex items-center">
-                              <FaEnvelope className="mr-2" />
-                              {booking.customerEmail}
-                          </span>
-                        </div>
+                              <FaCar className="mr-2" />
+                              {booking.carType}
+                            </span>
+                          </div>
                         </div>
         </div>
 
@@ -205,62 +211,56 @@ export default function BookingsPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <div className="flex items-center space-x-2">
-                            <FaMapMarkerAlt className="text-green-500" />
+                            <FaCalendarAlt className="text-green-500" />
                             <span className="text-sm font-medium text-gray-700">Pickup:</span>
-                            <span className="text-sm text-gray-600">{booking.pickupLocation}</span>
-          </div>
-                          <div className="flex items-center space-x-2">
-                            <FaMapMarkerAlt className="text-red-500" />
-                            <span className="text-sm font-medium text-gray-700">Dropoff:</span>
-                            <span className="text-sm text-gray-600">{booking.dropoffLocation}</span>
-              </div>
-                  </div>
-                        <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                            <FaCalendarAlt className="text-blue-500" />
-                            <span className="text-sm font-medium text-gray-700">Pickup Date:</span>
                             <span className="text-sm text-gray-600">
-                              {new Date(booking.pickupDate).toLocaleDateString()}
+                              {new Date(booking.pickupDate).toLocaleDateString()} at {booking.pickupTime}
                             </span>
-                    </div>
+                          </div>
                           <div className="flex items-center space-x-2">
-                            <FaCalendarAlt className="text-blue-500" />
-                            <span className="text-sm font-medium text-gray-700">Return Date:</span>
+                            <FaCalendarAlt className="text-red-500" />
+                            <span className="text-sm font-medium text-gray-700">Return:</span>
                             <span className="text-sm text-gray-600">
-                              {new Date(booking.returnDate).toLocaleDateString()}
-                    </span>
-                  </div>
-                  </div>
-                </div>
-
-                      {/* Vehicle Info */}
-                      {booking.vehicle && (
-                        <div className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
-                          <div className="flex-shrink-0">
-                            {booking.vehicle.imageUrl ? (
-                              <Image
-                                src={booking.vehicle.imageUrl}
-                                alt={`${booking.vehicle.make} ${booking.vehicle.model}`}
-                                width={60}
-                                height={40}
-                                className="rounded object-cover"
-                              />
-                            ) : (
-                              <div className="w-15 h-10 bg-gray-200 rounded flex items-center justify-center">
-                                <FaCar className="text-gray-400" />
-                      </div>
-                    )}
-                      </div>
-                      <div>
-                            <p className="font-medium text-gray-900">
-                              {booking.vehicle.year} {booking.vehicle.make} {booking.vehicle.model}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              License: {booking.vehicle.licensePlate}
-                            </p>
-                      </div>
+                              {new Date(booking.returnDate).toLocaleDateString()} at {booking.returnTime}
+                            </span>
+                          </div>
                         </div>
-                      )}
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <FaCar className="text-blue-500" />
+                            <span className="text-sm font-medium text-gray-700">Duration:</span>
+                            <span className="text-sm text-gray-600">
+                              {booking.rentalDays} day{booking.rentalDays !== 1 ? 's' : ''}
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <FaCheckCircle className="text-green-500" />
+                            <span className="text-sm font-medium text-gray-700">Status:</span>
+                            <span className="text-sm text-gray-600">
+                              {booking.returnConfirmed ? 'Return Confirmed' : 'Return Pending'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Additional Info */}
+                      <div className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-2">
+                          <FaCar className="text-blue-500" />
+                          <span className="text-sm font-medium text-gray-700">Car Type:</span>
+                          <span className="text-sm text-gray-600">{booking.carType}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <FaCheckCircle className="text-green-500" />
+                          <span className="text-sm font-medium text-gray-700">Full Tank:</span>
+                          <span className="text-sm text-gray-600">{booking.fullTank ? 'Yes' : 'No'}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <FaCar className="text-blue-500" />
+                          <span className="text-sm font-medium text-gray-700">Nationality:</span>
+                          <span className="text-sm text-gray-600">{booking.nationality}</span>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Status and Actions */}
@@ -271,7 +271,7 @@ export default function BookingsPage() {
                           <span className="ml-2">{booking.status}</span>
                         </span>
                         <p className="text-lg font-bold text-gray-900 mt-2">
-                          RWF {booking.totalAmount?.toLocaleString()}
+                          {booking.type}
                         </p>
                         <p className="text-sm text-gray-500">
                           Created: {new Date(booking.createdAt).toLocaleDateString()}
