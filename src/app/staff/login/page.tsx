@@ -93,22 +93,23 @@ export default function StaffLogin() {
               } else {
                 // Device is not trusted - this is a first-time device
                 setIsFirstTimeDevice(true);
-                // For first-time devices, always show QR code if TOTP is not set up
-                if (!data.totpSecret) {
-                  setShowQR(true);
-                }
+                // For first-time devices, always show QR code
+                setShowQR(true);
               }
             }
           } catch (trustError) {
             console.warn('Error checking trusted device:', trustError);
             // Continue with normal TOTP flow if trust check fails
             setIsFirstTimeDevice(true);
+            setShowQR(true);
           }
         } else {
           setIsFirstTimeDevice(true);
+          setShowQR(true);
         }
       } else {
         setIsFirstTimeDevice(true);
+        setShowQR(true);
       }
 
       // Continue with TOTP verification
@@ -390,7 +391,7 @@ export default function StaffLogin() {
             ) : (
               <p className="mb-6 text-gray-500 text-sm text-center">Enter the 6-digit code from your Google Authenticator app.</p>
             )}
-            {(!staff.totpSecret || showQR) && (
+            {(!staff.totpSecret || showQR || isFirstTimeDevice) && (
               <div className="mb-6 flex flex-col items-center">
                 <QRCodeCanvas value={otpauthUrl} size={180} />
                 <p className="mt-2 text-xs text-gray-600 text-center">Scan this QR code with Google Authenticator or any TOTP app.<br/>Account: <span className="font-mono">{staff.username}</span></p>
@@ -447,11 +448,11 @@ export default function StaffLogin() {
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                   <span className="text-sm text-gray-700">
-                    🔒 Trust this device for 30 days (skip 2FA on future logins)
+                    🔒 Trust this device for 7 days (skip 2FA on future logins)
                   </span>
                 </label>
                 <p className="text-xs text-gray-500 mt-1 ml-6">
-                  This will remember this device and skip two-factor authentication for the next 30 days.
+                  This will remember this device and skip two-factor authentication for the next 7 days.
                 </p>
               </div>
             )}
