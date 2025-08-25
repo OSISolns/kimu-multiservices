@@ -51,6 +51,7 @@ export default function StaffLogin() {
       
       // If user doesn't have TOTP set up, generate one automatically
       if (!data.totpSecret) {
+        console.log(`No TOTP secret found for ${username}, generating new one...`);
         try {
           const totpSetupRes = await fetch('/api/users/totp-setup', {
             method: 'POST',
@@ -62,11 +63,15 @@ export default function StaffLogin() {
             const totpData = await totpSetupRes.json();
             // Update the staff data with the new TOTP secret
             data.totpSecret = totpData.secret;
-            console.log(`Generated TOTP secret for ${username}`);
+            console.log(`Generated TOTP secret for ${username}:`, totpData.secret);
+          } else {
+            console.error('Failed to generate TOTP secret:', totpSetupRes.status);
           }
         } catch (totpError) {
           console.warn('Error setting up TOTP:', totpError);
         }
+      } else {
+        console.log(`TOTP secret already exists for ${username}`);
       }
       
       setStaff(data);
@@ -164,6 +169,7 @@ export default function StaffLogin() {
   const handleLogin = async () => {
     setLoading(true);
     setError('');
+    console.log(`Attempting TOTP verification for ${username} with code: ${code}`);
     try {
       const res = await fetch('/api/staff/verify-totp', {
         method: 'POST',
@@ -172,10 +178,11 @@ export default function StaffLogin() {
       });
       
       if (!res.ok) {
-        setError('Invalid verification code.');
-          setLoading(false);
-          return;
-        }
+        const errorData = await res.json();
+        setError(errorData.error || 'Invalid verification code.');
+        setLoading(false);
+        return;
+      }
 
       const data = await res.json();
       
@@ -239,44 +246,24 @@ export default function StaffLogin() {
     >
       {/* Background Overlay for Better Readability */}
       <div className="absolute inset-0 bg-black/30 -z-10"></div>
-      <div
-        className="bg-white/90 backdrop-blur-xl border border-white/30 rounded-3xl shadow-2xl shadow-blue-500/20 p-6 w-full max-w-sm flex flex-col items-center transition-all duration-500 hover:shadow-blue-500/30 hover:shadow-3xl hover:scale-[1.02] hover:bg-white/95 relative overflow-hidden z-30"
-      >
-        {/* Solid Color Decorative Elements */}
-        <div className="absolute top-0 left-0 w-full h-3 bg-blue-600 z-20 shadow-lg"></div>
-        <div className="absolute -top-4 -right-4 w-12 h-12 bg-orange-500 rounded-full blur-lg"></div>
-        <div className="absolute -bottom-4 -left-4 w-8 h-8 bg-blue-500 rounded-full blur-lg"></div>
-        
-        {/* Solid Orange & Blue Accent Elements */}
-        <div className="absolute top-2 right-2 w-2 h-2 bg-orange-600 rounded-full shadow-xl animate-pulse"></div>
-        <div className="absolute bottom-2 left-2 w-1.5 h-1.5 bg-blue-600 rounded-full shadow-xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 right-1 w-1.5 h-6 bg-orange-600 rounded-full shadow-md"></div>
-        <div className="flex flex-col items-center mb-4 relative">
-          {/* Enhanced Logo Container */}
-                      <div className="relative mb-2">
-            <div className="absolute inset-0 bg-blue-600 rounded-full blur-lg opacity-60 scale-110 animate-pulse-slow"></div>
-                          <div className="relative bg-white rounded-full p-2 shadow-xl border-2 border-orange-500 backdrop-blur-sm">
-              <Image src="/logo.png" alt="KIMU Logo" width={50} height={50} className="drop-shadow-lg" />
-            </div>
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-600 rounded-full shadow-xl animate-bounce-slow border border-white"></div>
-            <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-blue-600 rounded-full shadow-lg animate-pulse border border-white"></div>
+      
+      <div className="bg-white/90 backdrop-blur-xl border border-white/30 rounded-3xl shadow-2xl shadow-blue-500/20 p-6 w-full max-w-sm flex flex-col items-center">
+        {/* Header */}
+        <div className="flex flex-col items-center mb-6">
+          {/* Logo */}
+          <div className="mb-4">
+            <Image src="/logo.png" alt="KIMU Logo" width={60} height={60} className="drop-shadow-lg" />
           </div>
           
-          {/* Enhanced Title */}
-          <div className="text-center relative">
-            <h1 className="text-3xl font-black text-blue-700 mb-2 tracking-tight drop-shadow-sm">
-              KIMU
-            </h1>
-            <div className="flex items-center justify-center gap-3 mb-2">
-              <div className="h-1 bg-blue-600 flex-1 max-w-8 rounded-full"></div>
-              <span className="text-xs text-white font-bold tracking-widest uppercase px-4 py-2 bg-orange-600 rounded-full border-2 border-white shadow-lg">
-                Staff Portal
-              </span>
-              <div className="h-1 bg-orange-600 flex-1 max-w-8 rounded-full"></div>
-            </div>
-            <p className="text-sm text-gray-600 font-medium tracking-wide">
-              Transport & Multiservices Management
-            </p>
+          {/* Title */}
+          <h1 className="text-3xl font-bold text-blue-700 mb-2">KIMU</h1>
+          <p className="text-sm text-gray-600 text-center">
+            Transport & Multiservices Management
+          </p>
+          <div className="mt-2">
+            <span className="text-xs text-white font-bold tracking-widest uppercase px-3 py-1 bg-orange-600 rounded-full">
+              Staff Portal
+            </span>
           </div>
         </div>
         {step === 'credentials' && (
