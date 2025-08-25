@@ -93,23 +93,23 @@ export default function StaffLogin() {
               } else {
                 // Device is not trusted - this is a first-time device
                 setIsFirstTimeDevice(true);
-                // For first-time devices, always show QR code
-                setShowQR(true);
+                // QR code is hidden by default, user must click to show
+                setShowQR(false);
               }
             }
           } catch (trustError) {
             console.warn('Error checking trusted device:', trustError);
             // Continue with normal TOTP flow if trust check fails
             setIsFirstTimeDevice(true);
-            setShowQR(true);
+            setShowQR(false);
           }
         } else {
           setIsFirstTimeDevice(true);
-          setShowQR(true);
+          setShowQR(false);
         }
       } else {
         setIsFirstTimeDevice(true);
-        setShowQR(true);
+        setShowQR(false);
       }
 
       // Continue with TOTP verification
@@ -391,14 +391,11 @@ export default function StaffLogin() {
             ) : (
               <p className="mb-6 text-gray-500 text-sm text-center">Enter the 6-digit code from your Google Authenticator app.</p>
             )}
-            {(!staff.totpSecret || showQR || isFirstTimeDevice) && (
+            {(!staff.totpSecret || showQR) && (
               <div className="mb-6 flex flex-col items-center">
                 <QRCodeCanvas value={otpauthUrl} size={180} />
                 <p className="mt-2 text-xs text-gray-600 text-center">Scan this QR code with Google Authenticator or any TOTP app.<br/>Account: <span className="font-mono">{staff.username}</span></p>
                 <p className="mt-1 text-xs text-gray-500">If you need the secret: <span className="font-mono">{staff.totpSecret || 'PLACEHOLDER'}</span></p>
-                {isFirstTimeDevice && !staff.totpSecret && (
-                  <p className="mt-2 text-xs text-blue-600 font-medium">✨ QR code automatically shown for first-time setup</p>
-                )}
                 {staff.totpSecret && (
                   <button
                     className="text-blue-600 underline text-[10px] hover:text-orange-600 mt-2"
@@ -408,6 +405,22 @@ export default function StaffLogin() {
                     {showQR ? 'Hide Setup QR Code' : 'Show QR code for setup'}
                   </button>
                 )}
+              </div>
+            )}
+            
+            {/* Show QR Code Button for First-Time Devices */}
+            {isFirstTimeDevice && !showQR && (
+              <div className="mb-6 text-center">
+                <button
+                  type="button"
+                  onClick={() => setShowQR(true)}
+                  className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 mx-auto"
+                >
+                  📱 Show QR Code for Setup
+                </button>
+                <p className="text-xs text-gray-500 mt-2">
+                  Click to reveal the QR code for setting up your authenticator app
+                </p>
               </div>
             )}
             {error && (
