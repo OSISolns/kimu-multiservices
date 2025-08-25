@@ -391,7 +391,7 @@ export default function StaffLogin() {
             ) : (
               <p className="mb-6 text-gray-500 text-sm text-center">Enter the 6-digit code from your Google Authenticator app.</p>
             )}
-            {(!staff.totpSecret || showQR) && (
+            {showQR && (
               <div className="mb-6 flex flex-col items-center">
                 <QRCodeCanvas value={otpauthUrl} size={180} />
                 <p className="mt-2 text-xs text-gray-600 text-center">Scan this QR code with Google Authenticator or any TOTP app.<br/>Account: <span className="font-mono">{staff.username}</span></p>
