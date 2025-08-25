@@ -258,9 +258,9 @@ export default function VehiclesPage() {
     // Debug: Log what's being sent
     console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type)
     console.log('FormData entries:')
-    for (let [key, value] of formData.entries()) {
+    Array.from(formData.entries()).forEach(([key, value]) => {
       console.log(key, value)
-    }
+    })
     
     try {
       const response = await fetch('/api/vehicles/upload', {
@@ -811,7 +811,7 @@ export default function VehiclesPage() {
                     {modalType === 'edit' && selectedVehicle && isFirstVehicleOfBrand(selectedVehicle) && (
                       <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded-lg">
                         <p className="text-xs text-yellow-800 font-medium">
-                          ⚠️ Brand Image Protected: This vehicle's image represents the brand and cannot be changed
+                          ⚠️ Brand Image Protected: This vehicle&apos;s image represents the brand and cannot be changed
                         </p>
                       </div>
                     )}
@@ -980,7 +980,7 @@ export default function VehiclesPage() {
                           </div>
                           <h3 className="text-lg font-semibold text-gray-800 mb-2">Brand Image Protected</h3>
                           <p className="text-sm text-gray-600 mb-4">
-                            This vehicle's image represents the brand and cannot be changed
+                            This vehicle&apos;s image represents the brand and cannot be changed
                           </p>
                           <div className="mt-4 text-xs text-yellow-600 space-y-1">
                             <p>🛡️ This image is used in the Offers page</p>

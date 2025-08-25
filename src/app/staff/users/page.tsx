@@ -536,8 +536,8 @@ export default function UsersPage() {
          role: u.role,
          status: u.status,
          department: u.department || '-',
-         lastLogin: u.lastLogin ? u.lastLogin.toLocaleDateString() : '-',
-         createdAt: u.createdAt ? u.createdAt.toLocaleDateString() : '-',
+         lastLogin: u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : '-',
+         createdAt: u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '-',
        });
      });
 
@@ -821,7 +821,7 @@ export default function UsersPage() {
                         </span>
                       </td>
                       <td className="py-4 px-6 text-sm">
-                        {user.lastLogin ? user.lastLogin.toLocaleDateString() : 'Never'}
+                        {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex gap-2">
@@ -955,7 +955,7 @@ export default function UsersPage() {
                     <div>
                       <label className="block text-sm font-medium text-gray-600 mb-1">Account Created</label>
                       <div className="text-lg font-semibold text-gray-800">
-                        {selectedUser.createdAt ? selectedUser.createdAt.toLocaleDateString() : 'Unknown'}
+                        {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString() : 'Unknown'}
                       </div>
                     </div>
                   </div>
