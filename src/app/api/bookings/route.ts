@@ -1,159 +1,345 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@/generated/prisma'
-import { sendBookingNotification, sendBookingStatusUpdate } from '../../services/notifications'
-import { logActivity, ActivityActions, getIpAddress, getUserAgent } from '../../services/activityLog'
+import { prisma } from '@/lib/prisma'
+import { sendBookingNotification, sendBookingStatusUpdate } from '@/app/services/notifications'
+import { logActivity, ActivityActions, getIpAddress, getUserAgent } from '@/app/services/activityLog'
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient }
-const prisma = globalForPrisma.prisma || new PrismaClient()
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+// Role-based access control
+function checkUserPermissions(user: any, requiredRoles: string[]) {
+  if (!user) return false
+  return requiredRoles.includes(user.role)
+}
 
-// Add a reusable role-checking utility
-function hasRole(user: any, allowedRoles: string[]) {
-  return allowedRoles.includes(user.role);
+// Validate car rental data
+function validateCarRentalData(data: any) {
+  const errors: string[] = []
+  
+  if (!data.idOrPassport) {
+    errors.push('Valid identification document is required')
+  }
+  
+  if (!data.nationality) {
+    errors.push('Nationality must be specified')
+  }
+  
+  if (!data.carType) {
+    errors.push('Vehicle type selection is required')
+  }
+  
+  // Check if dates are in the future
+  if (data.pickupDate) {
+    const pickupDate = new Date(data.pickupDate)
+    if (pickupDate < new Date()) {
+      errors.push('Pickup date cannot be in the past')
+    }
+  }
+  
+  return errors
+}
+
+// Calculate rental duration with business logic
+function calculateRentalDuration(pickupDate: string, pickupTime: string, returnDate: string, returnTime: string) {
+  if (!pickupDate || !pickupTime || !returnDate || !returnTime) {
+    return 1 // Default to 1 day if incomplete data
+  }
+  
+  const pickup = new Date(`${pickupDate}T${pickupTime}`)
+  const returnDateTime = new Date(`${returnDate}T${returnTime}`)
+  
+  if (pickup >= returnDateTime) {
+    return 1 // Invalid date range, default to 1 day
+  }
+  
+  const diffMs = returnDateTime.getTime() - pickup.getTime()
+  const diffHours = diffMs / (1000 * 60 * 60)
+  
+  // Business rule: minimum 4 hours = 0.5 days, 12+ hours = 1 day
+  if (diffHours < 4) return 0.5
+  if (diffHours <= 12) return 1
+  
+  return Math.ceil(diffHours / 24)
 }
 
 export async function GET(req: NextRequest) {
   try {
+    console.log('GET /api/bookings - Request received');
+    
     const { searchParams } = new URL(req.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '50')
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20')))
+    const status = searchParams.get('status')
+    const type = searchParams.get('type')
+    
+    console.log('GET /api/bookings - Params:', { page, limit, status, type });
+    
     const skip = (page - 1) * limit
+    
+    // Build where clause dynamically
+    const whereClause: any = {}
+    if (status) whereClause.status = status
+    if (type) whereClause.type = type
+    
+    console.log('GET /api/bookings - Where clause:', whereClause);
+    
     const [bookings, total] = await Promise.all([
       prisma.booking.findMany({
+        where: whereClause,
         orderBy: { createdAt: 'desc' },
         skip,
-        take: limit
+        take: limit,
       }),
-      prisma.booking.count()
+      prisma.booking.count({ where: whereClause })
     ])
+    
+    console.log('GET /api/bookings - Found bookings:', bookings.length, 'Total:', total);
+    console.log('GET /api/bookings - Sample booking:', bookings[0]);
+    
     return NextResponse.json({
-      bookings,
+      data: bookings,
       pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
+        currentPage: page,
+        pageSize: limit,
+        totalRecords: total,
+        totalPages: Math.ceil(total / limit),
+        hasNextPage: page < Math.ceil(total / limit),
+        hasPreviousPage: page > 1
       }
     })
   } catch (error) {
-    console.error('Error fetching bookings:', error)
-    return NextResponse.json({ error: 'Failed to fetch bookings' }, { status: 500 })
+    console.error('Failed to retrieve bookings:', error)
+    return NextResponse.json(
+      { error: 'Unable to fetch booking information' }, 
+      { status: 500 }
+    )
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const username = req.headers.get('x-username');
-    const user = username ? await prisma.user.findUnique({ where: { username } }) : null;
-    if (!user || !hasRole(user, ['staff', 'admin', 'transport-officer'])) {
-      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
-    }
-    const data = await req.json()
+    console.log('POST /api/bookings - Request received');
     
-    // Add validation for required 'type' field
-    if (!data.type) {
-      return NextResponse.json({ success: false, error: "Booking 'type' is required." }, { status: 400 });
+    // Authentication check
+    const username = req.headers.get('x-username')
+    console.log('POST /api/bookings - Username from header:', username);
+    
+    if (!username) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
     
-    if (data.type === 'Car Rental') {
-      if (!data.idOrPassport || !data.nationality) {
-        return NextResponse.json({ success: false, error: 'Passport or National ID card and nationality are required for car rentals.' }, { status: 400 })
+    const user = await prisma.user.findUnique({ where: { username } })
+    console.log('POST /api/bookings - User found:', user ? { username: user.username, role: user.role } : 'Not found');
+    
+    if (!user || !checkUserPermissions(user, ['staff', 'admin', 'tofficer', 'agent'])) {
+      console.log('POST /api/bookings - Permission denied for user:', username);
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+    }
+    
+    const requestData = await req.json()
+    console.log('POST /api/bookings - Request data:', requestData);
+    
+    // Validate booking type
+    if (!requestData.type || !['Car Rental', 'Hotel', 'Taxi Service', 'Airport Transfer', 'City Tour'].includes(requestData.type)) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Invalid booking type specified' 
+      }, { status: 400 })
+    }
+    
+    let newBooking: any
+    let rentalDays = null
+    
+    // Handle car rental bookings
+    if (requestData.type === 'Car Rental') {
+      const validationErrors = validateCarRentalData(requestData)
+      if (validationErrors.length > 0) {
+        return NextResponse.json({ 
+          success: false, 
+          errors: validationErrors 
+        }, { status: 400 })
       }
       
-      let rentalDays = 1
-      if (data.pickupDate && data.pickupTime && data.returnDate && data.returnTime) {
-        const pickup = new Date(`${data.pickupDate}T${data.pickupTime}`)
-        const ret = new Date(`${data.returnDate}T${data.returnTime}`)
-        const diffMs = ret.getTime() - pickup.getTime()
-        const diffHours = diffMs / (1000 * 60 * 60)
-        if (diffHours > 12) {
-          rentalDays = Math.ceil(diffHours / 12)
-        }
-      }
+      rentalDays = calculateRentalDuration(
+        requestData.pickupDate, 
+        requestData.pickupTime, 
+        requestData.returnDate, 
+        requestData.returnTime
+      )
       
-      const newBooking = await prisma.booking.create({
+      newBooking = await prisma.booking.create({
         data: {
-          type: data.type,
-          name: data.name,
-          phone: data.phone,
-          nationality: data.nationality,
-          idOrPassport: data.idOrPassport,
-          carType: data.carType,
-          pickupDate: data.pickupDate,
-          pickupTime: data.pickupTime,
-          returnDate: data.returnDate,
-          returnTime: data.returnTime,
+          type: requestData.type,
+          name: requestData.name?.trim(),
+          email: requestData.email?.trim(),
+          phone: requestData.phone?.trim(),
+          nationality: requestData.nationality?.trim(),
+          idOrPassport: requestData.idOrPassport?.trim(),
+          carType: requestData.carType,
+          pickupDate: requestData.pickupDate,
+          pickupTime: requestData.pickupTime,
+          returnDate: requestData.returnDate,
+          returnTime: requestData.returnTime,
           rentalDays,
           returnConfirmed: false,
           fullTank: false,
+          status: 'Confirmed'
+        }
+      })
+    }
+    // Handle taxi service bookings
+    else if (requestData.type === 'Taxi Service') {
+      if (!requestData.name?.trim() || !requestData.phone?.trim()) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Customer name and contact number are required for taxi service' 
+        }, { status: 400 })
+      }
+      
+      newBooking = await prisma.booking.create({
+        data: {
+          type: requestData.type,
+          name: requestData.name?.trim(),
+          email: requestData.email?.trim(),
+          phone: requestData.phone?.trim(),
+          nationality: requestData.nationality?.trim(),
+          idOrPassport: requestData.idOrPassport?.trim(),
+          pickupDate: requestData.pickupDate,
+          pickupTime: requestData.pickupTime,
+          returnDate: requestData.returnDate,
+          returnTime: requestData.returnTime,
           status: 'Active'
         }
       })
+    }
+    // Handle hotel bookings
+    else if (requestData.type === 'Hotel') {
+      if (!requestData.guestName?.trim() || !requestData.phone?.trim()) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Guest name and contact number are required' 
+        }, { status: 400 })
+      }
       
-      // Log activity
-      await logActivity({
-        action: ActivityActions.BOOKING_CREATED,
-        details: {
-          bookingId: newBooking.id,
-          type: data.type,
-          customerName: data.name,
-          carType: data.carType
-        },
-        ipAddress: getIpAddress(req),
-        userAgent: getUserAgent(req)
-      })
-      
-      // Send notification
-      sendBookingNotification(newBooking).catch(error => {
-        console.error('Failed to send booking notification:', error)
-      })
-      
-      return NextResponse.json({ success: true, rentalDays, booking: newBooking })
-    } else if (data.type === 'Hotel') {
-      const newBooking = await prisma.booking.create({
+      newBooking = await prisma.booking.create({
         data: {
-          type: data.type,
-          name: data.guestName,
-          phone: data.phone,
-          pickupDate: data.checkInDate,
-          pickupTime: '14:00', // Default check-in time
-          returnDate: data.checkOutDate,
-          returnTime: '11:00', // Default check-out time
-          status: 'Active'
+          type: requestData.type,
+          name: requestData.guestName.trim(),
+          email: requestData.email?.trim(),
+          phone: requestData.phone.trim(),
+          pickupDate: requestData.checkInDate,
+          pickupTime: '14:00', // Standard check-in
+          returnDate: requestData.checkOutDate,
+          returnTime: '11:00', // Standard check-out
+          status: 'Confirmed'
         }
       })
+    }
+    // Handle taxi service bookings
+    else if (requestData.type === 'Taxi Service') {
+      if (!requestData.name?.trim() || !requestData.phone?.trim() || !requestData.idOrPassport?.trim() || !requestData.nationality?.trim()) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Customer name, phone, ID/Passport, and nationality are required for taxi service' 
+        }, { status: 400 })
+      }
       
-      // Send notification
-      sendBookingNotification(newBooking).catch(error => {
-        console.error('Failed to send booking notification:', error)
-      })
-      
-      return NextResponse.json({ success: true, booking: newBooking })
-    } else {
-      // Generic handler for other booking types
-      const newBooking = await prisma.booking.create({
+      newBooking = await prisma.booking.create({
         data: {
-          type: data.type,
-          name: data.name || data.guestName || null,
-          phone: data.phone || null,
-          nationality: data.nationality || null,
-          idOrPassport: data.idOrPassport || null,
-          carType: data.carType || null,
-          pickupDate: data.pickupDate || data.checkInDate || null,
-          pickupTime: data.pickupTime || null,
-          returnDate: data.returnDate || data.checkOutDate || null,
-          returnTime: data.returnTime || null,
-          rentalDays: data.rentalDays || null,
+          type: requestData.type,
+          name: requestData.name.trim(),
+          email: requestData.email?.trim(),
+          phone: requestData.phone.trim(),
+          nationality: requestData.nationality.trim(),
+          idOrPassport: requestData.idOrPassport.trim(),
+          pickupDate: requestData.pickupDate,
+          pickupTime: requestData.pickupTime,
+          returnDate: requestData.returnDate,
+          returnTime: requestData.returnTime,
+          status: 'Confirmed'
+        }
+      })
+    }
+    // Handle other booking types
+    else {
+      const requiredFields = ['name', 'phone']
+      const missingFields = requiredFields.filter(field => !requestData[field]?.trim())
+      
+      if (missingFields.length > 0) {
+        return NextResponse.json({ 
+          success: false, 
+          error: `Missing required fields: ${missingFields.join(', ')}` 
+        }, { status: 400 })
+      }
+      
+      newBooking = await prisma.booking.create({
+        data: {
+          type: requestData.type,
+          name: requestData.name?.trim() || requestData.guestName?.trim(),
+          email: requestData.email?.trim(),
+          phone: requestData.phone?.trim(),
+          nationality: requestData.nationality?.trim() || null,
+          idOrPassport: requestData.idOrPassport?.trim() || null,
+          carType: requestData.carType || null,
+          pickupDate: requestData.pickupDate || requestData.checkInDate || null,
+          pickupTime: requestData.pickupTime || null,
+          returnDate: requestData.returnDate || requestData.checkOutDate || null,
+          returnTime: requestData.returnTime || null,
+          rentalDays: requestData.rentalDays || null,
           returnConfirmed: false,
           fullTank: false,
-          status: 'Active'
+          status: 'Confirmed'
         }
       })
-      // Optionally: log activity, send notification, etc.
-      return NextResponse.json({ success: true, booking: newBooking })
     }
+    
+    console.log('POST /api/bookings - Booking created successfully:', newBooking);
+    
+    // Log the activity
+    await logActivity({
+      action: ActivityActions.BOOKING_CREATED,
+      details: {
+        bookingId: newBooking.id,
+        type: requestData.type,
+        customerName: newBooking.name,
+        carType: newBooking.carType,
+        rentalDays
+      },
+      ipAddress: getIpAddress(req),
+      userAgent: getUserAgent(req)
+    }).catch(err => {
+      console.warn('Activity logging failed:', err)
+    })
+    
+    // Send notification asynchronously
+    sendBookingNotification(newBooking).catch(err => {
+      console.error('Notification delivery failed:', err)
+    })
+    
+    const response: any = { 
+      success: true, 
+      bookingId: newBooking.id,
+      message: 'Booking created successfully'
+    }
+    
+    if (rentalDays) {
+      response.rentalDays = rentalDays
+    }
+    
+    console.log('POST /api/bookings - Sending response:', response);
+    return NextResponse.json(response)
+    
   } catch (error) {
-    console.error('Error creating booking:', error)
-    return NextResponse.json({ success: false, error: 'Failed to create booking' }, { status: 500 })
+    console.error('Booking creation failed:', error)
+    
+    // Handle specific database errors
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Duplicate booking detected' 
+      }, { status: 409 })
+    }
+    
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Unable to process booking request' 
+    }, { status: 500 })
   }
 } 

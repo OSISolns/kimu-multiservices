@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@/generated/prisma'
+import { prisma } from '@/lib/prisma'
 import {
   logActivity,
   ActivityActions,
   getIpAddress,
   getUserAgent
 } from '../../../services/activityLog'
-
-const prisma = new PrismaClient()
 
 export async function PATCH(
   req: NextRequest,
@@ -57,15 +55,42 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    console.log('DELETE request received for notification');
+    
+    // Check if user is authenticated
+    const username = req.headers.get('x-username');
+    console.log('Username from header:', username);
+    
+    if (!username) {
+      console.log('No username provided');
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+    
     const { id } = await params;
+    console.log('Notification ID to delete:', id);
     const parsedId = parseInt(id);
+    console.log('Parsed ID:', parsedId);
+    
     const notification = await prisma.notification.findUnique({
       where: { id: parsedId }
     })
+    console.log('Found notification:', notification);
+
+    if (!notification) {
+      console.log('Notification not found');
+      return NextResponse.json(
+        { success: false, error: 'Notification not found' },
+        { status: 404 }
+      )
+    }
 
     await prisma.notification.delete({
       where: { id: parsedId }
     })
+    console.log('Notification deleted from database');
 
     await logActivity({
       userId: notification?.userId || undefined,
@@ -77,6 +102,7 @@ export async function DELETE(
       ipAddress: getIpAddress(req),
       userAgent: getUserAgent(req)
     })
+    console.log('Activity logged');
 
     return NextResponse.json({ success: true })
   } catch (error) {

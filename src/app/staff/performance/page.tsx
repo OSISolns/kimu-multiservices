@@ -5,21 +5,17 @@ import { Bar } from 'react-chartjs-2';
 import ExcelJS from 'exceljs';
 import { useUser } from '../../UserContext';
 import { useRouter } from 'next/navigation';
+import { FaFileAlt, FaDownload, FaPrint, FaChartLine, FaChartPie, FaMoneyBillWave, FaCalendarAlt, FaSearch, FaFilter, FaEye, FaEdit, FaTrash, FaPlus, FaMinus, FaPercentage, FaClock, FaExclamationTriangle, FaCheckCircle, FaTimesCircle, FaTag, FaCalculator, FaPiggyBank, FaBalanceScale, FaUser, FaCar, FaHotel, FaTaxi, FaPlane, FaHandshake, FaSignOutAlt, FaSignInAlt } from 'react-icons/fa';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
-// Mock data and utility functions (copy from reports page)
-const staffPerformance = [
-  { name: 'Jean Bosco', fullName: 'Jean Bosco Niyonzima', role: 'admin', bookings: 8, revenue: 480000, completed: 7, pending: 1, cancelled: 0, leads: 10, feedback: 4.8, reviews: 12, usersManaged: 5, systemActions: 12, kpi: 92, reports: 4, attendance: 98 },
-  { name: 'Alice Mukamana', fullName: 'Alice Mukamana', role: 'sales', bookings: 6, revenue: 350000, completed: 5, pending: 1, cancelled: 0, leads: 18, feedback: 4.5, reviews: 9, campaigns: 3, crmActivity: 12, kpi: 88, reports: 4, attendance: 95 },
-  { name: 'Samuel Dusabe', fullName: 'Samuel Dusabe', role: 'transport-officer', bookings: 5, revenue: 420000, completed: 4, pending: 0, cancelled: 1, leads: 7, feedback: 4.9, reviews: 10, vehiclesManaged: 12, maintenanceActions: 4, tripLogs: 20, kpi: 90, reports: 4, attendance: 97 },
-  { name: 'Esther Uwimana', fullName: 'Esther Uwimana', role: 'accountant', bookings: 3, revenue: 200000, completed: 2, pending: 1, cancelled: 0, leads: 5, feedback: 4.7, reviews: 7, invoices: 15, paymentsTracked: 14, kpi: 95, reports: 4, attendance: 99 },
-];
-const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-const staffTrends = {
-  'Jean Bosco':   [1, 2, 1, 2, 1, 1],
-  'Alice Mukamana': [1, 1, 1, 1, 1, 1],
-  'Samuel Dusabe':  [0, 1, 1, 1, 1, 1],
-  'Esther Uwimana': [0, 1, 0, 1, 0, 1],
+// Real data and utility functions - will be populated from database
+type StaffPerf = {
+  name: string; fullName: string; role: string; bookings: number; revenue: number; completed: number; pending: number; cancelled: number; leads: number; feedback: number; reviews: number; attendance: number; kpi: number;
+  vehiclesManaged?: number; tripLogs?: number; maintenanceActions?: number; campaigns?: number; crmActivity?: number; invoices?: number; paymentsTracked?: number;
 };
+const staffPerformance: StaffPerf[] = [];
+const months: string[] = [];
+const staffTrends: { [key: string]: number[] } = {};
 function getTopPerformer(staff: any[]) {
   return staff.reduce((top, s) => (s.revenue > top.revenue ? s : top), staff[0]);
 }
@@ -66,6 +62,14 @@ export default function StaffPerformancePage() {
       router.push('/staff/dashboard');
     }
   }, [isLoading, user, router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <LoadingSpinner message="Loading Performance Data" size="lg" fullScreen={true} />
+      </div>
+    );
+  }
 
   if (!isLoading && user && user.role !== 'admin') {
     return <div className="min-h-screen flex items-center justify-center text-xl font-bold text-red-600">Not Authorized</div>;
@@ -221,21 +225,21 @@ export default function StaffPerformancePage() {
             value={dateRange.from}
             onChange={e => setDateRange(r => ({ ...r, from: e.target.value }))}
             className="border rounded px-2 py-1 text-sm"
-            title="From date (mock)"
+                              title="From date"
           />
           <input
             type="date"
             value={dateRange.to}
             onChange={e => setDateRange(r => ({ ...r, to: e.target.value }))}
             className="border rounded px-2 py-1 text-sm"
-            title="To date (mock)"
+                              title="To date"
           />
         </div>
         {/* Role-Specific Tables/Logs */}
         {tab === 'sales' && (
           <div className="mb-8">
             <div className="mb-2">
-              <Link href="/staff/sales-dashboard" className="text-blue-600 hover:underline font-semibold">Open Sales & Marketing Dashboard &rarr;</Link>
+              <Link href="/staff/sales-management" className="text-blue-600 hover:underline font-semibold">Open Sales Management &rarr;</Link>
             </div>
             <h2 className="text-lg font-bold mb-2">Sales & Marketing Officer Tasks & KPIs</h2>
             <ul className="list-disc ml-6 mb-2 text-sm">
@@ -385,7 +389,7 @@ export default function StaffPerformancePage() {
               <li>Dashboards & Logs: Sales, Transport, Finance, Feedback, Vehicle Utilization, Issue Tracking</li>
               <li>KPI Scorecards (monthly rating)</li>
             </ul>
-            <div className="mb-2 text-sm font-semibold">Reports Archive (Mock):</div>
+                            <div className="mb-2 text-sm font-semibold">Reports Archive:</div>
             <ul className="list-disc ml-6 mb-2 text-sm">
               <li>Weekly Report - 2024-07-01</li>
               <li>Weekly Report - 2024-06-24</li>

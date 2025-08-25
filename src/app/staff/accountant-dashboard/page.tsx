@@ -1,9 +1,10 @@
 "use client"
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FaMoneyBillWave, FaChartLine, FaCreditCard, FaReceipt, FaCalculator, FaFileInvoiceDollar, FaDollarSign, FaChartBar, FaCalendarAlt, FaUsers, FaCar, FaHotel, FaTaxi, FaPiggyBank, FaChartPie, FaBalanceScale, FaFileAlt, FaDownload, FaPrint, FaEye, FaEdit, FaTrash, FaPlus, FaMinus, FaPercentage, FaClock, FaExclamationTriangle, FaCheckCircle, FaTimesCircle, FaTable, FaSave, FaUndo, FaInfoCircle, FaCompress, FaExpand } from 'react-icons/fa';
+import { FaMoneyBillWave, FaChartLine, FaCreditCard, FaReceipt, FaCalculator, FaFileInvoiceDollar, FaDollarSign, FaChartBar, FaCalendarAlt, FaUsers, FaCar, FaHotel, FaTaxi, FaPiggyBank, FaChartPie, FaBalanceScale, FaFileAlt, FaDownload, FaPrint, FaEye, FaEdit, FaTrash, FaPlus, FaMinus, FaPercentage, FaClock, FaExclamationTriangle, FaCheckCircle, FaTimesCircle, FaTable, FaSave, FaUndo, FaInfoCircle, FaCompress, FaExpand, FaTag } from 'react-icons/fa';
 import { useUser } from '../../UserContext';
 import * as ExcelJS from 'exceljs';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 function formatRWF(num: number | undefined | null) {
   if (num === undefined || num === null || isNaN(num)) {
@@ -18,155 +19,39 @@ function calculatePercentage(value: number, total: number) {
   return total > 0 ? Math.round((value / total) * 100) : 0;
 }
 
-// Mock financial data structure
-  const mockFinancialData = {
-    openingBalances: {
-      mtnMomoRWF: 10900.00,
-      equityBankRWF: 1500000.00,
-      bkBankRWF: 598129.00
-    },
-    income: [
-      { id: 1, description: 'Debit from Gi.Masta(MTN Momo)', mtnMomoRWF: 384000.00, equityBankRWF: 0, bkBankRWF: 0, date: '2025-01-16' },
-      { id: 2, description: 'Hotel Booking Revenue', mtnMomoRWF: 0, equityBankRWF: 150000.00, bkBankRWF: 100000.00, date: '2025-01-17' },
-      { id: 3, description: 'Car Rental Payment', mtnMomoRWF: 180000.00, equityBankRWF: 0, bkBankRWF: 0, date: '2025-01-18' },
-      { id: 4, description: 'Taxi Service Revenue', mtnMomoRWF: 45000.00, equityBankRWF: 0, bkBankRWF: 0, date: '2025-01-19' },
-      { id: 5, description: 'Tour Package Revenue', mtnMomoRWF: 320000.00, equityBankRWF: 0, bkBankRWF: 0, date: '2025-01-20' }
-    ],
-    expenses: [
-      { id: 1, description: 'Fuel for Toyota Coaster', mtnMomoRWF: 45000.00, equityBankRWF: 0, bkBankRWF: 0, category: 'FUEL', date: '2025-01-15' },
-      { id: 2, description: 'Fuel for Land Cruiser', mtnMomoRWF: 38000.00, equityBankRWF: 0, bkBankRWF: 0, category: 'FUEL', date: '2025-01-16' },
-      { id: 3, description: 'Vehicle Insurance Premium', mtnMomoRWF: 0, equityBankRWF: 150000.00, bkBankRWF: 0, category: 'INSURANCE', date: '2025-01-17' },
-      { id: 4, description: 'Monthly Payroll - All Employees', mtnMomoRWF: 0, equityBankRWF: 300000.00, bkBankRWF: 220000.00, category: 'PAYROLL', date: '2025-01-18' },
-      { id: 5, description: 'Hotel Booking Commission', mtnMomoRWF: 25000.00, equityBankRWF: 0, bkBankRWF: 0, category: 'HOTEL ACCOMMODATION', date: '2025-01-19' },
-      { id: 6, description: 'Office Supplies', mtnMomoRWF: 12000.00, equityBankRWF: 0, bkBankRWF: 0, category: 'OFFICE EXPENSES', date: '2025-01-20' },
-      { id: 7, description: 'Petty Cash - Driver Allowance', mtnMomoRWF: 15000.00, equityBankRWF: 0, bkBankRWF: 0, category: 'PETTY CASH', date: '2025-01-21' },
-      { id: 8, description: 'Engine Oil Change', mtnMomoRWF: 25000.00, equityBankRWF: 0, bkBankRWF: 0, category: 'MAINTENANCE', date: '2025-01-22' },
-      { id: 9, description: 'Brake Pad Replacement', mtnMomoRWF: 35000.00, equityBankRWF: 0, bkBankRWF: 0, category: 'MAINTENANCE', date: '2025-01-23' },
-      { id: 10, description: 'Tire Replacement', mtnMomoRWF: 0, equityBankRWF: 120000.00, bkBankRWF: 0, category: 'MAINTENANCE', date: '2025-01-24' },
-      { id: 11, description: 'Vehicle Repair - Engine', mtnMomoRWF: 75000.00, equityBankRWF: 0, bkBankRWF: 0, category: 'VEHICLE REPAIRS', date: '2025-01-25' },
-      { id: 12, description: 'Carwash - Toyota Coaster', mtnMomoRWF: 5000.00, equityBankRWF: 0, bkBankRWF: 0, category: 'CARWASH', date: '2025-01-26' },
-      { id: 13, description: 'Carwash - Land Cruiser', mtnMomoRWF: 4000.00, equityBankRWF: 0, bkBankRWF: 0, category: 'CARWASH', date: '2025-01-27' },
-      { id: 14, description: 'Carwash - All Vehicles', mtnMomoRWF: 8000.00, equityBankRWF: 0, bkBankRWF: 0, category: 'CARWASH', date: '2025-01-28' }
-    ]
-  };
+// Types
+type FinancialRecord = {
+  id: number;
+  description: string;
+  mtnMomoRWF: number;
+  equityBankRWF: number;
+  bkBankRWF: number;
+  date: string;
+  [key: string]: any;
+};
 
-  // Payroll and Employee Data
+type FinancialData = {
+  openingBalances: { mtnMomoRWF: number; equityBankRWF: number; bkBankRWF: number };
+  income: FinancialRecord[];
+  expenses: FinancialRecord[];
+};
+
+type PayrollEmployee = { id: number; [key: string]: any };
+type PayrollData = { employees: PayrollEmployee[]; payrollHistory: any[] };
+
+// Real data structure - will be populated from API
+
+  // Payroll and Employee Data - will be populated from real data
   const mockPayrollData = {
-    employees: [
-      {
-        id: 1,
-        name: 'John Doe',
-        position: 'Driver',
-        employeeId: 'KIMUDRV001',
-        salary: 80000,
-        allowances: 0,
-        deductions: 0,
-        netSalary: 80000,
-        status: 'active',
-        joinDate: '2024-01-15',
-        bankAccount: '1234567890',
-        phone: '+250788123456'
-      },
-      {
-        id: 2,
-        name: 'Jane Smith',
-        position: 'Sales & Marketing Agent',
-        employeeId: 'KIMUSMA001',
-        salary: 70000,
-        allowances: 0,
-        deductions: 0,
-        netSalary: 70000,
-        status: 'active',
-        joinDate: '2024-02-01',
-        bankAccount: '0987654321',
-        phone: '+250788654321'
-      },
-      {
-        id: 3,
-        name: 'Mike Johnson',
-        position: 'Driver',
-        employeeId: 'KIMUDRV002',
-        salary: 75000,
-        allowances: 0,
-        deductions: 0,
-        netSalary: 75000,
-        status: 'active',
-        joinDate: '2024-01-20',
-        bankAccount: '1122334455',
-        phone: '+250788111222'
-      },
-      {
-        id: 4,
-        name: 'Sarah Wilson',
-        position: 'Transport Officer',
-        employeeId: 'KIMUTRO001',
-        salary: 85000,
-        allowances: 0,
-        deductions: 0,
-        netSalary: 85000,
-        status: 'active',
-        joinDate: '2024-03-10',
-        bankAccount: '5566778899',
-        phone: '+250788333444'
-      },
-      {
-        id: 5,
-        name: 'David Brown',
-        position: 'Manager',
-        employeeId: 'KIMUMGR001',
-        salary: 120000,
-        allowances: 0,
-        deductions: 0,
-        netSalary: 120000,
-        status: 'active',
-        joinDate: '2024-01-01',
-        bankAccount: '9988776655',
-        phone: '+250788555666'
-      },
-      {
-        id: 6,
-        name: 'Mary Johnson',
-        position: 'Accountant',
-        employeeId: 'KIMUACC001',
-        salary: 90000,
-        allowances: 0,
-        deductions: 0,
-        netSalary: 90000,
-        status: 'active',
-        joinDate: '2024-02-15',
-        bankAccount: '1122334455',
-        phone: '+250788777888'
-      }
-    ],
-    payrollHistory: [
-      {
-        id: 1,
-        month: 'January 2025',
-        totalSalary: 520000,
-        totalAllowances: 0,
-        totalDeductions: 0,
-        netPayroll: 520000,
-        status: 'paid',
-        paymentDate: '2025-01-31'
-      },
-      {
-        id: 2,
-        month: 'December 2024',
-        totalSalary: 520000,
-        totalAllowances: 0,
-        totalDeductions: 0,
-        netPayroll: 520000,
-        status: 'paid',
-        paymentDate: '2024-12-31'
-      }
-    ]
+    employees: [],
+    payrollHistory: []
   };
 
 export default function AccountantDashboard() {
   const router = useRouter();
   const { user, isLoading } = useUser();
   // Ensure all data has the correct structure with both bank accounts
-  const ensureDataStructure = (data: any) => {
+  const ensureDataStructure = (data: any): FinancialData => {
     return {
       ...data,
       income: data.income.map((item: any) => ({
@@ -181,11 +66,19 @@ export default function AccountantDashboard() {
         equityBankRWF: item.equityBankRWF ?? item.bankRWF ?? 0,
         bkBankRWF: item.bkBankRWF ?? 0
       }))
-    };
+    } as FinancialData;
   };
 
-  const [financialData, setFinancialData] = useState(ensureDataStructure(mockFinancialData));
-  const [payrollData, setPayrollData] = useState(mockPayrollData);
+  const [financialData, setFinancialData] = useState<FinancialData>(ensureDataStructure({
+    openingBalances: {
+      mtnMomoRWF: 0,
+      equityBankRWF: 0,
+      bkBankRWF: 0
+    },
+    income: [],
+    expenses: []
+  }));
+  const [payrollData, setPayrollData] = useState<PayrollData>(mockPayrollData as PayrollData);
   const [showAddModal, setShowAddModal] = useState(false);
   const [modalType, setModalType] = useState<'income' | 'expense'>('income');
   const [editingRow, setEditingRow] = useState<any>(null);
@@ -203,6 +96,7 @@ export default function AccountantDashboard() {
   const [timeFilter, setTimeFilter] = useState<'all' | 'daily' | 'weekly' | 'monthly' | 'yearly'>('all');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [activeTab, setActiveTab] = useState<'ledger' | 'summary' | 'reports' | 'payroll'>('ledger');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -211,8 +105,25 @@ export default function AccountantDashboard() {
       // Log unauthorized access attempt for security monitoring
       console.warn(`SECURITY ALERT: Unauthorized access attempt to accountant dashboard by user: ${user.username} (role: ${user.role}) at ${new Date().toISOString()}`);
       router.push('/staff/dashboard');
+    } else if (!isLoading && user) {
+      fetchFinancialData();
     }
   }, [router, user, isLoading]);
+
+  const fetchFinancialData = async () => {
+    try {
+      const response = await fetch('/api/financial-summary');
+      if (!response.ok) {
+        throw new Error('Failed to fetch financial data');
+      }
+      const data = await response.json();
+      setFinancialData(ensureDataStructure(data));
+    } catch (error) {
+      console.error('Error fetching financial data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filter data based on time period
   const filterDataByTime = (data: any[], filter: string, date: string) => {
@@ -305,26 +216,26 @@ export default function AccountantDashboard() {
       }
       
       // Get all transactions up to the period start
-      const previousIncome = financialData.income.filter(item => {
+      const previousIncome = financialData.income.filter((item: any) => {
         const itemDate = new Date(item.date);
         return !isNaN(itemDate.getTime()) && itemDate < periodStart;
       });
       
-      const previousExpenses = financialData.expenses.filter(item => {
+      const previousExpenses = financialData.expenses.filter((item: any) => {
         const itemDate = new Date(item.date);
         return !isNaN(itemDate.getTime()) && itemDate < periodStart;
       });
       
       return {
-        mtnMomoRWF: financialData.openingBalances.mtnMomoRWF + 
-          previousIncome.reduce((sum, item) => sum + (item.mtnMomoRWF || 0), 0) - 
-          previousExpenses.reduce((sum, item) => sum + (item.mtnMomoRWF || 0), 0),
-        equityBankRWF: financialData.openingBalances.equityBankRWF + 
-          previousIncome.reduce((sum, item) => sum + (item.equityBankRWF || 0), 0) - 
-          previousExpenses.reduce((sum, item) => sum + (item.equityBankRWF || 0), 0),
-        bkBankRWF: financialData.openingBalances.bkBankRWF + 
-          previousIncome.reduce((sum, item) => sum + (item.bkBankRWF || 0), 0) - 
-          previousExpenses.reduce((sum, item) => sum + (item.bkBankRWF || 0), 0)
+                mtnMomoRWF: financialData.openingBalances.mtnMomoRWF +
+          previousIncome.reduce((sum: number, item: any) => sum + (item.mtnMomoRWF || 0), 0) -
+          previousExpenses.reduce((sum: number, item: any) => sum + (item.mtnMomoRWF || 0), 0),
+        equityBankRWF: financialData.openingBalances.equityBankRWF +
+          previousIncome.reduce((sum: number, item: any) => sum + (item.equityBankRWF || 0), 0) -
+          previousExpenses.reduce((sum: number, item: any) => sum + (item.equityBankRWF || 0), 0),
+        bkBankRWF: financialData.openingBalances.bkBankRWF +
+          previousIncome.reduce((sum: number, item: any) => sum + (item.bkBankRWF || 0), 0) -
+          previousExpenses.reduce((sum: number, item: any) => sum + (item.bkBankRWF || 0), 0)
       };
     } catch (error) {
       console.error('Error calculating opening balances:', error);
@@ -348,7 +259,7 @@ export default function AccountantDashboard() {
   };
 
     // Add new transaction with security logging
-  const addTransaction = (type: 'income' | 'expense', data: any) => {
+  const addTransaction = async (type: 'income' | 'expense', data: any) => {
     // Security audit log
     const auditLog = {
       action: 'ADD_TRANSACTION',
@@ -378,10 +289,28 @@ export default function AccountantDashboard() {
         createdBy: user?.username,
         createdAt: new Date().toISOString()
       };
-      setFinancialData(prev => ({
+      setFinancialData((prev: any) => ({
         ...prev,
         income: [...prev.income, newIncome]
       }));
+
+      // Send notification
+      try {
+        await fetch('/api/notifications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-username': user?.username || '',
+          },
+          body: JSON.stringify({
+            message: `New income recorded: ${data.description} - ${(data.mtnMomoRWF + data.equityBankRWF + data.bkBankRWF).toLocaleString('en-US')} RWF`,
+            type: 'income',
+            userId: null
+          })
+        });
+      } catch (error) {
+        console.error('Error sending income notification:', error);
+      }
     } else {
       const newExpense = {
         id: Date.now(),
@@ -394,10 +323,28 @@ export default function AccountantDashboard() {
         createdBy: user?.username,
         createdAt: new Date().toISOString()
       };
-      setFinancialData(prev => ({
+      setFinancialData((prev: any) => ({
         ...prev,
         expenses: [...prev.expenses, newExpense]
       }));
+
+      // Send notification
+      try {
+        await fetch('/api/notifications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-username': user?.username || '',
+          },
+          body: JSON.stringify({
+            message: `New expense recorded: ${data.description} (${data.category}) - ${(data.mtnMomoRWF + data.equityBankRWF + data.bkBankRWF).toLocaleString('en-US')} RWF`,
+            type: 'expense',
+            userId: null
+          })
+        });
+      } catch (error) {
+        console.error('Error sending expense notification:', error);
+      }
     }
     setShowAddModal(false);
   };
@@ -478,9 +425,9 @@ export default function AccountantDashboard() {
 
   // Save changes for transaction
   const saveTransactionChanges = (transactionId: number, type: 'income' | 'expense', updatedData: any) => {
-    setFinancialData(prev => ({
+    setFinancialData((prev: FinancialData) => ({
       ...prev,
-      [type === 'income' ? 'income' : 'expenses']: prev[type === 'income' ? 'income' : 'expenses'].map(item =>
+      [type === 'income' ? 'income' : 'expenses']: prev[type === 'income' ? 'income' : 'expenses'].map((item: FinancialRecord) =>
         item.id === transactionId ? { ...item, ...updatedData } : item
       )
     }));
@@ -501,14 +448,14 @@ export default function AccountantDashboard() {
     console.log('SECURITY AUDIT:', auditLog);
     
     if (type === 'income') {
-      setFinancialData(prev => ({
+      setFinancialData((prev: FinancialData) => ({
         ...prev,
-        income: prev.income.filter(item => item.id !== id)
+        income: prev.income.filter((item: FinancialRecord) => item.id !== id)
       }));
     } else {
-      setFinancialData(prev => ({
+      setFinancialData((prev: FinancialData) => ({
         ...prev,
-        expenses: prev.expenses.filter(item => item.id !== id)
+        expenses: prev.expenses.filter((item: FinancialRecord) => item.id !== id)
       }));
     }
   };
@@ -533,7 +480,7 @@ export default function AccountantDashboard() {
   };
 
   // Payroll functions
-  const addEmployee = (employeeData: any) => {
+  const addEmployee = async (employeeData: any) => {
     const auditLog = {
       action: 'ADD_EMPLOYEE',
       user: user?.username,
@@ -558,11 +505,29 @@ export default function AccountantDashboard() {
       ...prev,
       employees: [...prev.employees, newEmployee]
     }));
+
+    // Send notification
+    try {
+      await fetch('/api/notifications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-username': user?.username || '',
+        },
+        body: JSON.stringify({
+          message: `New employee added: ${employeeData.name} (${employeeData.position}) - ${employeeData.salary.toLocaleString('en-US')} RWF`,
+          type: 'employee',
+          userId: null
+        })
+      });
+    } catch (error) {
+      console.error('Error sending employee notification:', error);
+    }
     
     setShowAddEmployeeModal(false);
   };
 
-  const processPayroll = () => {
+  const processPayroll = async () => {
     const auditLog = {
       action: 'PROCESS_PAYROLL',
       user: user?.username,
@@ -590,11 +555,31 @@ export default function AccountantDashboard() {
       ...prev,
       payrollHistory: [newPayroll, ...prev.payrollHistory]
     }));
+
+    // Send notification for each employee
+    try {
+      for (const employee of payrollData.employees) {
+        await fetch('/api/notifications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-username': user?.username || '',
+          },
+          body: JSON.stringify({
+            message: `Payroll processed: ${employee.name} - ${employee.salary.toLocaleString('en-US')} RWF (${newPayroll.month})`,
+            type: 'payroll',
+            userId: null
+          })
+        });
+      }
+    } catch (error) {
+      console.error('Error sending payroll notifications:', error);
+    }
     
     setShowPayrollModal(false);
   };
 
-  const deleteEmployee = (id: number) => {
+  const deleteEmployee = async (id: number) => {
     const auditLog = {
       action: 'DELETE_EMPLOYEE',
       user: user?.username,
@@ -604,10 +589,33 @@ export default function AccountantDashboard() {
     
     console.log('SECURITY AUDIT:', auditLog);
     
+    // Get employee details before deletion
+    const employeeToDelete = payrollData.employees.find(emp => emp.id === id);
+    
     setPayrollData(prev => ({
       ...prev,
       employees: prev.employees.filter(emp => emp.id !== id)
     }));
+
+    // Send notification
+    if (employeeToDelete) {
+      try {
+        await fetch('/api/notifications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-username': user?.username || '',
+          },
+          body: JSON.stringify({
+            message: `Employee deleted: ${employeeToDelete.name} (${employeeToDelete.position})`,
+            type: 'employee',
+            userId: null
+          })
+        });
+      } catch (error) {
+        console.error('Error sending employee deletion notification:', error);
+      }
+    }
   };
 
   // Export to Excel/CSV with security logging
@@ -683,9 +691,9 @@ export default function AccountantDashboard() {
     worksheet.mergeCells('A9:F9');
 
     const summaryData = [
-      ['Total Income (RWF)', filteredIncome.reduce((sum, item) => sum + item.cashRWF + item.bankRWF, 0).toLocaleString()],
-      ['Total Expenses (RWF)', filteredExpenses.reduce((sum, item) => sum + item.cashRWF + item.bankRWF, 0).toLocaleString()],
-      ['Net Profit/Loss (RWF)', (filteredIncome.reduce((sum, item) => sum + item.cashRWF + item.bankRWF, 0) - filteredExpenses.reduce((sum, item) => sum + item.cashRWF + item.bankRWF, 0)).toLocaleString()],
+      ['Total Income (RWF)', filteredIncome.reduce((sum, item) => sum + item.mtnMomoRWF + item.equityBankRWF + item.bkBankRWF, 0).toLocaleString()],
+      ['Total Expenses (RWF)', filteredExpenses.reduce((sum, item) => sum + item.mtnMomoRWF + item.equityBankRWF + item.bkBankRWF, 0).toLocaleString()],
+      ['Net Profit/Loss (RWF)', (filteredIncome.reduce((sum, item) => sum + item.mtnMomoRWF + item.equityBankRWF + item.bkBankRWF, 0) - filteredExpenses.reduce((sum, item) => sum + item.mtnMomoRWF + item.equityBankRWF + item.bkBankRWF, 0)).toLocaleString()],
       ['Total Transactions', (filteredIncome.length + filteredExpenses.length).toString()]
     ];
 
@@ -855,9 +863,9 @@ export default function AccountantDashboard() {
     worksheet.mergeCells('A' + (28 + summaryData.length + filteredIncome.length + filteredExpenses.length) + ':F' + (28 + summaryData.length + filteredIncome.length + filteredExpenses.length));
 
     const analysisData = [
-      ['Profit Margin (%)', ((filteredIncome.reduce((sum, item) => sum + item.cashRWF + item.bankRWF, 0) - filteredExpenses.reduce((sum, item) => sum + item.cashRWF + item.bankRWF, 0)) / filteredIncome.reduce((sum, item) => sum + item.cashRWF + item.bankRWF, 0) * 100).toFixed(2) + '%'],
-      ['Expense Ratio (%)', (filteredExpenses.reduce((sum, item) => sum + item.cashRWF + item.bankRWF, 0) / filteredIncome.reduce((sum, item) => sum + item.cashRWF + item.bankRWF, 0) * 100).toFixed(2) + '%'],
-      ['Cash Flow Ratio', (closingBalances.cashRWF / (filteredExpenses.reduce((sum, item) => sum + item.cashRWF + item.bankRWF, 0) || 1)).toFixed(2)],
+      ['Profit Margin (%)', ((filteredIncome.reduce((sum, item) => sum + item.mtnMomoRWF + item.equityBankRWF + item.bkBankRWF, 0) - filteredExpenses.reduce((sum, item) => sum + item.mtnMomoRWF + item.equityBankRWF + item.bkBankRWF, 0)) / (filteredIncome.reduce((sum, item) => sum + item.mtnMomoRWF + item.equityBankRWF + item.bkBankRWF, 0) || 1) * 100).toFixed(2) + '%'],
+      ['Expense Ratio (%)', ((filteredExpenses.reduce((sum, item) => sum + item.mtnMomoRWF + item.equityBankRWF + item.bkBankRWF, 0) / (filteredIncome.reduce((sum, item) => sum + item.mtnMomoRWF + item.equityBankRWF + item.bkBankRWF, 0) || 1)) * 100).toFixed(2) + '%'],
+      ['Cash Flow Ratio', (((closingBalances.mtnMomoRWF + closingBalances.equityBankRWF + closingBalances.bkBankRWF) / (filteredExpenses.reduce((sum, item) => sum + item.mtnMomoRWF + item.equityBankRWF + item.bkBankRWF, 0) || 1))).toFixed(2)],
       ['Transaction Count', (filteredIncome.length + filteredExpenses.length).toString()]
     ];
 
@@ -918,13 +926,10 @@ export default function AccountantDashboard() {
     });
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
+      <div className="text-center py-8">
+        <LoadingSpinner message="Loading financial data..." size="md" />
       </div>
     );
   }
@@ -1185,11 +1190,11 @@ export default function AccountantDashboard() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-orange-50 p-4 rounded-lg">
                   <div className="text-sm text-gray-600">Cash (RWF)</div>
-                  <div className="text-xl font-bold text-orange-700">{formatRWF(openingBalances.cashRWF)}</div>
+                  <div className="text-xl font-bold text-orange-700">{formatRWF(openingBalances.mtnMomoRWF)}</div>
                 </div>
                 <div className="bg-purple-50 p-4 rounded-lg">
                   <div className="text-sm text-gray-600">Bank (RWF)</div>
-                  <div className="text-xl font-bold text-purple-700">{formatRWF(openingBalances.bankRWF)}</div>
+                  <div className="text-xl font-bold text-purple-700">{formatRWF(openingBalances.equityBankRWF)}</div>
                 </div>
               </div>
             </div>
@@ -2481,7 +2486,7 @@ export default function AccountantDashboard() {
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                           <span className="text-blue-600 font-semibold text-sm">
-                            {employee.name.split(' ').map(n => n[0]).join('')}
+                            {employee.name.split(' ').map((n: string) => n[0]).join('')}
                           </span>
                         </div>
                         <div>

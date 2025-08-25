@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@/generated/prisma';
+import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import speakeasy from 'speakeasy';
 
-const prisma = new PrismaClient();
-
 export async function POST(req: NextRequest) {
   try {
-    const { username, password, role } = await req.json();
+    const adminUsername = req.headers.get('x-username');
+    const admin = adminUsername ? await prisma.user.findUnique({ where: { username: adminUsername } }) : null;
+    
+    if (!admin || !['admin', 'tofficer'].includes(admin.role)) {
+      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+    }
+
+    const { username, password, role, fullName } = await req.json();
     if (!username || !password) {
       return NextResponse.json({ error: 'Missing username or password' }, { status: 400 });
     }
@@ -22,7 +27,8 @@ export async function POST(req: NextRequest) {
       data: {
         username,
         passwordHash,
-        role: role || 'agent',
+        role: role || 'staff',
+        fullName,
         totpSecret,
       },
     });

@@ -20,7 +20,8 @@ const vehicles = [
     description: 'Spacious SUV perfect for family trips and city driving',
     isAvailable: true,
     power: '203 hp',
-    fuelEfficiency: '8.5 L/100km'
+    fuelEfficiency: '8.5 L/100km',
+    quantity: 15 // Added quantity field
   },
   {
     name: 'Toyota Land Cruiser',
@@ -38,7 +39,8 @@ const vehicles = [
     description: 'Premium off-road capable SUV with luxury features',
     isAvailable: true,
     power: '409 hp',
-    fuelEfficiency: '12.5 L/100km'
+    fuelEfficiency: '12.5 L/100km',
+    quantity: 15 // Added quantity field
   },
   {
     name: 'Toyota Coaster',
@@ -56,7 +58,8 @@ const vehicles = [
     description: 'Large capacity bus ideal for group transportation',
     isAvailable: true,
     power: '150 hp',
-    fuelEfficiency: '15.0 L/100km'
+    fuelEfficiency: '15.0 L/100km',
+    quantity: 15 // Added quantity field
   },
   {
     name: 'Toyota Noah',
@@ -74,7 +77,8 @@ const vehicles = [
     description: 'Comfortable family vehicle with sliding doors',
     isAvailable: true,
     power: '150 hp',
-    fuelEfficiency: '7.8 L/100km'
+    fuelEfficiency: '7.8 L/100km',
+    quantity: 15 // Added quantity field
   },
   {
     name: 'Toyota Prius',
@@ -92,7 +96,8 @@ const vehicles = [
     description: 'Fuel-efficient hybrid perfect for eco-conscious drivers',
     isAvailable: true,
     power: '121 hp',
-    fuelEfficiency: '4.5 L/100km'
+    fuelEfficiency: '4.5 L/100km',
+    quantity: 15 // Added quantity field
   },
   {
     name: 'Toyota Levin',
@@ -110,7 +115,8 @@ const vehicles = [
     description: 'Reliable and economical sedan for daily commuting',
     isAvailable: true,
     power: '120 hp',
-    fuelEfficiency: '6.2 L/100km'
+    fuelEfficiency: '6.2 L/100km',
+    quantity: 15 // Added quantity field
   },
   {
     name: 'Toyota Sonata',
@@ -128,7 +134,8 @@ const vehicles = [
     description: 'Stylish sedan with modern features and comfort',
     isAvailable: true,
     power: '150 hp',
-    fuelEfficiency: '7.0 L/100km'
+    fuelEfficiency: '7.0 L/100km',
+    quantity: 15 // Added quantity field
   },
   {
     name: 'Toyota Sorento',
@@ -146,7 +153,8 @@ const vehicles = [
     description: 'Versatile SUV with three rows of seating',
     isAvailable: true,
     power: '191 hp',
-    fuelEfficiency: '8.8 L/100km'
+    fuelEfficiency: '8.8 L/100km',
+    quantity: 15 // Added quantity field
   },
   {
     name: 'Toyota Tucson',
@@ -164,7 +172,8 @@ const vehicles = [
     description: 'Compact SUV with excellent fuel economy',
     isAvailable: true,
     power: '155 hp',
-    fuelEfficiency: '7.5 L/100km'
+    fuelEfficiency: '7.5 L/100km',
+    quantity: 15 // Added quantity field
   },
   {
     name: 'Toyota KI 5',
@@ -182,7 +191,8 @@ const vehicles = [
     description: 'Fully electric vehicle with zero emissions',
     isAvailable: true,
     power: '201 hp',
-    fuelEfficiency: '0 L/100km'
+    fuelEfficiency: '0 L/100km',
+    quantity: 15 // Added quantity field
   },
   {
     name: 'Toyota TXL',
@@ -200,25 +210,8 @@ const vehicles = [
     description: 'Reliable pickup truck for work and transportation',
     isAvailable: true,
     power: '160 hp',
-    fuelEfficiency: '9.0 L/100km'
-  },
-  {
-    name: 'Toyota TXL-02',
-    image: '/vehicles/TXL-02.png',
-    type: 'Pickup',
-    category: 'Commercial',
-    price: '10,500',
-    year: 2022,
-    engine: '2.8L 4-Cylinder',
-    mileage: '20,000 km',
-    transmission: 'Automatic',
-    fuel: 'Diesel',
-    capacity: '5 passengers',
-    doors: 4,
-    description: 'Powerful diesel pickup for heavy-duty work',
-    isAvailable: true,
-    power: '177 hp',
-    fuelEfficiency: '8.5 L/100km'
+    fuelEfficiency: '9.2 L/100km',
+    quantity: 15 // Added quantity field
   }
 ];
 
@@ -566,10 +559,37 @@ async function seedAll() {
   try {
     console.log('🌱 Starting comprehensive database seeding...');
     
+    // Clear existing vehicles first
+    await prisma.vehicle.deleteMany({});
+    console.log('🗑️ Cleared existing vehicles');
+    
+    // Create expanded vehicle list with 15 units of each model
+    const expandedVehicles = [];
+    
+    // Add base vehicles
+    vehicles.forEach(vehicle => {
+      expandedVehicles.push(vehicle);
+    });
+    
+    // Create 15 units of each vehicle model
+    vehicles.forEach((baseVehicle, index) => {
+      for (let i = 1; i <= 15; i++) {
+        expandedVehicles.push({
+          ...baseVehicle,
+          name: `${baseVehicle.name} #${i}`,
+          quantity: 1,
+          status: 'available',
+          licensePlate: `RAH${String(index * 15 + i).padStart(3, '0')}`,
+          vehicleId: `${baseVehicle.name.replace(/\s+/g, '').toUpperCase()}-${String(i).padStart(3, '0')}`,
+          isAvailable: Math.random() > 0.1, // 90% available
+        });
+      }
+    });
+    
     // Seed vehicles
     console.log('📦 Seeding vehicles...');
     const vehicleResult = await prisma.vehicle.createMany({
-      data: vehicles,
+      data: expandedVehicles,
       skipDuplicates: true
     });
     console.log(`✅ Successfully seeded ${vehicleResult.count} vehicles`);

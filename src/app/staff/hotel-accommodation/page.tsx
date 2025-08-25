@@ -1,9 +1,14 @@
 import { FaWhatsapp, FaPhone, FaCheck } from 'react-icons/fa';
 
-const hotels = [
-  { name: 'Claudine Ingabire', phone: '+250788222333', hotel: 'Kigali Marriott', checkin: '2024-06-14', checkout: '2024-06-16', status: 'Pending' },
-  { name: 'David Habimana', phone: '+250788444555', hotel: 'Radisson Blu', checkin: '2024-06-15', checkout: '2024-06-18', status: 'Completed' },
-];
+type HotelBooking = {
+  name: string;
+  hotel: string;
+  checkin: string;
+  checkout: string;
+  status: string;
+  phone: string;
+};
+const hotels: HotelBooking[] = [];
 
 export default function HotelAccommodationAgentPage() {
   return (

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { FaHistory, FaFilter, FaDownload, FaSearch, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useUser } from '../../UserContext';
 import Link from 'next/link';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 interface ActivityLog {
   id: number;
@@ -246,8 +247,7 @@ export default function ActivityLogsPage() {
           <div className="overflow-x-auto">
             {loading ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-2 text-gray-600">Loading activity logs...</p>
+                <LoadingSpinner message="Loading activity logs..." size="md" />
               </div>
             ) : activityLogs.length === 0 ? (
               <div className="text-center py-8">

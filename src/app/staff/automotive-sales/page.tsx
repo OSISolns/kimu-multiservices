@@ -1,10 +1,8 @@
 import { FaWhatsapp, FaPhone, FaCheck } from 'react-icons/fa';
 import Link from 'next/link';
 
-const sales = [
-  { name: 'Patrick Nshimiyimana', phone: '+250788666777', vehicle: 'Toyota RAV4', inquiry: '2024-06-10', status: 'Pending' },
-  { name: 'Esther Uwimana', phone: '+250788888999', vehicle: 'Hyundai Sonata', inquiry: '2024-06-11', status: 'Completed' },
-];
+type Sale = { name: string; vehicle: string; inquiry: string; status: string; phone: string };
+const sales: Sale[] = [];
 
 export default function AutomotiveSalesAgentPage() {
   return (

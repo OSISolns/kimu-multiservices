@@ -17,20 +17,8 @@ import Link from 'next/link';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-const transactions = [
-  { date: '2024-06-10', client: 'Jean Uwimana', type: 'Rental', amount: 120000, status: 'Completed' },
-  { date: '2024-06-11', client: 'Alice Smith', type: 'Rental', amount: 50000, status: 'Completed' },
-  { date: '2024-06-12', client: 'Paul Mugisha', type: 'Taxi', amount: 20000, status: 'Pending' },
-  { date: '2024-06-12', client: 'Claudine Ingabire', type: 'Hotel', amount: 80000, status: 'Completed' },
-  { date: '2024-06-13', client: 'John Doe', type: 'Rental', amount: 75000, status: 'Completed' },
-  { date: '2024-06-14', client: 'Jane Smith', type: 'Taxi', amount: 15000, status: 'Pending' },
-  { date: '2024-06-15', client: 'Bob Johnson', type: 'Hotel', amount: 95000, status: 'Completed' },
-  { date: '2024-06-16', client: 'Mary Wilson', type: 'Rental', amount: 180000, status: 'Completed' },
-  { date: '2024-06-17', client: 'David Brown', type: 'Taxi', amount: 25000, status: 'Completed' },
-  { date: '2024-06-18', client: 'Sarah Davis', type: 'Hotel', amount: 120000, status: 'Pending' },
-  { date: '2024-06-19', client: 'Mike Miller', type: 'Rental', amount: 90000, status: 'Completed' },
-  { date: '2024-06-20', client: 'Lisa Garcia', type: 'Taxi', amount: 30000, status: 'Completed' },
-];
+type Txn = { date: string; client: string; type: string; amount: number; status: string };
+const transactions: Txn[] = [];
 
 const total = transactions.reduce((sum, t) => sum + t.amount, 0);
 const completed = transactions.filter(t => t.status === 'Completed').length;

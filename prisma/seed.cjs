@@ -98,7 +98,25 @@ function main() {
                         })];
                 case 6:
                     _a.sent();
-                    console.log('Seeded agent1, admin, and accountant users with TOTP secrets.');
+                    // Create transport officer user
+                    var transportOfficerTotpSecret = speakeasy.generateSecret({ length: 20 }).base32;
+                    var transportOfficerPassword = 'kimu@2025';
+                    return [4 /*yield*/, bcrypt.hash(transportOfficerPassword, 10)];
+                case 7:
+                    var transportOfficerHash = _a.sent();
+                    return [4 /*yield*/, prisma.user.upsert({
+                            where: { username: 'tofficer' },
+                            update: { passwordHash: transportOfficerHash, role: 'transport-officer', totpSecret: transportOfficerTotpSecret },
+                            create: {
+                                username: 'tofficer',
+                                passwordHash: transportOfficerHash,
+                                role: 'transport-officer',
+                                totpSecret: transportOfficerTotpSecret,
+                            },
+                        })];
+                case 8:
+                    _a.sent();
+                    console.log('Seeded agent1, admin, accountant, and transport officer users with TOTP secrets.');
                     return [2 /*return*/];
             }
         });

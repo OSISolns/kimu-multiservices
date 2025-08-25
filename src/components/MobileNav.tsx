@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react';
+import Link from 'next/link';
 
 export default function MobileNav() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -19,12 +20,12 @@ export default function MobileNav() {
       {menuOpen && (
         <div className="md:hidden absolute top-20 left-0 w-full bg-white shadow-lg z-50 animate-fade-in">
           <div className="flex flex-col items-center py-6 space-y-4">
-            <a href="/" className="font-semibold text-lg text-gray-800 hover:text-orange-600" onClick={() => setMenuOpen(false)}>Home</a>
-            <a href="/about" className="font-semibold text-lg text-gray-800 hover:text-orange-600" onClick={() => setMenuOpen(false)}>About</a>
-            <a href="/services" className="font-semibold text-lg text-gray-800 hover:text-orange-600" onClick={() => setMenuOpen(false)}>Services</a>
-            <a href="/offers" className="font-semibold text-lg text-gray-800 hover:text-orange-600" onClick={() => setMenuOpen(false)}>Offers</a>
-            <a href="/rent-a-car" className="font-semibold text-lg text-blue-700 hover:text-orange-600" onClick={() => setMenuOpen(false)}>Book a Car</a>
-            <a href="/contact" className="font-semibold text-lg text-gray-800 hover:text-orange-600" onClick={() => setMenuOpen(false)}>Contact</a>
+            <Link href="/" className="font-semibold text-lg text-gray-800 hover:text-orange-600" onClick={() => setMenuOpen(false)}>Home</Link>
+            <Link href="/about" className="font-semibold text-lg text-gray-800 hover:text-orange-600" onClick={() => setMenuOpen(false)}>About</Link>
+            <Link href="/services" className="font-semibold text-lg text-gray-800 hover:text-orange-600" onClick={() => setMenuOpen(false)}>Services</Link>
+            <Link href="/offers" className="font-semibold text-lg text-gray-800 hover:text-orange-600" onClick={() => setMenuOpen(false)}>Offers</Link>
+            <Link href="/rent-a-car" className="font-semibold text-lg text-blue-700 hover:text-orange-600" onClick={() => setMenuOpen(false)}>Book a Car</Link>
+            <Link href="/contact" className="font-semibold text-lg text-gray-800 hover:text-orange-600" onClick={() => setMenuOpen(false)}>Contact</Link>
           </div>
         </div>
       )}

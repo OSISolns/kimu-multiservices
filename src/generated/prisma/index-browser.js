@@ -20,12 +20,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 6.12.0
- * Query Engine version: 8047c96bbd92db98a2abc7c9323ce77c02c89dbc
+ * Prisma Client JS version: 6.14.0
+ * Query Engine version: 717184b7b35ea05dfa71a3236b7af656013e1e49
  */
 Prisma.prismaVersion = {
-  client: "6.12.0",
-  engine: "8047c96bbd92db98a2abc7c9323ce77c02c89dbc"
+  client: "6.14.0",
+  engine: "717184b7b35ea05dfa71a3236b7af656013e1e49"
 }
 
 Prisma.PrismaClientKnownRequestError = () => {
@@ -124,8 +124,12 @@ exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   username: 'username',
   fullName: 'fullName',
+  email: 'email',
+  phone: 'phone',
   passwordHash: 'passwordHash',
   role: 'role',
+  department: 'department',
+  status: 'status',
   profilePicture: 'profilePicture',
   createdAt: 'createdAt',
   totpSecret: 'totpSecret',
@@ -150,13 +154,22 @@ exports.Prisma.VehicleScalarFieldEnum = {
   description: 'description',
   isAvailable: 'isAvailable',
   power: 'power',
-  fuelEfficiency: 'fuelEfficiency'
+  fuelEfficiency: 'fuelEfficiency',
+  quantity: 'quantity',
+  status: 'status',
+  maintenanceNotes: 'maintenanceNotes',
+  maintenanceDate: 'maintenanceDate',
+  quantityUpdateReason: 'quantityUpdateReason',
+  quantityUpdateDate: 'quantityUpdateDate',
+  licensePlate: 'licensePlate',
+  vehicleId: 'vehicleId'
 };
 
 exports.Prisma.BookingScalarFieldEnum = {
   id: 'id',
   type: 'type',
   name: 'name',
+  email: 'email',
   phone: 'phone',
   nationality: 'nationality',
   idOrPassport: 'idOrPassport',
@@ -212,6 +225,57 @@ exports.Prisma.PaymentScalarFieldEnum = {
   userId: 'userId'
 };
 
+exports.Prisma.TrustedDeviceScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  deviceId: 'deviceId',
+  deviceName: 'deviceName',
+  userAgent: 'userAgent',
+  ipAddress: 'ipAddress',
+  createdAt: 'createdAt',
+  expiresAt: 'expiresAt',
+  lastUsed: 'lastUsed'
+};
+
+exports.Prisma.LeadScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  company: 'company',
+  stage: 'stage',
+  value: 'value',
+  contact: 'contact',
+  email: 'email',
+  location: 'location',
+  lastContact: 'lastContact',
+  nextFollowUp: 'nextFollowUp',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CampaignScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  reach: 'reach',
+  engagement: 'engagement',
+  leads: 'leads',
+  conversions: 'conversions',
+  budget: 'budget',
+  startDate: 'startDate',
+  endDate: 'endDate',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ActivityScalarFieldEnum = {
+  id: 'id',
+  date: 'date',
+  client: 'client',
+  activity: 'activity',
+  outcome: 'outcome',
+  type: 'type',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -235,7 +299,11 @@ exports.Prisma.ModelName = {
   Notification: 'Notification',
   ActivityLog: 'ActivityLog',
   SystemLog: 'SystemLog',
-  Payment: 'Payment'
+  Payment: 'Payment',
+  TrustedDevice: 'TrustedDevice',
+  Lead: 'Lead',
+  Campaign: 'Campaign',
+  Activity: 'Activity'
 };
 
 /**

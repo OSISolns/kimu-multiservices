@@ -12,7 +12,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
     showSidebar = false;
   }
   if (typeof children === 'string' && children.includes('Not Authorized')) showSidebar = false;
-  if (typeof children === 'object' && children && 'props' in children && children.props.className && children.props.className.includes('not-authorized')) showSidebar = false;
+  if (typeof children === 'object' && children && 'props' in children && (children as any).props?.className?.includes('not-authorized')) showSidebar = false;
 
   return (
     <div className="min-h-screen bg-gray-50 flex">

@@ -1,8 +1,9 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { FaCalendarAlt, FaCar, FaTaxi, FaPlane, FaHotel, FaHandshake } from 'react-icons/fa';
 import { useUser } from '../../UserContext';
 import Link from 'next/link';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 interface Booking {
   id: number;
@@ -83,6 +84,14 @@ export default function AgentCalendarPage() {
     .filter(b => b.pickupDate && b.pickupDate > todayStr)
     .sort((a, b) => (a.pickupDate || '').localeCompare(b.pickupDate || ''))
     .slice(0, 5);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <LoadingSpinner message="Loading Calendar" size="lg" fullScreen={true} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-blue-50 py-10 px-4">

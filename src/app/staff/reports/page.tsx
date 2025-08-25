@@ -1,8 +1,23 @@
 "use client";
 
-import { FaFileAlt, FaCar, FaTaxi, FaPlane, FaHotel, FaHandshake, FaDownload, FaCheck, FaHourglassHalf, FaTimes, FaExclamationTriangle } from 'react-icons/fa';
-import { Pie, Line, Bar } from 'react-chartjs-2';
-import { Chart } from 'react-chartjs-2';
+import { FaFileAlt, FaCar, FaTaxi, FaPlane, FaHotel, FaHandshake, FaDownload, FaCheck, FaHourglassHalf, FaTimes, FaExclamationTriangle, FaMoneyBillWave, FaChartLine, FaCalculator, FaCalendarAlt, FaPiggyBank, FaChartPie } from 'react-icons/fa';
+import dynamic from 'next/dynamic';
+
+// Dynamically import charts to reduce initial bundle size
+const Pie = dynamic(() => import('react-chartjs-2').then(mod => ({ default: mod.Pie })), {
+  loading: () => <div className="h-64 bg-gray-100 animate-pulse rounded-lg" />,
+  ssr: false
+});
+
+const Line = dynamic(() => import('react-chartjs-2').then(mod => ({ default: mod.Line })), {
+  loading: () => <div className="h-64 bg-gray-100 animate-pulse rounded-lg" />,
+  ssr: false
+});
+
+const Bar = dynamic(() => import('react-chartjs-2').then(mod => ({ default: mod.Bar })), {
+  loading: () => <div className="h-64 bg-gray-100 animate-pulse rounded-lg" />,
+  ssr: false
+});
 import {
   Chart as ChartJS,
   ArcElement,
@@ -16,43 +31,132 @@ import {
   Title as ChartTitle,
 } from 'chart.js';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import ExcelJS from 'exceljs';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useUser } from '../../UserContext';
 import { useRouter } from 'next/navigation';
+import LoadingSpinner from '@/components/LoadingSpinner';
+
+// Types and Constants
+import {
+  BookingSummary,
+  StatusBreakdown,
+  RecentBooking,
+  StaffPerformance,
+  FinancialSummary,
+  BookingStatsResponse,
+  StaffPerformanceResponse,
+  DateRange,
+  TabType,
+  SortKey,
+  FinancialPeriod
+} from '@/types/reports';
+
+import {
+  CHART_COLORS,
+  CHART_OPTIONS,
+  STATUS_ICONS,
+  TAB_CONFIG,
+  FINANCIAL_PERIODS,
+  SORT_OPTIONS,
+  SERVICE_LABELS
+} from '@/constants/reports';
+
+// Utilities
+import {
+  getTopPerformer,
+  filterStaffByName,
+  sortStaff,
+  formatRWF,
+  getSuccessRate,
+  getPerformancePercentage
+} from '@/utils/reportHelpers';
+
+import {
+  exportRecentBookingsToExcel,
+  exportStaffToExcel,
+  exportFinancialSummaryToExcel
+} from '@/utils/excelExports';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, BarElement, ChartTitle);
 
-const summary = {
-  totalBookings: 24,
-  totalRevenue: 1450000,
-  rentals: 12,
-  taxis: 5,
-  transfers: 4,
-  hotels: 2,
-  sales: 1,
-};
+export default function ReportsPage() {
+  const router = useRouter();
+  const { user, isLoading } = useUser();
 
-// Mock trends data (bookings and revenue by month)
-const trendsLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-const bookingsTrend = [2, 4, 6, 5, 3, 4];
-const revenueTrend = [120000, 250000, 300000, 200000, 180000, 250000];
+  // State Management
+  const [staffFilter, setStaffFilter] = useState<string>('');
+  const [sortKey, setSortKey] = useState<SortKey>('revenue');
+  const [sortAsc, setSortAsc] = useState<boolean>(false);
+  const [dateRange, setDateRange] = useState<DateRange>({ from: '', to: '' });
+  const [tab, setTab] = useState<TabType>('trends');
+  const [financialPeriod, setFinancialPeriod] = useState<FinancialPeriod>('all');
+  const [financialStartDate, setFinancialStartDate] = useState<string>('');
+  const [financialEndDate, setFinancialEndDate] = useState<string>('');
+  const [financialLoading, setFinancialLoading] = useState<boolean>(false);
+  const [dataLoading, setDataLoading] = useState<boolean>(true);
+
+  // Data State
+  const [summary, setSummary] = useState<BookingSummary>({
+  totalBookings: 0,
+  totalRevenue: 0,
+  rentals: 0,
+  taxis: 0,
+  transfers: 0,
+  hotels: 0,
+  sales: 0,
+  });
+  
+  const [trendsLabels, setTrendsLabels] = useState<string[]>([]);
+  const [bookingsTrend, setBookingsTrend] = useState<number[]>([]);
+  const [revenueTrend, setRevenueTrend] = useState<number[]>([]);
+  const [statusBreakdown, setStatusBreakdown] = useState<StatusBreakdown>({});
+  const [recentBookings, setRecentBookings] = useState<RecentBooking[]>([]);
+  const [staffPerformance, setStaffPerformance] = useState<StaffPerformance[]>([]);
+  const [months, setMonths] = useState<string[]>([]);
+  const [staffTrends, setStaffTrends] = useState<{ [key: string]: number[] }>({});
+  
+  const [financialSummary, setFinancialSummary] = useState<FinancialSummary>({
+    totalRevenue: 0,
+    totalIncome: 0,
+    totalExpenses: 0,
+    netProfit: 0,
+    transactionCount: 0,
+    period: '',
+    generatedBy: '',
+    generatedAt: new Date().toISOString(),
+    openingBalances: {
+      mtnMomoRWF: 0,
+      equityBankRWF: 0,
+      bkBankRWF: 0
+    },
+    closingBalances: {
+      mtnMomoRWF: 0,
+      equityBankRWF: 0,
+      bkBankRWF: 0
+    },
+    income: [],
+    expenses: []
+  });
+
+  // Chart Data Configuration
 const trendsData = {
   labels: trendsLabels,
   datasets: [
     {
       label: 'Bookings',
       data: bookingsTrend,
-      backgroundColor: 'rgba(59, 130, 246, 0.5)',
-      borderColor: 'rgba(59, 130, 246, 1)',
-      type: 'bar' as const,
+      backgroundColor: CHART_COLORS.bookings.background,
+      borderColor: CHART_COLORS.bookings.border,
+      type: 'line' as const,
       yAxisID: 'y',
+      fill: false,
+      tension: 0.4,
     },
     {
       label: 'Revenue (RWF)',
       data: revenueTrend,
-      backgroundColor: 'rgba(16, 185, 129, 0.3)',
-      borderColor: 'rgba(16, 185, 129, 1)',
+      backgroundColor: CHART_COLORS.revenue.background,
+      borderColor: CHART_COLORS.revenue.border,
       type: 'line' as const,
       yAxisID: 'y1',
       fill: false,
@@ -60,25 +164,7 @@ const trendsData = {
     },
   ],
 };
-const trendsOptions = {
-  responsive: true,
-  plugins: {
-    legend: { position: 'top' as const },
-    title: { display: true, text: 'Monthly Trends (Bookings & Revenue)' },
-  },
-  scales: {
-    y: { beginAtZero: true, title: { display: true, text: 'Bookings' } },
-    y1: {
-      beginAtZero: true,
-      position: 'right' as const,
-      grid: { drawOnChartArea: false },
-      title: { display: true, text: 'Revenue (RWF)' },
-    },
-  },
-};
 
-// Mock status breakdown
-const statusBreakdown = { Completed: 18, Pending: 5, Cancelled: 1 };
 const statusPieData = {
   labels: Object.keys(statusBreakdown),
   datasets: [
@@ -86,154 +172,38 @@ const statusPieData = {
       label: 'Status',
       data: Object.values(statusBreakdown),
       backgroundColor: [
-        'rgba(16, 185, 129, 0.7)', // green
-        'rgba(251, 191, 36, 0.7)', // yellow
-        'rgba(239, 68, 68, 0.7)', // red
+          CHART_COLORS.success,
+          CHART_COLORS.secondary,
+          CHART_COLORS.danger,
       ],
       borderWidth: 1,
     },
   ],
 };
-const statusPieOptions = {
-  responsive: true,
-  plugins: {
-    legend: { position: 'bottom' },
-    title: { display: true, text: 'Booking Status Breakdown' },
-  },
-};
 
-// Mock recent activity
-const recentBookings = [
-  { id: 101, type: 'Car Rental', name: 'Jean Uwimana', status: 'Completed', amount: 120000, date: '2024-06-10' },
-  { id: 102, type: 'Taxi', name: 'Alice Smith', status: 'Pending', amount: 20000, date: '2024-06-11' },
-  { id: 103, type: 'Hotel', name: 'Paul Mugisha', status: 'Completed', amount: 80000, date: '2024-06-12' },
-  { id: 104, type: 'Car Rental', name: 'Claudine Ingabire', status: 'Cancelled', amount: 0, date: '2024-06-13' },
-  { id: 105, type: 'Transfer', name: 'John Doe', status: 'Completed', amount: 75000, date: '2024-06-14' },
-];
-
-// Bar chart for service distribution (bookings by service)
-const serviceLabels = ['Car Rentals', 'Taxis', 'Transfers', 'Hotels', 'Sales'];
 const serviceBookings = [summary.rentals, summary.taxis, summary.transfers, summary.hotels, summary.sales];
 const serviceBarData = {
-  labels: serviceLabels,
+    labels: [...SERVICE_LABELS],
   datasets: [
     {
       label: 'Bookings',
       data: serviceBookings,
       backgroundColor: [
-        'rgba(59, 130, 246, 0.7)', // blue
-        'rgba(251, 191, 36, 0.7)', // yellow
-        'rgba(16, 185, 129, 0.7)', // green
-        'rgba(251, 146, 60, 0.7)', // orange
-        'rgba(99, 102, 241, 0.7)', // indigo
+          CHART_COLORS.primary,
+          CHART_COLORS.secondary,
+          CHART_COLORS.success,
+          CHART_COLORS.warning,
+          CHART_COLORS.info,
       ],
       borderRadius: 8,
     },
   ],
 };
-const serviceBarOptions = {
-  responsive: true,
-  plugins: {
-    legend: { display: false },
-    title: { display: true, text: 'Bookings by Service Type', font: { size: 18 } },
-  },
-  scales: {
-    y: { beginAtZero: true, title: { display: true, text: 'Bookings' } },
-  },
-};
 
-// Mock staff performance data with roles and role-specific stats
-const staffPerformance = [
-  { name: 'Jean Bosco', role: 'admin', bookings: 8, revenue: 480000, completed: 7, pending: 1, cancelled: 0, leads: 10, feedback: 4.8, reviews: 12, usersManaged: 5, systemActions: 12 },
-  { name: 'Alice Mukamana', role: 'agent', bookings: 6, revenue: 350000, completed: 5, pending: 1, cancelled: 0, leads: 8, feedback: 4.5, reviews: 9, repeatCustomers: 3 },
-  { name: 'Samuel Dusabe', role: 'transport-officer', bookings: 5, revenue: 420000, completed: 4, pending: 0, cancelled: 1, leads: 7, feedback: 4.9, reviews: 10, vehiclesManaged: 12, maintenanceActions: 4 },
-  { name: 'Esther Uwimana', role: 'agent', bookings: 3, revenue: 200000, completed: 2, pending: 1, cancelled: 0, leads: 5, feedback: 4.7, reviews: 7, repeatCustomers: 1 },
-];
-
-// Mock trend data per staff (monthly)
-const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-const staffTrends = {
-  'Jean Bosco':   [1, 2, 1, 2, 1, 1],
-  'Alice Mukamana': [1, 1, 1, 1, 1, 1],
-  'Samuel Dusabe':  [0, 1, 1, 1, 1, 1],
-  'Esther Uwimana': [0, 1, 0, 1, 0, 1],
-};
-
-function getTopPerformer(staff: any[]) {
-  return staff.reduce((top, s) => (s.revenue > top.revenue ? s : top), staff[0]);
-}
-
-function getAverageBookingValue(s: any) {
-  return s.bookings ? Math.round(s.revenue / s.bookings) : 0;
-}
-
-function getConversionRate(s: any) {
-  return s.leads ? Math.round((s.bookings / s.leads) * 100) : 0;
-}
-
-function getCommission(s: any) {
-  // Mock: 5% commission
-  return Math.round(s.revenue * 0.05);
-}
-
-function filterStaffByName(staff: any[], filter: string) {
-  return staff.filter(s => s.name.toLowerCase().includes(filter.toLowerCase()));
-}
-
-function sortStaff(staff: any[], key: string, asc: boolean) {
-  return [...staff].sort((a, b) => (asc ? (a as any)[key] - (b as any)[key] : (b as any)[key] - (a as any)[key]));
-}
-
-function exportRecentBookingsToExcel() {
-  const workbook = new ExcelJS.Workbook();
-  const sheet = workbook.addWorksheet('Recent Bookings');
-  sheet.columns = [
-    { header: 'ID', key: 'id', width: 10 },
-    { header: 'Type', key: 'type', width: 18 },
-    { header: 'Name', key: 'name', width: 22 },
-    { header: 'Status', key: 'status', width: 14 },
-    { header: 'Amount', key: 'amount', width: 14 },
-    { header: 'Date', key: 'date', width: 16 },
-  ];
-  recentBookings.forEach(b => {
-    sheet.addRow({
-      id: b.id,
-      type: b.type,
-      name: b.name,
-      status: b.status,
-      amount: b.amount,
-      date: b.date,
-    });
-  });
-  // Style header
-  sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
-  sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
-  // Add totals/averages row with formulas
-  const lastRow = sheet.lastRow ? sheet.lastRow.number + 1 : recentBookings.length + 2;
-  sheet.getCell(`A${lastRow}`).value = 'Totals/Averages';
-  sheet.getCell(`E${lastRow}`).value = { formula: `SUM(E2:E${lastRow-1})` };
-  sheet.getCell(`F${lastRow}`).value = { formula: `COUNTA(F2:F${lastRow-1})` };
-  sheet.getRow(lastRow).font = { bold: true };
-  // Download
-  workbook.xlsx.writeBuffer().then(buffer => {
-    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `recent-bookings-${new Date().toISOString().split('T')[0]}.xlsx`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  });
-}
-
-export default function ReportsPage() {
-  const router = useRouter();
-  const { user, isLoading } = useUser();
-  const [staffFilter, setStaffFilter] = useState('');
-  const [sortKey, setSortKey] = useState('revenue');
-  const [sortAsc, setSortAsc] = useState(false);
-  const [dateRange, setDateRange] = useState({ from: '', to: '' });
-  const [tab, setTab] = useState('trends');
+  // Effects
+  useEffect(() => {
+    fetchReportData();
+  }, [dateRange]);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -243,6 +213,92 @@ export default function ReportsPage() {
     }
   }, [isLoading, user, router]);
 
+  // Optimized API Functions with caching
+  const fetchReportData = useCallback(async (): Promise<void> => {
+    setDataLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (dateRange.from) params.append('startDate', dateRange.from);
+      if (dateRange.to) params.append('endDate', dateRange.to);
+
+      // Add cache-control headers for faster subsequent loads
+      const fetchOptions = {
+        headers: {
+          'Cache-Control': 'max-age=300', // 5 minutes cache
+        }
+      };
+
+      const [bookingStatsRes, staffPerformanceRes] = await Promise.all([
+        fetch(`/api/reports/booking-stats?${params.toString()}`, fetchOptions),
+        fetch(`/api/reports/staff-performance?${params.toString()}`, fetchOptions)
+      ]);
+
+      if (bookingStatsRes.ok) {
+        const bookingData: BookingStatsResponse = await bookingStatsRes.json();
+        setSummary(bookingData.summary);
+        setTrendsLabels(bookingData.trendsLabels);
+        setBookingsTrend(bookingData.bookingsTrend);
+        setRevenueTrend(bookingData.revenueTrend);
+        setStatusBreakdown(bookingData.statusBreakdown);
+        setRecentBookings(bookingData.recentBookings);
+      }
+
+      if (staffPerformanceRes.ok) {
+        const staffData: StaffPerformanceResponse = await staffPerformanceRes.json();
+        setStaffPerformance(staffData.staffPerformance);
+        setMonths(staffData.months);
+        setStaffTrends(staffData.staffTrends);
+      }
+    } catch (error) {
+      console.error('Error fetching report data:', error);
+    } finally {
+      setDataLoading(false);
+    }
+  }, [dateRange]);
+
+  const pullFinancialSummary = useCallback(async (): Promise<void> => {
+    setFinancialLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (financialPeriod !== 'all') {
+        params.append('period', financialPeriod);
+      }
+      if (financialStartDate) {
+        params.append('startDate', financialStartDate);
+      }
+      if (financialEndDate) {
+        params.append('endDate', financialEndDate);
+      }
+      params.append('generatedBy', user?.username || 'Admin');
+
+      const response = await fetch(`/api/financial-summary?${params.toString()}`, {
+        headers: {
+          'Cache-Control': 'max-age=180', // 3 minutes cache for financial data
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch financial summary');
+      }
+
+      const data: FinancialSummary = await response.json();
+      setFinancialSummary(data);
+    } catch (error) {
+      console.error('Error fetching financial summary:', error);
+    } finally {
+      setFinancialLoading(false);
+    }
+  }, [financialPeriod, financialStartDate, financialEndDate, user?.username]);
+
+  // Computed Values
+  const filteredStaff = sortStaff(
+    filterStaffByName(staffPerformance, staffFilter),
+    sortKey,
+    sortAsc
+  );
+  const topPerformer = getTopPerformer(filteredStaff);
+
+  // Authorization Check
   if (!isLoading && user && !['admin', 'accountant'].includes(user.role)) {
     return (
       <div className="min-h-screen flex items-center justify-center text-xl font-bold text-red-600">
@@ -251,309 +307,530 @@ export default function ReportsPage() {
     );
   }
 
-  let filteredStaff = filterStaffByName(staffPerformance, staffFilter);
-  filteredStaff = sortStaff(filteredStaff, sortKey, sortAsc);
-  const topPerformer = getTopPerformer(filteredStaff);
+  // Status Icon Renderer
+  const renderStatusIcon = (status: string) => {
+    const config = STATUS_ICONS[status as keyof typeof STATUS_ICONS];
+    if (!config) return null;
 
-  function exportStaffToExcel() {
-    const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet('Staff Performance');
-    sheet.columns = [
-      { header: 'Name', key: 'name', width: 20 },
-      { header: 'Role', key: 'role', width: 15 },
-      { header: 'Bookings', key: 'bookings', width: 12 },
-      { header: 'Revenue', key: 'revenue', width: 15 },
-      { header: 'Completed', key: 'completed', width: 12 },
-      { header: 'Pending', key: 'pending', width: 10 },
-      { header: 'Cancelled', key: 'cancelled', width: 12 },
-      { header: 'Conversion', key: 'conversion', width: 12 },
-      { header: 'Feedback', key: 'feedback', width: 10 },
-      { header: 'Reviews', key: 'reviews', width: 10 },
-    ];
-    filteredStaff.forEach(s => {
-      sheet.addRow({
-        name: s.name,
-        role: s.role,
-        bookings: s.bookings,
-        revenue: s.revenue,
-        completed: s.completed,
-        pending: s.pending,
-        cancelled: s.cancelled,
-        conversion: getConversionRate(s) + '%',
-        feedback: s.feedback,
-        reviews: s.reviews,
-      });
-    });
-    // Style header
-    sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
-    sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
-    // Add totals/averages row with formulas
-    const lastRow = sheet.lastRow ? sheet.lastRow.number + 1 : filteredStaff.length + 2;
-    sheet.getCell(`A${lastRow}`).value = 'Totals/Averages';
-    sheet.getCell(`C${lastRow}`).value = { formula: `SUM(C2:C${lastRow-1})` };
-    sheet.getCell(`D${lastRow}`).value = { formula: `SUM(D2:D${lastRow-1})` };
-    sheet.getCell(`E${lastRow}`).value = { formula: `SUM(E2:E${lastRow-1})` };
-    sheet.getCell(`F${lastRow}`).value = { formula: `SUM(F2:F${lastRow-1})` };
-    sheet.getCell(`G${lastRow}`).value = { formula: `SUM(G2:G${lastRow-1})` };
-    sheet.getCell(`H${lastRow}`).value = { formula: `AVERAGE(H2:H${lastRow-1})` };
-    sheet.getCell(`I${lastRow}`).value = { formula: `AVERAGE(I2:I${lastRow-1})` };
-    sheet.getCell(`J${lastRow}`).value = { formula: `AVERAGE(J2:J${lastRow-1})` };
-    sheet.getCell(`K${lastRow}`).value = undefined;
-    sheet.getRow(lastRow).font = { bold: true };
-    // Download
-    workbook.xlsx.writeBuffer().then(buffer => {
-      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `staff-performance-${new Date().toISOString().split('T')[0]}.xlsx`;
-      a.click();
-      window.URL.revokeObjectURL(url);
-    });
-  }
+    const IconComponent = status === 'Completed' ? FaCheck : 
+                         status === 'Pending' ? FaHourglassHalf : FaTimes;
+    
+    return <IconComponent className={config.color} />;
+  };
 
   return (
     <div className="min-h-screen bg-blue-50 py-10 px-4">
       <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-lg p-4">
+        {/* Header Navigation */}
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <Link href="/staff/dashboard" className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">&larr; Back to Dashboard</Link>
-          <button onClick={exportRecentBookingsToExcel} className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold"><FaDownload /> Export to Excel</button>
+          <Link 
+            href="/staff/dashboard" 
+            className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
+          >
+            &larr; Back to Dashboard
+          </Link>
+          <button 
+            onClick={() => exportRecentBookingsToExcel(recentBookings)} 
+            className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold"
+          >
+            <FaDownload /> Export to Excel
+          </button>
         </div>
-        <h1 className="text-2xl font-bold mb-6 flex items-center gap-2"><FaFileAlt className="text-blue-500" /> Reports</h1>
-        {/* Tabs */}
-        <div className="mb-8 border-b flex gap-2">
-          <button onClick={() => setTab('trends')} className={`px-4 py-2 font-semibold border-b-2 ${tab === 'trends' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500'} focus:outline-none`}>Trends</button>
-          <button onClick={() => setTab('status')} className={`px-4 py-2 font-semibold border-b-2 ${tab === 'status' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500'} focus:outline-none`}>Status Breakdown</button>
-          <button onClick={() => setTab('service')} className={`px-4 py-2 font-semibold border-b-2 ${tab === 'service' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500'} focus:outline-none`}>Service Distribution</button>
-          <button onClick={() => setTab('activity')} className={`px-4 py-2 font-semibold border-b-2 ${tab === 'activity' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500'} focus:outline-none`}>Recent Activity</button>
-          <button onClick={() => setTab('staff')} className={`px-4 py-2 font-semibold border-b-2 ${tab === 'staff' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500'} focus:outline-none`}>Staff Performance</button>
+
+        {/* Page Header */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-800">Reports & Analytics</h1>
+              <p className="text-slate-600 mt-1">Comprehensive insights into your business performance</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={fetchReportData}
+                disabled={dataLoading}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                {dataLoading ? (
+                  <LoadingSpinner size="sm" inline message="Refreshing..." variant="spinner" color="blue" />
+                ) : (
+                  <>
+                    <FaDownload />
+                    <span>Refresh Data</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
-        {/* Tab Content */}
-        {tab === 'trends' && (
-          <div className="bg-gray-50 rounded-lg p-6 mb-8 text-center">
-            <Chart type="bar" data={trendsData} options={trendsOptions} />
-          </div>
-        )}
-        {tab === 'status' && (
-          <div className="bg-gray-50 rounded-lg p-6 mb-8">
-            <h2 className="text-lg font-bold mb-4">Booking Status Breakdown</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="text-gray-500 text-left">
-                    <th className="py-2 px-4">Status</th>
-                    <th className="py-2 px-4">Count</th>
-                    <th className="py-2 px-4">Percentage</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(statusBreakdown).map(([status, count], i) => {
-                    const total = Object.values(statusBreakdown).reduce((a, b) => a + b, 0);
-                    const percent = total ? Math.round((count / total) * 100) : 0;
-                    let icon = null, color = '';
-                    if (status === 'Completed') { icon = <FaCheck className="text-green-600" />; color = 'text-green-800'; }
-                    if (status === 'Pending') { icon = <FaHourglassHalf className="text-yellow-600" />; color = 'text-yellow-800'; }
-                    if (status === 'Cancelled') { icon = <FaTimes className="text-red-600" />; color = 'text-red-800'; }
-                    return (
-                      <tr key={status} className="border-b last:border-0 hover:bg-gray-50">
-                        <td className={`py-2 px-4 font-semibold flex items-center gap-2 ${color}`}>{icon} {status}</td>
-                        <td className="py-2 px-4">{count}</td>
-                        <td className="py-2 px-4">{percent}%</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-        {tab === 'service' && (
-          <div className="bg-gray-50 rounded-lg p-6 mb-8 text-center">
-            <Bar data={serviceBarData} options={serviceBarOptions} />
-          </div>
-        )}
-        {tab === 'activity' && (
-          <div className="bg-gray-50 rounded-lg p-6 mb-8">
-            <h2 className="text-lg font-bold mb-4">Recent Bookings</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="text-gray-500 text-left">
-                    <th className="py-2 px-4">ID</th>
-                    <th className="py-2 px-4">Type</th>
-                    <th className="py-2 px-4">Name</th>
-                    <th className="py-2 px-4">Status</th>
-                    <th className="py-2 px-4">Amount</th>
-                    <th className="py-2 px-4">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentBookings.map((b) => (
-                    <tr key={b.id} className="border-b last:border-0 hover:bg-gray-50">
-                      <td className="py-2 px-4">{b.id}</td>
-                      <td className="py-2 px-4">{b.type}</td>
-                      <td className="py-2 px-4">{b.name}</td>
-                      <td className="py-2 px-4">{b.status}</td>
-                      <td className="py-2 px-4">{b.amount ? b.amount.toLocaleString() : '-'} RWF</td>
-                      <td className="py-2 px-4">{b.date}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-        </div>
-          </div>
-        )}
-        {tab === 'staff' && (
-          <div className="bg-gray-50 rounded-lg p-6 mb-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-2">
-              <h2 className="text-lg font-bold">Staff Performance</h2>
-              <button onClick={exportStaffToExcel} className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors">Export to Excel</button>
-              <div className="flex gap-2 flex-wrap">
-                <input
-                  type="text"
-                  placeholder="Filter by name..."
-                  value={staffFilter}
-                  onChange={e => setStaffFilter(e.target.value)}
-                  className="border rounded px-2 py-1 text-sm"
-                />
-                <select value={sortKey} onChange={e => setSortKey(e.target.value)} className="border rounded px-2 py-1 text-sm">
-                  <option value="revenue">Sort by Revenue</option>
-                  <option value="bookings">Sort by Bookings</option>
-                  <option value="feedback">Sort by Feedback</option>
-                </select>
-                <button
-                  className="border rounded px-2 py-1 text-sm"
-                  onClick={() => setSortAsc(a => !a)}
-                  title="Toggle sort order"
-                >{sortAsc ? 'Asc' : 'Desc'}</button>
-                <input
-                  type="date"
-                  value={dateRange.from}
-                  onChange={e => setDateRange(r => ({ ...r, from: e.target.value }))}
-                  className="border rounded px-2 py-1 text-sm"
-                  title="From date (mock)"
-                />
-                <input
-                  type="date"
-                  value={dateRange.to}
-                  onChange={e => setDateRange(r => ({ ...r, to: e.target.value }))}
-                  className="border rounded px-2 py-1 text-sm"
-                  title="To date (mock)"
-                />
-              </div>
-            </div>
-            <div className="mb-4">
-              <Link href="/staff/performance" className="text-blue-600 hover:underline font-semibold">View Full Staff Performance Page &rarr;</Link>
-            </div>
-            {/* Top Performer Highlight */}
-            <div className="mb-4">
-              <span className="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full font-semibold text-sm">
-                Top Performer: {topPerformer.name} ({topPerformer.revenue.toLocaleString()} RWF)
-              </span>
-            </div>
-            {/* Trend Chart (mock) */}
-            <div className="mb-4">
-              <Bar
-                data={{
-                  labels: months,
-                  datasets: filteredStaff.map(s => ({
-                    label: s.name,
-                    data: staffTrends[s.name as keyof typeof staffTrends],
-                    backgroundColor: s.name === topPerformer.name ? 'rgba(16,185,129,0.7)' : 'rgba(59,130,246,0.5)',
-                  })),
-                }}
-                options={{
-                  responsive: true,
-                  plugins: { legend: { position: 'top' }, title: { display: true, text: 'Bookings per Month (Mock)' } },
-                  scales: { y: { beginAtZero: true } },
-                }}
+
+        {/* Date Range Picker */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+          <div className="flex items-center gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+              <input
+                type="date"
+                value={dateRange.from}
+                onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            {/* Staff Table */}
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="text-gray-500 text-left">
-                    <th className="py-2 px-4">Staff</th>
-                    <th className="py-2 px-4">Role</th>
-                    <th className="py-2 px-4">Bookings</th>
-                    <th className="py-2 px-4">Revenue</th>
-                    <th className="py-2 px-4">Avg Value</th>
-                    <th className="py-2 px-4">Completed</th>
-                    <th className="py-2 px-4">Pending</th>
-                    <th className="py-2 px-4">Cancelled</th>
-                    <th className="py-2 px-4">Conversion</th>
-                    <th className="py-2 px-4">Feedback</th>
-                    <th className="py-2 px-4">Reviews</th>
-                    <th className="py-2 px-4">Role Features</th>
-                    <th className="py-2 px-4">Status Breakdown</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredStaff.map((s, i) => (
-                    <tr key={i} className={s.name === topPerformer.name ? 'bg-green-50 font-bold' : 'border-b last:border-0 hover:bg-gray-50'}>
-                      <td className="py-2 px-4">{s.name}</td>
-                      <td className="py-2 px-4 capitalize">{s.role}</td>
-                      <td className="py-2 px-4">{s.bookings}</td>
-                      <td className="py-2 px-4">{s.revenue.toLocaleString()} RWF</td>
-                      <td className="py-2 px-4">{getAverageBookingValue(s).toLocaleString()} RWF</td>
-                      <td className="py-2 px-4">{s.completed}</td>
-                      <td className="py-2 px-4">{s.pending}</td>
-                      <td className="py-2 px-4">{s.cancelled}</td>
-                      <td className="py-2 px-4">{getConversionRate(s)}%</td>
-                      <td className="py-2 px-4">{s.feedback} ⭐</td>
-                      <td className="py-2 px-4">{s.reviews}</td>
-                      <td className="py-2 px-4">
-                        {s.role === 'admin' && (
-                          <div>
-                            <div><span className="font-semibold">Users Managed:</span> {s.usersManaged}</div>
-                            <div><span className="font-semibold">System Actions:</span> {s.systemActions}</div>
-                          </div>
-                        )}
-                        {s.role === 'agent' && (
-                          <div>
-                            <div><span className="font-semibold">Repeat Customers:</span> {s.repeatCustomers}</div>
-                          </div>
-                        )}
-                        {s.role === 'transport-officer' && (
-                          <div>
-                            <div><span className="font-semibold">Vehicles Managed:</span> {s.vehiclesManaged}</div>
-                            <div><span className="font-semibold">Maintenance Actions:</span> {s.maintenanceActions}</div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+              <input
+                type="date"
+                value={dateRange.to}
+                onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={fetchReportData}
+                disabled={dataLoading}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {dataLoading ? 'Updating...' : 'Update Reports'}
+              </button>
+            </div>
           </div>
-                        )}
-                      </td>
-                      <td className="py-2 px-4">
-                        <Bar
-                          data={{
-                            labels: ['Completed', 'Pending', 'Cancelled'],
-                            datasets: [{
-                              label: 'Bookings',
-                              data: [s.completed, s.pending, s.cancelled],
-                              backgroundColor: [
-                                'rgba(16,185,129,0.7)',
-                                'rgba(251,191,36,0.7)',
-                                'rgba(239,68,68,0.7)',
-                              ],
-                            }],
-                          }}
-                          options={{
-                            plugins: { legend: { display: false } },
-                            scales: { y: { beginAtZero: true, display: false }, x: { display: false } },
-                            responsive: true,
-                            maintainAspectRatio: false,
-                          }}
-                          height={30}
-                          width={100}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        </div>
+
+        {/* Tabs */}
+        <div className="mb-8 border-b flex gap-2">
+          {TAB_CONFIG.map(({ id, label }) => (
+            <button 
+              key={id}
+              onClick={() => setTab(id as TabType)} 
+              className={`px-4 py-2 font-semibold border-b-2 ${
+                tab === id ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500'
+              } focus:outline-none`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Main Content */}
+        {dataLoading ? (
+          <div className="text-center py-12">
+            <LoadingSpinner 
+              message="Loading Reports Data" 
+              size="lg" 
+              variant="company"
+              showProgress={true}
+              duration={5}
+            />
           </div>
+        ) : (
+          <>
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white rounded-xl p-6 shadow border">
+                <div className="flex items-center gap-3 mb-3">
+                  <FaFileAlt className="text-blue-600 text-2xl" />
+                  <h3 className="text-lg font-semibold text-blue-700">Total Bookings</h3>
+                </div>
+                <p className="text-3xl font-bold text-blue-900">{summary.totalBookings}</p>
+              </div>
+              <div className="bg-white rounded-xl p-6 shadow border">
+                <div className="flex items-center gap-3 mb-3">
+                  <FaMoneyBillWave className="text-green-600 text-2xl" />
+                  <h3 className="text-lg font-semibold text-green-700">Total Revenue</h3>
+                </div>
+                <p className="text-3xl font-bold text-green-900">{formatRWF(summary.totalRevenue)}</p>
+              </div>
+              <div className="bg-white rounded-xl p-6 shadow border">
+                <div className="flex items-center gap-3 mb-3">
+                  <FaCar className="text-orange-600 text-2xl" />
+                  <h3 className="text-lg font-semibold text-orange-700">Car Rentals</h3>
+                </div>
+                <p className="text-3xl font-bold text-orange-900">{summary.rentals}</p>
+              </div>
+              <div className="bg-white rounded-xl p-6 shadow border">
+                <div className="flex items-center gap-3 mb-3">
+                  <FaTaxi className="text-yellow-600 text-2xl" />
+                  <h3 className="text-lg font-semibold text-yellow-700">Taxi Services</h3>
+                </div>
+                <p className="text-3xl font-bold text-yellow-900">{summary.taxis}</p>
+              </div>
+            </div>
+
+            {/* Tab Content */}
+            {tab === 'trends' && (
+              <div className="bg-gray-50 rounded-lg p-6 mb-8 text-center">
+                <Line data={trendsData} options={CHART_OPTIONS.trends} />
+              </div>
+            )}
+
+            {tab === 'status' && (
+              <div className="bg-gray-50 rounded-lg p-6 mb-8">
+                <h2 className="text-lg font-bold mb-4">Booking Status Breakdown</h2>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead>
+                      <tr className="text-gray-500 text-left">
+                        <th className="py-2 px-4">Status</th>
+                        <th className="py-2 px-4">Count</th>
+                        <th className="py-2 px-4">Percentage</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(statusBreakdown).map(([status, count]) => {
+                        const total = Object.values(statusBreakdown).reduce((a, b) => a + b, 0);
+                        const percent = total ? Math.round((count / total) * 100) : 0;
+                        const config = STATUS_ICONS[status as keyof typeof STATUS_ICONS];
+                        
+                        return (
+                          <tr key={status} className="border-b last:border-0 hover:bg-gray-50">
+                            <td className={`py-2 px-4 font-semibold flex items-center gap-2 ${config?.textColor || ''}`}>
+                              {renderStatusIcon(status)} {status}
+                            </td>
+                            <td className="py-2 px-4">{count}</td>
+                            <td className="py-2 px-4">{percent}%</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {tab === 'service' && (
+              <div className="bg-gray-50 rounded-lg p-6 mb-8 text-center">
+                <Bar data={serviceBarData} options={CHART_OPTIONS.serviceBar} />
+              </div>
+            )}
+
+            {tab === 'activity' && (
+              <div className="bg-gray-50 rounded-lg p-6 mb-8">
+                <h2 className="text-lg font-bold mb-4">Recent Bookings</h2>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead>
+                      <tr className="text-gray-500 text-left">
+                        <th className="py-2 px-4">ID</th>
+                        <th className="py-2 px-4">Type</th>
+                        <th className="py-2 px-4">Name</th>
+                        <th className="py-2 px-4">Status</th>
+                        <th className="py-2 px-4">Amount</th>
+                        <th className="py-2 px-4">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recentBookings.map((booking) => (
+                        <tr key={booking.id} className="border-b last:border-0 hover:bg-gray-50">
+                          <td className="py-2 px-4">{booking.id}</td>
+                          <td className="py-2 px-4">{booking.type}</td>
+                          <td className="py-2 px-4">{booking.name}</td>
+                          <td className="py-2 px-4">{booking.status}</td>
+                          <td className="py-2 px-4">{booking.amount ? formatRWF(booking.amount) : '-'}</td>
+                          <td className="py-2 px-4">{booking.date}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {tab === 'staff' && (
+              <div className="bg-gray-50 rounded-lg p-6 mb-8">
+                <h2 className="text-lg font-bold mb-4">Staff Performance</h2>
+                {filteredStaff && filteredStaff.length > 0 ? (
+                  <>
+                    <div className="mb-4 flex items-center gap-4">
+                      <input
+                        type="text"
+                        placeholder="Search staff by name..."
+                        value={staffFilter}
+                        onChange={(e) => setStaffFilter(e.target.value)}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <select
+                        value={sortKey}
+                        onChange={(e) => setSortKey(e.target.value as SortKey)}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        {SORT_OPTIONS.map(({ value, label }) => (
+                          <option key={value} value={value}>{label}</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => setSortAsc(!sortAsc)}
+                        className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        {sortAsc ? '↑ Ascending' : '↓ Descending'}
+                      </button>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full text-sm">
+                        <thead>
+                          <tr className="text-gray-500 text-left">
+                            <th className="py-2 px-4">Staff Member</th>
+                            <th className="py-2 px-4">Total Revenue</th>
+                            <th className="py-2 px-4">Total Bookings</th>
+                            <th className="py-2 px-4">Performance</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredStaff.map((staff) => (
+                            <tr key={staff.id} className="border-b last:border-0 hover:bg-gray-50">
+                              <td className="py-2 px-4 font-semibold">{staff.name}</td>
+                              <td className="py-2 px-4">{formatRWF(staff.totalRevenue)}</td>
+                              <td className="py-2 px-4">{staff.totalBookings}</td>
+                              <td className="py-2 px-4">
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div
+                                    className="bg-blue-600 h-2 rounded-full"
+                                    style={{ width: `${getPerformancePercentage(staff, topPerformer)}%` }}
+                                  ></div>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="mt-4 flex justify-between items-center">
+                      <button
+                        onClick={() => exportStaffToExcel(filteredStaff)}
+                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                      >
+                        <FaDownload />
+                        Export to Excel
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="text-gray-500 text-lg mb-2">No staff performance data available</div>
+                    <div className="text-gray-400 text-sm">Staff performance data will appear here once available</div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {tab === 'finance' && (
+              <div className="space-y-6">
+                {/* Financial Summary Controls */}
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                    <FaMoneyBillWave className="text-green-600" />
+                    Financial Ledger Summary
+                  </h2>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Period</label>
+                      <select
+                        value={financialPeriod}
+                        onChange={(e) => setFinancialPeriod(e.target.value as FinancialPeriod)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        {FINANCIAL_PERIODS.map(({ value, label }) => (
+                          <option key={value} value={value}>{label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                      <input
+                        type="date"
+                        value={financialStartDate}
+                        onChange={(e) => setFinancialStartDate(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                      <input
+                        type="date"
+                        value={financialEndDate}
+                        onChange={(e) => setFinancialEndDate(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    
+                    <div className="flex items-end gap-2">
+                      <button
+                        onClick={pullFinancialSummary}
+                        disabled={financialLoading}
+                        className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        {financialLoading ? (
+                          <LoadingSpinner size="sm" inline message="Loading..." variant="dots" color="orange" />
+                        ) : (
+                          <span>Pull Summary</span>
+                        )}
+                      </button>
+                      
+                      {financialSummary.totalIncome > 0 && (
+                        <button
+                          onClick={() => exportFinancialSummaryToExcel(financialSummary, user?.username)}
+                          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                        >
+                          <FaDownload />
+                          Export
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Financial Summary Results */}
+                {financialSummary.totalIncome > 0 && (
+                  <div className="space-y-6">
+                    {/* Summary Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                      <div className="bg-white rounded-xl p-6 shadow border">
+                        <div className="flex items-center gap-3 mb-3">
+                          <FaMoneyBillWave className="text-green-600 text-2xl" />
+                          <h3 className="text-lg font-semibold text-green-700">Total Income</h3>
+                        </div>
+                        <p className="text-3xl font-bold text-green-700">{formatRWF(financialSummary.totalIncome)}</p>
+                      </div>
+
+                      <div className="bg-white rounded-xl p-6 shadow border">
+                        <div className="flex items-center gap-3 mb-3">
+                          <FaCalculator className="text-red-600 text-2xl" />
+                          <h3 className="text-lg font-semibold text-red-700">Total Expenses</h3>
+                        </div>
+                        <p className="text-3xl font-bold text-red-700">{formatRWF(financialSummary.totalExpenses)}</p>
+                      </div>
+
+                      <div className="bg-white rounded-xl p-6 shadow border">
+                        <div className="flex items-center gap-3 mb-3">
+                          <FaChartLine className="text-blue-600 text-2xl" />
+                          <h3 className="text-lg font-semibold text-blue-700">Net Profit</h3>
+                        </div>
+                        <p className={`text-3xl font-bold ${financialSummary.netProfit >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                          {formatRWF(financialSummary.netProfit)}
+                        </p>
+                      </div>
+
+                      <div className="bg-white rounded-xl p-6 shadow border">
+                        <div className="flex items-center gap-3 mb-3">
+                          <FaChartPie className="text-purple-600 text-2xl" />
+                          <h3 className="text-lg font-semibold text-purple-700">Transactions</h3>
+                        </div>
+                        <p className="text-3xl font-bold text-purple-700">{financialSummary.transactionCount}</p>
+                      </div>
+                    </div>
+
+                    {/* Balance Sheets */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="bg-white rounded-xl p-6 shadow border">
+                        <h3 className="text-xl font-semibold mb-4 text-gray-700">Opening Balances</h3>
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">MTN Momo:</span>
+                            <span className="font-semibold">{formatRWF(financialSummary.openingBalances.mtnMomoRWF)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Equity Bank:</span>
+                            <span className="font-semibold">{formatRWF(financialSummary.openingBalances.equityBankRWF)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">BK Bank:</span>
+                            <span className="font-semibold">{formatRWF(financialSummary.openingBalances.bkBankRWF)}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-white rounded-xl p-6 shadow border">
+                        <h3 className="text-xl font-semibold mb-4 text-gray-700">Closing Balances</h3>
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">MTN Momo:</span>
+                            <span className="font-semibold">{formatRWF(financialSummary.closingBalances.mtnMomoRWF)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Equity Bank:</span>
+                            <span className="font-semibold">{formatRWF(financialSummary.closingBalances.equityBankRWF)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">BK Bank:</span>
+                            <span className="font-semibold">{formatRWF(financialSummary.closingBalances.bkBankRWF)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Income Transactions */}
+                    <div className="bg-white rounded-xl p-6 shadow border">
+                      <h3 className="text-xl font-semibold mb-4 text-green-700 flex items-center gap-2">
+                        <FaMoneyBillWave className="text-green-600" />
+                        Income Transactions ({financialSummary.income.length})
+                      </h3>
+                      <div className="space-y-3 max-h-64 overflow-y-auto">
+                        {financialSummary.income.map((item) => (
+                          <div key={item.id} className="border-l-4 border-green-500 pl-3">
+                            <p className="font-medium text-gray-900">{item.description}</p>
+                            <div className="flex justify-between text-sm text-gray-600 mt-1">
+                              <span>{item.date}</span>
+                              <span className="font-semibold text-green-700">{formatRWF(item.mtnMomoRWF || 0)}</span>
+                            </div>
+                          </div>
+                        ))}
+                        {financialSummary.income.length === 0 && (
+                          <p className="text-gray-500 text-center py-4">No income transactions available</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Expense Transactions */}
+                    <div className="bg-white rounded-xl p-6 shadow border">
+                      <h3 className="text-xl font-semibold mb-4 text-red-700 flex items-center gap-2">
+                        <FaCalculator className="text-red-600" />
+                        Expense Transactions ({financialSummary.expenses.length})
+                      </h3>
+                      <div className="space-y-3 max-h-64 overflow-y-auto">
+                        {financialSummary.expenses.map((item) => (
+                          <div key={item.id} className="border-l-4 border-red-500 pl-3">
+                            <p className="font-medium text-gray-900">{item.description}</p>
+                            <div className="flex justify-between text-sm text-gray-600 mt-1">
+                              <span>{item.date}</span>
+                              <span className="font-semibold text-red-700">{formatRWF(item.mtnMomoRWF || 0)}</span>
+                        </div>
+                      </div>
+                    ))}
+                        {financialSummary.expenses.length === 0 && (
+                      <p className="text-gray-500 text-center py-4">No expense transactions available</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="bg-gray-50 rounded-xl p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                          <p><span className="font-semibold text-blue-700">Period:</span> {financialSummary.period || 'N/A'}</p>
+                    </div>
+                    <div>
+                          <p><span className="font-semibold text-blue-700">Generated by:</span> {financialSummary.generatedBy || 'System'}</p>
+                          <p><span className="font-semibold text-blue-700">Generated at:</span> {financialSummary.generatedAt ? new Date(financialSummary.generatedAt).toLocaleString() : 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+                {financialSummary.totalIncome === 0 && !financialLoading && (
+              <div className="text-center py-12">
+                <FaFileAlt className="text-6xl text-gray-300 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">No Financial Data Available</h3>
+                    <p className="text-gray-500 mb-4">Click &quot;Pull Summary&quot; to fetch financial data for the selected period.</p>
+              </div>
+            )}
           </div>
         )}
-      </div>
+          </>
+        )}
     </div>
+  </div>
   );
 } 

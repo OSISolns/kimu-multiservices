@@ -1,10 +1,17 @@
 import { FaWhatsapp, FaPhone, FaCheck } from 'react-icons/fa';
 import Link from 'next/link';
 
-const transfers = [
-  { name: 'Linda Mukamana', phone: '+250788777888', flight: 'WB101', pickup: 'Kigali Airport', dropoff: 'Radisson Blu', time: '2024-06-13 08:30', status: 'Pending' },
-  { name: 'Samuel Dusabe', phone: '+250788999000', flight: 'ET302', pickup: 'Kigali Airport', dropoff: 'Kigali Marriott', time: '2024-06-13 10:00', status: 'Completed' },
-];
+type Transfer = {
+  name: string;
+  flight: string;
+  pickup: string;
+  dropoff: string;
+  time: string;
+  status: string;
+  phone: string;
+};
+
+const transfers: Transfer[] = [];
 
 export default function AirportTransfersAgentPage() {
   return (

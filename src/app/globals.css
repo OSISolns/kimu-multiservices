@@ -40,6 +40,257 @@
   .animate-fade-scale {
     animation: fade-scale 7s ease-in-out infinite;
   }
+
+  @keyframes progressBar {
+    0% { width: 0%; }
+    100% { width: 100%; }
+  }
+  .animate-progress-bar {
+    animation: progressBar 5s linear infinite;
+  }
+
+  /* Enhanced Loading Spinner Animations */
+  @keyframes company-spin {
+    0% { transform: rotate(0deg) scale(1); }
+    25% { transform: rotate(90deg) scale(1.02); }
+    50% { transform: rotate(180deg) scale(1); }
+    75% { transform: rotate(270deg) scale(1.02); }
+    100% { transform: rotate(360deg) scale(1); }
+  }
+  
+  @keyframes logo-float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-6px) rotate(180deg); }
+  }
+  
+  @keyframes ring-rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  @keyframes glow-pulse {
+    0%, 100% { 
+      opacity: 0.4;
+      box-shadow: 0 0 5px rgba(59, 130, 246, 0.3);
+    }
+    50% { 
+      opacity: 0.8;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.6), 0 0 30px rgba(251, 146, 60, 0.4);
+    }
+  }
+  
+  @keyframes wave-loading {
+    0%, 40%, 100% { transform: translateY(0); }
+    20% { transform: translateY(-10px); }
+  }
+  
+  .animate-company-spin {
+    animation: company-spin 6s ease-in-out infinite;
+  }
+  
+  .animate-logo-float {
+    animation: logo-float 8s ease-in-out infinite;
+  }
+  
+  .animate-ring-rotate {
+    animation: ring-rotate 4s linear infinite;
+  }
+  
+  .animate-glow-pulse {
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
+  
+  .animate-wave-loading {
+    animation: wave-loading 1.5s ease-in-out infinite;
+  }
+
+  /* Gradient animations */
+  @keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient-shift 3s ease infinite;
+  }
+
+  /* Notification Bell Ring Animation */
+  @keyframes bell-ring {
+    0%, 100% { transform: rotate(0deg); }
+    10%, 30% { transform: rotate(15deg); }
+    20% { transform: rotate(-15deg); }
+    40%, 60% { transform: rotate(10deg); }
+    50% { transform: rotate(-10deg); }
+    70%, 90% { transform: rotate(5deg); }
+    80% { transform: rotate(-5deg); }
+  }
+
+  .animate-bell-ring {
+    animation: bell-ring 1s ease-in-out;
+  }
+
+  /* Notification Count Pulse */
+  @keyframes notification-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+
+  .animate-notification-pulse {
+    animation: notification-pulse 2s ease-in-out infinite;
+  }
+
+  /* FloatingBackground Animations */
+  @keyframes float {
+    0% {
+      transform: translate(0, 0) scale(1) rotate(0deg);
+    }
+    25% {
+      transform: translate(10px, -15px) scale(1.1) rotate(5deg);
+    }
+    50% {
+      transform: translate(-5px, -25px) scale(0.9) rotate(-5deg);
+    }
+    75% {
+      transform: translate(-15px, -15px) scale(1.05) rotate(5deg);
+    }
+    100% {
+      transform: translate(0, 0) scale(1) rotate(0deg);
+    }
+  }
+  
+  @keyframes line-horizontal {
+    0% { left: 0; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { left: 100vw; opacity: 0; }
+  }
+  
+  @keyframes line-vertical {
+    0% { top: 0; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 100vh; opacity: 0; }
+  }
+  
+  @keyframes line-diagonal1 {
+    0% { left: 0; top: 0; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { left: 100vw; top: 100vh; opacity: 0; }
+  }
+  
+  @keyframes line-diagonal2 {
+    0% { left: 100vw; top: 0; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { left: 0; top: 100vh; opacity: 0; }
+  }
+
+  /* Hero Float Animation */
+  @keyframes hero-float {
+    0% { transform: scale(1) translateY(0px) translateX(0px) rotate(-2deg); }
+    25% { transform: scale(1.04) translateY(-10px) translateX(10px) rotate(2deg); }
+    50% { transform: scale(1.02) translateY(10px) translateX(-10px) rotate(-1deg); }
+    75% { transform: scale(1.05) translateY(-8px) translateX(8px) rotate(1deg); }
+    100% { transform: scale(1) translateY(0px) translateX(0px) rotate(-2deg); }
+  }
+
+  .animate-hero-float {
+    animation: hero-float 8s ease-in-out infinite;
+  }
+
+  /* Dashboard Animations */
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  @keyframes count-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes blob {
+    0% {
+      transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+      transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+      transform: translate(-20px, 20px) scale(0.9);
+    }
+    100% {
+      transform: translate(0px, 0px) scale(1);
+    }
+  }
+  
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out forwards;
+  }
+  
+  .animate-scale-in {
+    animation: scale-in 0.3s ease-out forwards;
+  }
+  
+  .animate-count-up {
+    animation: count-up 0.8s ease-out forwards;
+  }
+  
+  .animate-blob {
+    animation: blob 7s infinite;
+  }
+  
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+  
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+  
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+  
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+
+  /* Bookings Page Animations */
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out forwards;
+  }
 }
 
 /* You can add your custom global styles below */ 

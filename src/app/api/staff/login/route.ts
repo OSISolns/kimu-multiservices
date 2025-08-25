@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@/generated/prisma';
+import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { logActivity, ActivityActions, getIpAddress, getUserAgent } from '../../../services/activityLog';
-
-const prisma = new PrismaClient();
 
 // Add a reusable role-checking utility
 function hasRole(user: any, allowedRoles: string[]) {

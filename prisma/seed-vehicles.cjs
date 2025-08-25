@@ -17,8 +17,16 @@ const vehicles = [
     doors: 5,
     description: 'The Toyota Prado TXL offers luxury, power, and comfort for both city and off-road journeys. Perfect for executive travel and family adventures in Rwanda.',
     isAvailable: true,
-    power: '',
-    fuelEfficiency: '',
+    power: '177 HP',
+    fuelEfficiency: '8.5L/100km',
+    quantity: 20,
+    status: 'available',
+    maintenanceNotes: null,
+    maintenanceDate: null,
+    quantityUpdateReason: null,
+    quantityUpdateDate: null,
+    licensePlate: null,
+    vehicleId: null,
   },
   {
     name: 'Toyota Coaster',
@@ -35,8 +43,16 @@ const vehicles = [
     doors: 3,
     description: 'The Toyota Coaster is ideal for group travel, offering spacious seating and reliable performance for tours, events, and airport transfers.',
     isAvailable: true,
-    power: '',
-    fuelEfficiency: '',
+    power: '150 HP',
+    fuelEfficiency: '12.0L/100km',
+    quantity: 20,
+    status: 'available',
+    maintenanceNotes: null,
+    maintenanceDate: null,
+    quantityUpdateReason: null,
+    quantityUpdateDate: null,
+    licensePlate: null,
+    vehicleId: null,
   },
   {
     name: 'Rav4 Full Electric',
@@ -53,8 +69,16 @@ const vehicles = [
     doors: 5,
     description: 'Experience the future of driving with the Rav4 Full Electric. Eco-friendly, powerful, and comfortable for both city and countryside.',
     isAvailable: true,
-    power: '',
-    fuelEfficiency: '',
+    power: '302 HP',
+    fuelEfficiency: '2.6L/100km',
+    quantity: 15,
+    status: 'available',
+    maintenanceNotes: null,
+    maintenanceDate: null,
+    quantityUpdateReason: null,
+    quantityUpdateDate: null,
+    licensePlate: null,
+    vehicleId: null,
   },
   {
     name: 'KIA Sorento',
@@ -71,8 +95,16 @@ const vehicles = [
     doors: 5,
     description: 'The KIA Sorento combines style, space, and performance. A great choice for families and business travelers seeking comfort and reliability.',
     isAvailable: true,
-    power: '',
-    fuelEfficiency: '',
+    power: '136 HP',
+    fuelEfficiency: '6.8L/100km',
+    quantity: 18,
+    status: 'available',
+    maintenanceNotes: null,
+    maintenanceDate: null,
+    quantityUpdateReason: null,
+    quantityUpdateDate: null,
+    licensePlate: null,
+    vehicleId: null,
   },
   {
     name: 'Hyundai Sonata',
@@ -89,8 +121,16 @@ const vehicles = [
     doors: 4,
     description: 'The Hyundai Sonata offers a smooth ride, modern features, and excellent fuel efficiency. Perfect for city commutes and business trips.',
     isAvailable: true,
-    power: '',
-    fuelEfficiency: '',
+    power: '150 HP',
+    fuelEfficiency: '6.2L/100km',
+    quantity: 20,
+    status: 'available',
+    maintenanceNotes: null,
+    maintenanceDate: null,
+    quantityUpdateReason: null,
+    quantityUpdateDate: null,
+    licensePlate: null,
+    vehicleId: null,
   },
   {
     name: 'Toyota Noah',
@@ -98,7 +138,7 @@ const vehicles = [
     type: 'Minivan',
     category: 'Van',
     price: '80,000 RWF/day',
-    year: 2018,
+    year: 2013,
     engine: '1,797cc',
     mileage: '88,651km',
     transmission: 'Manual',
@@ -107,8 +147,16 @@ const vehicles = [
     doors: 5,
     description: 'The Toyota Noah is a versatile minivan, ideal for families and groups. Enjoy spacious seating and flexible cargo options.',
     isAvailable: true,
-    power: '',
-    fuelEfficiency: '',
+    power: '99 HP',
+    fuelEfficiency: '5.8L/100km',
+    quantity: 15,
+    status: 'available',
+    maintenanceNotes: null,
+    maintenanceDate: null,
+    quantityUpdateReason: null,
+    quantityUpdateDate: null,
+    licensePlate: null,
+    vehicleId: null,
   },
   {
     name: 'Hyundai Tucson',
@@ -125,8 +173,16 @@ const vehicles = [
     doors: 4,
     description: 'The Hyundai Tucson is a compact SUV with a reputation for reliability and comfort. Great for both urban and rural travel.',
     isAvailable: true,
-    power: '',
-    fuelEfficiency: '',
+    power: '136 HP',
+    fuelEfficiency: '6.5L/100km',
+    quantity: 18,
+    status: 'available',
+    maintenanceNotes: null,
+    maintenanceDate: null,
+    quantityUpdateReason: null,
+    quantityUpdateDate: null,
+    licensePlate: null,
+    vehicleId: null,
   },
   {
     name: 'Toyota Levin',
@@ -134,7 +190,7 @@ const vehicles = [
     type: 'Sedan',
     category: 'Car',
     price: '60,000 RWF/day',
-    year: 2022,
+    year: 2018,
     engine: '1.8L 99HP L4',
     mileage: '62,700km',
     transmission: 'Automatic',
@@ -143,8 +199,16 @@ const vehicles = [
     doors: 4,
     description: 'The Toyota Levin blends efficiency and style. A modern sedan for those who value comfort and advanced technology.',
     isAvailable: true,
-    power: '',
-    fuelEfficiency: '',
+    power: '99 HP',
+    fuelEfficiency: '5.2L/100km',
+    quantity: 20,
+    status: 'available',
+    maintenanceNotes: null,
+    maintenanceDate: null,
+    quantityUpdateReason: null,
+    quantityUpdateDate: null,
+    licensePlate: null,
+    vehicleId: null,
   },
   {
     name: 'Toyota Prius',
@@ -152,7 +216,7 @@ const vehicles = [
     type: 'Sedan',
     category: 'Car',
     price: '50,000 RWF/day',
-    year: 2010,
+    year: 2012,
     engine: '1,798cc',
     mileage: '130,004km',
     transmission: 'Automatic',
@@ -161,8 +225,16 @@ const vehicles = [
     doors: 4,
     description: "The Toyota Prius is the world's favorite hybrid, offering outstanding fuel economy and a comfortable ride for city and highway.",
     isAvailable: true,
-    power: '',
-    fuelEfficiency: '',
+    power: '134 HP',
+    fuelEfficiency: '4.3L/100km',
+    quantity: 25,
+    status: 'available',
+    maintenanceNotes: null,
+    maintenanceDate: null,
+    quantityUpdateReason: null,
+    quantityUpdateDate: null,
+    licensePlate: null,
+    vehicleId: null,
   },
   {
     name: 'Kia K5 Optima',
@@ -170,7 +242,7 @@ const vehicles = [
     type: 'Sedan',
     category: 'Car',
     price: '50,000 RWF/day',
-    year: 2015,
+    year: 2012,
     engine: '1,999cc',
     mileage: '76,500km',
     transmission: 'Automatic',
@@ -179,36 +251,34 @@ const vehicles = [
     doors: 4,
     description: 'The Kia K5 Optima is a stylish sedan with advanced features and a smooth, quiet ride. Ideal for business and leisure.',
     isAvailable: true,
-    power: '',
-    fuelEfficiency: '',
-  },
+    power: '150 HP',
+    fuelEfficiency: '6.5L/100km',
+    quantity: 20,
+    status: 'available',
+    maintenanceNotes: null,
+    maintenanceDate: null,
+    quantityUpdateReason: null,
+    quantityUpdateDate: null,
+    licensePlate: null,
+    vehicleId: null,
+  }
 ];
 
-function randomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-const expandedVehicles = [];
-expandedVehicles.forEach(base => {
-  const count = randomInt(10, 15);
-  for (let i = 0; i < count; i++) {
-    expandedVehicles.push({
-      ...base,
-      year: randomInt(2010, 2025),
-      mileage: `${randomInt(20000, 200000)}km`,
-      isAvailable: Math.random() > 0.2,
-      // Optionally, add a unique suffix to name to avoid duplicates
-      name: `${base.name} #${i+1}`,
-    });
-  }
-});
-
 async function main() {
-  await prisma.vehicle.createMany({
-    data: expandedVehicles,
-    skipDuplicates: true,
-  });
-  console.log('Seeded all vehicles.');
+  try {
+    // Clear existing vehicles
+    await prisma.vehicle.deleteMany({});
+    console.log('Cleared existing vehicles');
+    
+    // Create all vehicles
+    await prisma.vehicle.createMany({
+      data: vehicles,
+      skipDuplicates: true,
+    });
+    console.log(`Seeded ${vehicles.length} vehicles successfully.`);
+  } catch (error) {
+    console.error('Error seeding vehicles:', error);
+  }
 }
 
 main()

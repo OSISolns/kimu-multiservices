@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaDownload, FaChartBar, FaFileExport, FaCalendarAlt, FaMoneyBillWave, FaReceipt, FaChartLine } from 'react-icons/fa';
 import { useUser } from '../../UserContext';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 function formatRWF(num: number) {
   return num.toLocaleString('en-US') + ' RWF';
@@ -15,6 +16,8 @@ export default function FinancialReports() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [dateRange, setDateRange] = useState('month');
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -27,20 +30,37 @@ export default function FinancialReports() {
   }, [router, user, isLoading]);
 
   const fetchData = () => {
+    setIsDataLoading(true);
+    setError(null);
+    // Fetch payments
     fetch('/api/payments')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then(data => {
+        console.log('Payments data:', data);
         setPayments(Array.isArray(data) ? data : []);
       })
       .catch(err => {
         console.error('Error fetching payments:', err);
+        setError('Failed to fetch payments data');
         setPayments([]);
       });
 
+    // Fetch bookings
     fetch('/api/bookings')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then(data => {
-        if (Array.isArray(data.bookings)) {
+        console.log('Bookings data:', data);
+        if (data && Array.isArray(data.bookings)) {
           setBookings(data.bookings);
         } else {
           setBookings([]);
@@ -48,10 +68,14 @@ export default function FinancialReports() {
       })
       .catch(err => {
         console.error('Error fetching bookings:', err);
+        setError('Failed to fetch bookings data');
         setBookings([]);
       });
 
-    setTimeout(() => setIsLoaded(true), 100);
+    setTimeout(() => {
+      setIsLoaded(true);
+      setIsDataLoading(false);
+    }, 100);
   };
 
   const getFilteredPayments = () => {
@@ -85,12 +109,29 @@ export default function FinancialReports() {
     return acc;
   }, {} as Record<string, number>);
 
-  if (isLoading) {
+  if (isDataLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <LoadingSpinner message="Loading financial reports..." size="md" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-600 text-4xl mb-4">⚠️</div>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">Error Loading Data</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={fetchData}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -109,16 +150,35 @@ export default function FinancialReports() {
         <div className="bg-white rounded-2xl p-6 shadow">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold">Report Period</h2>
-            <select 
-              value={dateRange} 
-              onChange={(e) => setDateRange(e.target.value)}
-              className="border rounded-lg px-4 py-2"
-            >
-              <option value="week">Last Week</option>
-              <option value="month">Last Month</option>
-              <option value="quarter">Last Quarter</option>
-              <option value="all">All Time</option>
-            </select>
+            <div className="flex items-center gap-4">
+              <select 
+                value={dateRange} 
+                onChange={(e) => setDateRange(e.target.value)}
+                className="border rounded-lg px-4 py-2"
+              >
+                <option value="week">Last Week</option>
+                <option value="month">Last Month</option>
+                <option value="quarter">Last Quarter</option>
+                <option value="all">All Time</option>
+              </select>
+                             <button 
+                 onClick={fetchData}
+                 disabled={isDataLoading}
+                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+               >
+                 {isDataLoading ? (
+                  <>
+                    <LoadingSpinner size="sm" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <FaDownload />
+                    Refresh Data
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
 

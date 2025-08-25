@@ -12,39 +12,54 @@ model User {
   id                    Int      @id @default(autoincrement())
   username              String   @unique
   fullName              String?
+  email                 String?
+  phone                 String?
   passwordHash          String
   role                  String   @default("agent")
+  department            String?
+  status                String   @default("active")
   profilePicture        String?
   createdAt             DateTime @default(now())
   totpSecret            String?
   emailNotifications    Boolean  @default(false)
   whatsappNotifications Boolean  @default(false)
+
+  trustedDevices TrustedDevice[]
 }
 
 model Vehicle {
-  id             Int     @id @default(autoincrement())
-  name           String
-  image          String
-  type           String
-  category       String
-  price          String
-  year           Int
-  engine         String
-  mileage        String
-  transmission   String
-  fuel           String
-  capacity       String
-  doors          Int
-  description    String
-  isAvailable    Boolean @default(true)
-  power          String
-  fuelEfficiency String
+  id                   Int       @id @default(autoincrement())
+  name                 String
+  image                String
+  type                 String
+  category             String
+  price                String
+  year                 Int
+  engine               String
+  mileage              String
+  transmission         String
+  fuel                 String
+  capacity             String
+  doors                Int
+  description          String
+  isAvailable          Boolean   @default(true)
+  power                String
+  fuelEfficiency       String
+  quantity             Int       @default(1)
+  status               String    @default("available")
+  maintenanceNotes     String?
+  maintenanceDate      DateTime?
+  quantityUpdateReason String?
+  quantityUpdateDate   DateTime?
+  licensePlate         String?
+  vehicleId            String?
 }
 
 model Booking {
   id              Int      @id @default(autoincrement())
   type            String
   name            String?
+  email           String?
   phone           String?
   nationality     String?
   idOrPassport    String?
@@ -98,4 +113,61 @@ model Payment {
   transactionId String?
   paymentDate   DateTime @default(now())
   userId        Int?
+}
+
+model TrustedDevice {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  deviceId   String // Browser fingerprint/device identifier
+  deviceName String? // Optional human-readable device name
+  userAgent  String? // Store user agent for reference
+  ipAddress  String? // Store IP for additional security
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime // Trust expires after 30 days
+  lastUsed   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deviceId])
+  @@index([deviceId])
+  @@index([expiresAt])
+}
+
+model Lead {
+  id           Int      @id @default(autoincrement())
+  name         String
+  company      String
+  stage        String   @default("Contacted")
+  value        Float    @default(0)
+  contact      String?
+  email        String?
+  location     String?
+  lastContact  DateTime @default(now())
+  nextFollowUp DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Campaign {
+  id          Int      @id @default(autoincrement())
+  name        String
+  reach       Int      @default(0)
+  engagement  Int      @default(0)
+  leads       Int      @default(0)
+  conversions Int      @default(0)
+  budget      Float    @default(0)
+  startDate   DateTime @default(now())
+  endDate     DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Activity {
+  id        Int      @id @default(autoincrement())
+  date      DateTime @default(now())
+  client    String
+  activity  String
+  outcome   String
+  type      String   @default("call")
+  createdAt DateTime @default(now())
 }

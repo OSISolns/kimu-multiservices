@@ -1,9 +1,12 @@
 "use client"
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { QRCodeCanvas } from 'qrcode.react';
-import { FaCar, FaHotel } from 'react-icons/fa';
+import { FaCar, FaHotel, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { useUser } from '../../UserContext';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import { generateDeviceFingerprint, generateDeviceName, isDeviceFingerprintingAvailable } from '@/lib/deviceFingerprint';
 
 const ISSUER = 'KIMU Transport';
 
@@ -16,7 +19,17 @@ export default function StaffLogin() {
   const [loading, setLoading] = useState(false);
   const [staff, setStaff] = useState<{ username: string; totpSecret: string | null; role: string } | null>(null);
   const [showQR, setShowQR] = useState(false);
+  const [showTrustPrompt, setShowTrustPrompt] = useState(false);
+  const [trustDevice, setTrustDevice] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const router = useRouter();
+  const { loginUser } = useUser();
+
+  // Ensure we're on the client side to avoid hydration mismatch
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Step 1: Handle credentials submit
   const handleCredentials = async () => {
@@ -35,6 +48,36 @@ export default function StaffLogin() {
       }
       const data = await res.json();
       setStaff(data);
+
+      // Check if device is trusted (skip TOTP if trusted)
+      // Only check on client side after hydration
+      if (isClient && isDeviceFingerprintingAvailable()) {
+        const deviceId = generateDeviceFingerprint();
+        if (deviceId) {
+          try {
+            const trustCheckRes = await fetch('/api/check-trusted-device', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username, deviceId }),
+            });
+            
+            if (trustCheckRes.ok) {
+              const trustData = await trustCheckRes.json();
+              if (trustData.trusted) {
+                // Device is trusted, skip TOTP and login directly
+                console.log(`Device is trusted for ${username}, skipping TOTP`);
+                await loginDirectly(data);
+                return;
+              }
+            }
+          } catch (trustError) {
+            console.warn('Error checking trusted device:', trustError);
+            // Continue with normal TOTP flow if trust check fails
+          }
+        }
+      }
+
+      // Continue with TOTP verification
       setStep('code');
     } catch (e) {
       setError('Error verifying credentials.');
@@ -42,84 +85,164 @@ export default function StaffLogin() {
     setLoading(false);
   };
 
+  // Helper function to login directly (used for trusted devices)
+  const loginDirectly = async (staffData: any) => {
+    const userData = {
+      id: Date.now(),
+      username: username,
+      fullName: username,
+      email: null,
+      phone: null,
+      passwordHash: '',
+      role: staffData?.role || 'staff',
+      department: null,
+      status: 'active',
+      profilePicture: null,
+      createdAt: new Date(),
+      totpSecret: staffData?.totpSecret || null,
+      emailNotifications: false,
+      whatsappNotifications: false
+    };
+    
+    // Add trusted device if requested
+    if (trustDevice && isClient && isDeviceFingerprintingAvailable()) {
+      const deviceId = generateDeviceFingerprint();
+      const deviceName = generateDeviceName();
+      if (deviceId && deviceName) {
+        try {
+          await fetch('/api/trusted-devices', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, deviceId, deviceName }),
+          });
+        } catch (error) {
+          console.warn('Failed to save trusted device:', error);
+        }
+      }
+    }
+
+    await loginUser(userData);
+    router.push('/staff/dashboard');
+  };
+
   // Step 2: Handle TOTP code submit
   const handleLogin = async () => {
     setLoading(true);
     setError('');
     try {
-      if (code.length !== 6) {
-        setError('Please enter a 6-digit code.');
-        setLoading(false);
-        return;
-      }
-      const res = await fetch('/api/verify-totp', {
+      const res = await fetch('/api/staff/verify-totp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, username }),
+        body: JSON.stringify({ username, code, trustDevice }),
       });
+      
+      if (!res.ok) {
+        setError('Invalid verification code.');
+          setLoading(false);
+          return;
+        }
+
       const data = await res.json();
-      if (data.valid) {
-        localStorage.setItem('isStaff', 'true');
-        // Store user data in localStorage for UserContext
-        localStorage.setItem('user', JSON.stringify({
-          id: 0, // We don't have the actual ID from the login response
-          username: username,
-          fullName: null, // Add fullName property
-          passwordHash: '', // Add empty passwordHash
-          role: staff?.role || 'staff',
-          profilePicture: null, // Add profilePicture property
-          createdAt: new Date().toISOString(), // Add createdAt property
-          totpSecret: staff?.totpSecret || null, // Add totpSecret property
-          emailNotifications: false, // Add emailNotifications property
-          whatsappNotifications: false // Add whatsappNotifications property
-        }));
-        router.push('/staff/dashboard');
-      } else {
-        setError(data.error || 'Invalid code. Please try again. Make sure your device time is synchronized.');
+      
+      // Add trusted device if requested
+      if (trustDevice && isClient && isDeviceFingerprintingAvailable()) {
+        const deviceId = generateDeviceFingerprint();
+        const deviceName = generateDeviceName();
+        if (deviceId && deviceName) {
+          try {
+            await fetch('/api/trusted-devices', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username, deviceId, deviceName }),
+            });
+          } catch (error) {
+            console.warn('Failed to save trusted device:', error);
+          }
+        }
       }
+
+      await loginUser(data);
+      router.push('/staff/dashboard');
     } catch (e) {
-      setError('Error verifying code. Please check your connection and try again.');
+      setError('Error verifying code.');
     }
     setLoading(false);
   };
 
-  // Generate otpauth URL for QR code (if staff and no secret)
-  const otpauthUrl = staff && !staff.totpSecret
-    ? `otpauth://totp/${encodeURIComponent(ISSUER)}:${encodeURIComponent(staff.username)}?secret=PLACEHOLDER&issuer=${encodeURIComponent(ISSUER)}`
-    : staff && staff.totpSecret
-    ? `otpauth://totp/${encodeURIComponent(ISSUER)}:${encodeURIComponent(staff.username)}?secret=${staff.totpSecret}&issuer=${encodeURIComponent(ISSUER)}`
+  // Generate OTP Auth URL for QR code
+  const otpauthUrl = staff?.totpSecret 
+    ? `otpauth://totp/${ISSUER}:${staff.username}?secret=${staff.totpSecret}&issuer=${ISSUER}`
     : '';
 
-  return (
-    <div className="min-h-screen relative flex items-center justify-center overflow-hidden py-12 px-4">
-      {/* Animated Background */}
-      <div className="absolute inset-0 -z-10 animate-fade-in">
-        <svg width="100%" height="100%" className="w-full h-full" style={{ position: 'absolute', top: 0, left: 0 }}>
-          <circle cx="20%" cy="20%" r="120" fill="#e0f2fe" opacity="0.5">
-            <animate attributeName="r" values="120;140;120" dur="6s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="80%" cy="80%" r="100" fill="#fef9c3" opacity="0.4">
-            <animate attributeName="r" values="100;120;100" dur="7s" repeatCount="indefinite" />
-          </circle>
-        </svg>
-        {/* Car Icon Animation */}
-        <FaCar className="text-blue-200 absolute left-10 top-10 text-[120px] animate-bounce-slow" style={{ filter: 'blur(1px)' }} />
-        {/* Hotel Icon Animation */}
-        <FaHotel className="text-yellow-200 absolute right-10 bottom-10 text-[100px] animate-bounce-slower" style={{ filter: 'blur(1px)' }} />
-        {/* Company Logo Animation */}
-        <div className="absolute right-10 top-10 animate-fade-scale">
-          <Image src="/logo.png" alt="Company Logo" width={90} height={90} className="opacity-60" style={{ filter: 'blur(0.5px)' }} />
+  // Don't render anything until mounted to avoid hydration mismatch
+  if (!isClient) {
+    return (
+      <div className="min-h-screen relative flex items-center justify-center overflow-hidden py-12 px-4">
+        <div className="bg-white/90 backdrop-blur-xl border border-white/30 rounded-3xl shadow-2xl shadow-blue-500/20 p-6 w-full max-w-sm flex flex-col items-center">
+          <div className="animate-pulse">
+            <div className="w-16 h-16 bg-gray-300 rounded-full mb-4"></div>
+            <div className="h-8 bg-gray-300 rounded mb-4"></div>
+            <div className="h-4 bg-gray-300 rounded mb-2"></div>
+            <div className="h-4 bg-gray-300 rounded mb-4"></div>
+            <div className="h-12 bg-gray-300 rounded mb-4"></div>
+            <div className="h-12 bg-gray-300 rounded"></div>
+          </div>
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div 
+      className="min-h-screen relative flex items-center justify-center overflow-hidden py-12 px-4"
+      style={{
+        backgroundImage: 'url(/BG.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      {/* Background Overlay for Better Readability */}
+      <div className="absolute inset-0 bg-black/30 -z-10"></div>
       <div
-        className="bg-white/80 backdrop-blur-md border border-blue-100 rounded-3xl shadow-2xl p-10 w-full max-w-md flex flex-col items-center transition-all duration-300 hover:shadow-blue-200 hover:border-blue-300"
+        className="bg-white/90 backdrop-blur-xl border border-white/30 rounded-3xl shadow-2xl shadow-blue-500/20 p-6 w-full max-w-sm flex flex-col items-center transition-all duration-500 hover:shadow-blue-500/30 hover:shadow-3xl hover:scale-[1.02] hover:bg-white/95 relative overflow-hidden z-30"
       >
-        <div className="flex flex-col items-center mb-6">
-          <div className="bg-white/70 rounded-full p-2 shadow-md mb-2 border border-blue-100">
-            <Image src="/logo.png" alt="KIMU Logo" width={64} height={64} />
+        {/* Solid Color Decorative Elements */}
+        <div className="absolute top-0 left-0 w-full h-3 bg-blue-600 z-20 shadow-lg"></div>
+        <div className="absolute -top-4 -right-4 w-12 h-12 bg-orange-500 rounded-full blur-lg"></div>
+        <div className="absolute -bottom-4 -left-4 w-8 h-8 bg-blue-500 rounded-full blur-lg"></div>
+        
+        {/* Solid Orange & Blue Accent Elements */}
+        <div className="absolute top-2 right-2 w-2 h-2 bg-orange-600 rounded-full shadow-xl animate-pulse"></div>
+        <div className="absolute bottom-2 left-2 w-1.5 h-1.5 bg-blue-600 rounded-full shadow-xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 right-1 w-1.5 h-6 bg-orange-600 rounded-full shadow-md"></div>
+        <div className="flex flex-col items-center mb-4 relative">
+          {/* Enhanced Logo Container */}
+                      <div className="relative mb-2">
+            <div className="absolute inset-0 bg-blue-600 rounded-full blur-lg opacity-60 scale-110 animate-pulse-slow"></div>
+                          <div className="relative bg-white rounded-full p-2 shadow-xl border-2 border-orange-500 backdrop-blur-sm">
+              <Image src="/logo.png" alt="KIMU Logo" width={50} height={50} className="drop-shadow-lg" />
+            </div>
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-600 rounded-full shadow-xl animate-bounce-slow border border-white"></div>
+            <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-blue-600 rounded-full shadow-lg animate-pulse border border-white"></div>
           </div>
-          <h1 className="text-3xl font-extrabold text-blue-900 mb-1 tracking-tight text-center">CAMS</h1>
-          <span className="text-xs text-blue-700 font-semibold tracking-wide uppercase mb-1 block text-center">Company Administration & Management System</span>
+          
+          {/* Enhanced Title */}
+          <div className="text-center relative">
+            <h1 className="text-3xl font-black text-blue-700 mb-2 tracking-tight drop-shadow-sm">
+              KIMU
+            </h1>
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <div className="h-1 bg-blue-600 flex-1 max-w-8 rounded-full"></div>
+              <span className="text-xs text-white font-bold tracking-widest uppercase px-4 py-2 bg-orange-600 rounded-full border-2 border-white shadow-lg">
+                Staff Portal
+              </span>
+              <div className="h-1 bg-orange-600 flex-1 max-w-8 rounded-full"></div>
+            </div>
+            <p className="text-sm text-gray-600 font-medium tracking-wide">
+              Transport & Multiservices Management
+            </p>
+          </div>
         </div>
         {step === 'credentials' && (
           <form
@@ -135,30 +258,74 @@ export default function StaffLogin() {
                 <span>{error}</span>
               </div>
             )}
+            
+            <div className="relative mb-3 w-full">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
             <input
               type="text"
               placeholder="Staff Username"
               value={username}
               onChange={e => setUsername(e.target.value)}
-              className="border w-full p-3 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent text-center text-lg mb-4"
+                className="w-full pl-12 pr-4 py-2 border-3 border-orange-500 rounded-2xl bg-orange-50 focus:ring-4 focus:ring-orange-600 focus:border-orange-600 focus:bg-white text-center text-base font-medium placeholder-orange-600 transition-all duration-300 shadow-lg"
               disabled={loading}
               autoFocus
             />
+            </div>
+            
+            <div className="relative mb-4 w-full">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
             <input
-              type="password"
+                type={showPassword ? "text" : "password"}
               placeholder="Password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="border w-full p-3 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent text-center text-lg mb-4"
+                className="w-full pl-12 pr-14 py-2 border-3 border-blue-500 rounded-2xl bg-blue-50 focus:ring-4 focus:ring-blue-600 focus:border-blue-600 focus:bg-white text-center text-base font-medium placeholder-blue-600 transition-all duration-300 shadow-lg"
               disabled={loading}
             />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={loading}
+                                 className="absolute right-4 top-1/2 transform -translate-y-1/2 text-orange-600 hover:text-orange-800 focus:outline-none focus:text-orange-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 p-2 rounded-lg hover:bg-orange-100 shadow-md"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                tabIndex={-1}
+              >
+                {showPassword ? (
+                  <FaEyeSlash className="h-5 w-5" />
+                ) : (
+                  <FaEye className="h-5 w-5" />
+                )}
+              </button>
+            </div>
+            
             <button
               type="submit"
-              className="bg-blue-600 text-white px-4 py-3 rounded-lg w-full font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               disabled={loading || !username || !password}
             >
-              {loading && <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>}
-              Next
+              <div className="flex items-center gap-3">
+                {loading ? (
+                  <>
+                    <LoadingSpinner size="xs" inline variant="spinner" color="blue" />
+                    <span>Authenticating...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Continue</span>
+                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </>
+                )}
+              </div>
             </button>
           </form>
         )}
@@ -176,18 +343,15 @@ export default function StaffLogin() {
                 <QRCodeCanvas value={otpauthUrl} size={180} />
                 <p className="mt-2 text-xs text-gray-600 text-center">Scan this QR code with Google Authenticator or any TOTP app.<br/>Account: <span className="font-mono">{staff.username}</span></p>
                 <p className="mt-1 text-xs text-gray-500">If you need the secret: <span className="font-mono">{staff.totpSecret || 'PLACEHOLDER'}</span></p>
-              </div>
-            )}
-            <div className="w-full flex justify-end">
             <button
                 className="text-blue-600 underline text-[10px] hover:text-orange-600 mt-2"
               type="button"
               onClick={() => setShowQR(v => !v)}
-                style={{ position: 'absolute', right: '1.5rem', bottom: '1.5rem' }}
             >
               {showQR ? 'Hide Setup QR Code' : 'Show QR code for setup'}
             </button>
             </div>
+            )}
             {error && (
               <div className="bg-red-100 text-red-700 p-4 rounded mb-4 w-full flex items-center gap-2">
                 <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-12.728 12.728M5.636 5.636l12.728 12.728" /></svg>
@@ -211,7 +375,7 @@ export default function StaffLogin() {
               className="bg-blue-600 text-white px-4 py-3 rounded-lg w-full font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
               disabled={loading}
             >
-              {loading && <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>}
+              {loading && <LoadingSpinner size="xs" inline variant="spinner" color="blue" />}
               Login
             </button>
             <button

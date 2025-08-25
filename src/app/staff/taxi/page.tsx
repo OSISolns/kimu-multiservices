@@ -1,12 +1,31 @@
-import { FaWhatsapp, FaPhone, FaCheck } from 'react-icons/fa';
+"use client";
 
-const taxiBookings = [
-  { name: 'Eric Niyonsaba', phone: '+250788111222', pickup: 'Kigali Airport', dropoff: 'Kigali Marriott', time: '2024-06-12 09:00', status: 'Pending' },
-  { name: 'Grace Uwase', phone: '+250788333444', pickup: 'Kigali Convention Center', dropoff: 'Kigali Heights', time: '2024-06-12 11:30', status: 'Completed' },
-  { name: 'Paul Mugisha', phone: '+250788555666', pickup: 'Kigali City Center', dropoff: 'Kigali Serena', time: '2024-06-12 14:00', status: 'Pending' },
-];
+import { useState, useEffect } from 'react';
+import { useUser } from '../../UserContext';
+import { FaCar, FaCalendarAlt, FaMoneyBillWave, FaFileAlt, FaCheck, FaClock, FaWhatsapp, FaPhone, FaEdit, FaHotel, FaExclamationTriangle, FaBell, FaChartLine, FaCalculator, FaPiggyBank, FaChartPie, FaUsers, FaShieldAlt, FaStar, FaPlus, FaTrash, FaEye, FaSearch, FaFilter, FaArrowLeft, FaSort, FaSortUp, FaSortDown, FaDownload, FaPrint, FaMinus, FaPercentage, FaCheckCircle, FaTimesCircle, FaTag } from 'react-icons/fa';
+import LoadingSpinner from '@/components/LoadingSpinner';
+
+type TaxiBooking = {
+  name: string;
+  pickup: string;
+  dropoff: string;
+  time: string;
+  status: string;
+  phone: string;
+};
+const taxiBookings: TaxiBooking[] = [];
 
 export default function TaxiAgentPage() {
+  const { user, isLoading } = useUser();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <LoadingSpinner message="Loading Taxi Dashboard" size="lg" fullScreen={true} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-blue-50 py-10 px-4">
       <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-4">
