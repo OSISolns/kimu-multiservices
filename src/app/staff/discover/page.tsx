@@ -1,5 +1,8 @@
 import { FaSearch } from 'react-icons/fa'
 
+// Force dynamic rendering to prevent prerendering issues
+export const dynamic = 'force-dynamic'
+
 export default function Discover() {
   return (
     <div className="p-8 max-w-2xl mx-auto text-center">

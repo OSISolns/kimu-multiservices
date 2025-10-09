@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useUser } from "../../UserContext";
 import { useRouter } from "next/navigation";
 import { 
@@ -71,6 +71,43 @@ export default function SalesManagementPage() {
     location: ''
   });
 
+  // Form data for new quote
+  const [newQuote, setNewQuote] = useState({
+    customerId: '',
+    serviceType: 'Car Rental',
+    amount: '',
+    validUntil: '',
+    notes: ''
+  });
+
+  // Form data for logging visit/activity
+  const [newActivity, setNewActivity] = useState({
+    customerId: '',
+    visitDate: '',
+    purpose: '',
+    outcome: ''
+  });
+
+  // Form data for scheduling calls
+  const [newCall, setNewCall] = useState({
+    customerId: '',
+    callDate: '',
+    callTime: '',
+    purpose: ''
+  });
+
+  // Form data for creating campaigns
+  const [newCampaign, setNewCampaign] = useState({
+    name: '',
+    reach: '',
+    engagement: '',
+    leads: '',
+    conversions: '',
+    budget: '',
+    startDate: '',
+    endDate: ''
+  });
+
   const [leads, setLeads] = useState<Lead[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
@@ -78,46 +115,53 @@ export default function SalesManagementPage() {
 
   const [activities, setActivities] = useState<Activity[]>([]);
 
-  // Dynamic KPI calculations
-  const kpis = {
-    totalLeads: leads.length,
-    newLeads: leads.filter(lead => {
-      const leadDate = new Date(lead.lastContact);
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      return leadDate >= thirtyDaysAgo;
-    }).length,
-    conversionRate: leads.length > 0 ? Math.round((leads.filter(lead => lead.stage === 'Closed Won').length / leads.length) * 100) : 0,
-    activeDeals: leads.filter(lead => !['Closed Won', 'Closed Lost'].includes(lead.stage)).length,
-    totalPipeline: leads.reduce((sum, lead) => sum + lead.value, 0),
-    campaignReach: campaigns.reduce((sum, campaign) => sum + (campaign.reach || 0), 0)
-  };
+  // Dynamic KPI calculations - OPTIMIZED with useMemo
+  const kpis = useMemo(() => {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    return {
+      totalLeads: leads.length,
+      newLeads: leads.filter(lead => {
+        const leadDate = new Date(lead.lastContact);
+        return leadDate >= thirtyDaysAgo;
+      }).length,
+      conversionRate: leads.length > 0 ? Math.round((leads.filter(lead => lead.stage === 'Closed Won').length / leads.length) * 100) : 0,
+      activeDeals: leads.filter(lead => !['Closed Won', 'Closed Lost'].includes(lead.stage)).length,
+      totalPipeline: leads.reduce((sum, lead) => sum + lead.value, 0),
+      campaignReach: Array.isArray(campaigns) ? campaigns.reduce((sum, campaign) => sum + (campaign.reach || 0), 0) : 0
+    };
+  }, [leads, campaigns]);
 
-  // Fetch data from Prisma database
+  // Fetch data from Prisma database - OPTIMIZED with parallel calls
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoadingData(true);
         
-        // Fetch leads from database
-        const leadsResponse = await fetch('/api/leads');
-        if (leadsResponse.ok) {
-          const leadsData = await leadsResponse.json();
-          setLeads(leadsData);
+        // Parallel API calls for better performance
+        const [leadsResponse, campaignsResponse, activitiesResponse] = await Promise.allSettled([
+          fetch('/api/leads?limit=50'), // Limit data
+          fetch('/api/campaigns?limit=20'),
+          fetch('/api/activities?limit=30')
+        ]);
+        
+        // Process leads
+        if (leadsResponse.status === 'fulfilled' && leadsResponse.value.ok) {
+          const leadsData = await leadsResponse.value.json();
+          setLeads(leadsData.data || leadsData);
         }
         
-        // Fetch campaigns from database
-        const campaignsResponse = await fetch('/api/campaigns');
-        if (campaignsResponse.ok) {
-          const campaignsData = await campaignsResponse.json();
-          setCampaigns(campaignsData);
+        // Process campaigns
+        if (campaignsResponse.status === 'fulfilled' && campaignsResponse.value.ok) {
+          const campaignsData = await campaignsResponse.value.json();
+          setCampaigns(campaignsData.campaigns || campaignsData);
         }
         
-        // Fetch activities from database
-        const activitiesResponse = await fetch('/api/activities');
-        if (activitiesResponse.ok) {
-          const activitiesData = await activitiesResponse.json();
-          setActivities(activitiesData);
+        // Process activities
+        if (activitiesResponse.status === 'fulfilled' && activitiesResponse.value.ok) {
+          const activitiesData = await activitiesResponse.value.json();
+          setActivities(activitiesData.activities || activitiesData);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -131,18 +175,22 @@ export default function SalesManagementPage() {
     }
   }, [user, isLoading]);
 
-  // Filter leads based on search
-  const filteredLeads = leads.filter(lead => 
-    lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.company.toLowerCase().includes(searchTerm.toLowerCase())
+  // Filter leads based on search - OPTIMIZED with useMemo
+  const filteredLeads = useMemo(() => 
+    leads.filter(lead => 
+      lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.company.toLowerCase().includes(searchTerm.toLowerCase())
+    ), [leads, searchTerm]
   );
 
-  // Group leads by stage
-  const stages = ["Contacted", "Proposal Sent", "Negotiation", "Closed Won", "Closed Lost"];
-  const leadsByStage = stages.map(stage => ({
-    stage,
-    leads: filteredLeads.filter(lead => lead.stage === stage)
-  }));
+  // Group leads by stage - OPTIMIZED with useMemo
+  const leadsByStage = useMemo(() => {
+    const stages = ["Contacted", "Proposal Sent", "Negotiation", "Closed Won", "Closed Lost"];
+    return stages.map(stage => ({
+      stage,
+      leads: filteredLeads.filter(lead => lead.stage === stage)
+    }));
+  }, [filteredLeads]);
 
   // Handle lead stage change
   const moveLead = (leadId: string, newStage: string) => {
@@ -234,6 +282,234 @@ export default function SalesManagementPage() {
       } catch (error) {
         console.error('Error creating lead:', error);
       }
+    }
+  };
+
+  // Handle quote creation
+  const handleCreateQuote = async () => {
+    if (!newQuote.customerId || !newQuote.amount || !newQuote.validUntil) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/quotes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          customerId: parseInt(newQuote.customerId),
+          serviceType: newQuote.serviceType,
+          amount: parseFloat(newQuote.amount),
+          validUntil: new Date(newQuote.validUntil).toISOString(),
+          notes: newQuote.notes,
+          createdBy: user?.id || 1 // Use current user ID or default
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Quote created successfully:', result);
+        
+        // Reset form and close modal
+        setNewQuote({
+          customerId: '',
+          serviceType: 'Car Rental',
+          amount: '',
+          validUntil: '',
+          notes: ''
+        });
+        setShowCreateQuoteModal(false);
+        
+        // Show success message
+        alert('Quote created successfully!');
+      } else {
+        const error = await response.json();
+        console.error('Failed to create quote:', error);
+        alert('Failed to create quote: ' + (error.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error creating quote:', error);
+      alert('Error creating quote: ' + error);
+    }
+  };
+
+  // Handle activity logging
+  const handleLogActivity = async () => {
+    if (!newActivity.customerId || !newActivity.purpose || !newActivity.outcome) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      // Find the selected customer
+      const selectedCustomer = leads.find(lead => lead.id === newActivity.customerId);
+      if (!selectedCustomer) {
+        alert('Customer not found');
+        return;
+      }
+
+      const response = await fetch('/api/activities', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          client: selectedCustomer.name,
+          activity: newActivity.purpose,
+          outcome: newActivity.outcome,
+          type: 'visit',
+          date: newActivity.visitDate ? new Date(newActivity.visitDate).toISOString() : new Date().toISOString(),
+          createdBy: user?.id || 1
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Activity logged successfully:', result);
+        
+        // Add to local activities state
+        setActivities(prev => [result.activity, ...prev]);
+        
+        // Reset form and close modal
+        setNewActivity({
+          customerId: '',
+          visitDate: '',
+          purpose: '',
+          outcome: ''
+        });
+        setShowLogVisitModal(false);
+        
+        // Show success message
+        alert('Activity logged successfully!');
+      } else {
+        const error = await response.json();
+        console.error('Failed to log activity:', error);
+        alert('Failed to log activity: ' + (error.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error logging activity:', error);
+      alert('Error logging activity: ' + error);
+    }
+  };
+
+  // Handle call scheduling
+  const handleScheduleCall = async () => {
+    if (!newCall.customerId || !newCall.callDate || !newCall.callTime || !newCall.purpose) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      // Find the selected customer
+      const selectedCustomer = leads.find(lead => lead.id === newCall.customerId);
+      if (!selectedCustomer) {
+        alert('Customer not found');
+        return;
+      }
+
+      // Create a scheduled call activity
+      const response = await fetch('/api/activities', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          client: selectedCustomer.name,
+          activity: `Scheduled call: ${newCall.purpose}`,
+          outcome: `Call scheduled for ${newCall.callDate} at ${newCall.callTime}`,
+          type: 'call',
+          date: new Date(newCall.callDate + 'T' + newCall.callTime).toISOString(),
+          createdBy: user?.id || 1
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Call scheduled successfully:', result);
+        
+        // Add to local activities state
+        setActivities(prev => [result.activity, ...prev]);
+        
+        // Reset form and close modal
+        setNewCall({
+          customerId: '',
+          callDate: '',
+          callTime: '',
+          purpose: ''
+        });
+        setShowScheduleCallModal(false);
+        
+        // Show success message
+        alert('Call scheduled successfully!');
+      } else {
+        const error = await response.json();
+        console.error('Failed to schedule call:', error);
+        alert('Failed to schedule call: ' + (error.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error scheduling call:', error);
+      alert('Error scheduling call: ' + error);
+    }
+  };
+
+  // Handle campaign creation
+  const handleCreateCampaign = async () => {
+    if (!newCampaign.name || !newCampaign.endDate) {
+      alert('Please fill in campaign name and end date');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/campaigns', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: newCampaign.name,
+          reach: parseInt(newCampaign.reach) || 0,
+          engagement: parseInt(newCampaign.engagement) || 0,
+          leads: parseInt(newCampaign.leads) || 0,
+          conversions: parseInt(newCampaign.conversions) || 0,
+          budget: parseFloat(newCampaign.budget) || 0,
+          startDate: newCampaign.startDate ? new Date(newCampaign.startDate).toISOString() : new Date().toISOString(),
+          endDate: new Date(newCampaign.endDate).toISOString(),
+          createdBy: user?.id || 1
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Campaign created successfully:', result);
+        
+        // Add to local campaigns state
+        setCampaigns(prev => [result.campaign, ...prev]);
+        
+        // Reset form and close modal
+        setNewCampaign({
+          name: '',
+          reach: '',
+          engagement: '',
+          leads: '',
+          conversions: '',
+          budget: '',
+          startDate: '',
+          endDate: ''
+        });
+        setShowAddCampaignModal(false);
+        
+        // Show success message
+        alert('Campaign created successfully!');
+      } else {
+        const error = await response.json();
+        console.error('Failed to create campaign:', error);
+        alert('Failed to create campaign: ' + (error.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error creating campaign:', error);
+      alert('Error creating campaign: ' + error);
     }
   };
 
@@ -411,9 +687,9 @@ export default function SalesManagementPage() {
             <nav className="flex space-x-8 px-6">
               {[
                 { id: 'pipeline', label: 'Sales Pipeline', count: leads.length },
-                { id: 'activities', label: 'Recent Activities', count: activities.length },
+                { id: 'activities', label: 'Recent Activities', count: Array.isArray(activities) ? activities.length : 0 },
                 { id: 'customers', label: 'Customer Database', count: leads.length },
-                { id: 'campaigns', label: 'Marketing Campaigns', count: campaigns.length }
+                { id: 'campaigns', label: 'Marketing Campaigns', count: Array.isArray(campaigns) ? campaigns.length : 0 }
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -528,13 +804,16 @@ export default function SalesManagementPage() {
           <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900">Recent Activities</h2>
-              <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2">
+              <button 
+                onClick={() => setShowLogVisitModal(true)}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+              >
                 <FaPlus className="h-4 w-4" />
                 <span>Log Activity</span>
               </button>
             </div>
             
-            {activities.length === 0 ? (
+            {!Array.isArray(activities) || activities.length === 0 ? (
               <div className="text-center py-12">
                 <FaCalendarAlt className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No activities yet</h3>
@@ -559,7 +838,7 @@ export default function SalesManagementPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {activities.map((activity) => (
+                    {Array.isArray(activities) && activities.map((activity) => (
                       <tr key={activity.id} className="hover:bg-gray-50">
                         <td className="py-4 px-4 text-sm text-gray-900">{activity.date}</td>
                         <td className="py-4 px-4 text-sm font-medium text-gray-900">{activity.client}</td>
@@ -683,7 +962,7 @@ export default function SalesManagementPage() {
               </button>
             </div>
             
-            {campaigns.length === 0 ? (
+            {!Array.isArray(campaigns) || campaigns.length === 0 ? (
               <div className="text-center py-12">
                 <FaChartLine className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No campaigns yet</h3>
@@ -709,7 +988,7 @@ export default function SalesManagementPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {campaigns.map((campaign) => (
+                    {Array.isArray(campaigns) && campaigns.map((campaign) => (
                       <tr key={campaign.id} className="hover:bg-gray-50">
                         <td className="py-4 px-4 text-sm font-medium text-gray-900">{campaign.name}</td>
                         <td className="py-4 px-4 text-sm text-gray-900">{campaign.reach?.toLocaleString() || '0'}</td>
@@ -737,10 +1016,9 @@ export default function SalesManagementPage() {
            <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
              <button 
-               onClick={() => {
-                 console.log('Add Customer button clicked');
-                 setShowAddCustomerModal(true);
-               }}
+              onClick={() => {
+                setShowAddCustomerModal(true);
+              }}
                className="bg-green-600 text-white p-4 rounded-lg hover:bg-green-700 transition-colors flex flex-col items-center space-y-2"
              >
                <FaPlus className="h-6 w-6" />
@@ -748,7 +1026,9 @@ export default function SalesManagementPage() {
              </button>
              
              <button 
-               onClick={() => setShowLogVisitModal(true)}
+              onClick={() => {
+                setShowLogVisitModal(true);
+              }}
                className="bg-yellow-500 text-white p-4 rounded-lg hover:bg-yellow-600 transition-colors flex flex-col items-center space-y-2"
              >
                <FaCalendarAlt className="h-6 w-6" />
@@ -756,7 +1036,9 @@ export default function SalesManagementPage() {
              </button>
              
              <button 
-               onClick={() => setShowCreateQuoteModal(true)}
+              onClick={() => {
+                setShowCreateQuoteModal(true);
+              }}
                className="bg-blue-600 text-white p-4 rounded-lg hover:bg-blue-700 transition-colors flex flex-col items-center space-y-2"
              >
                <FaFileInvoiceDollar className="h-6 w-6" />
@@ -764,7 +1046,9 @@ export default function SalesManagementPage() {
              </button>
              
              <button 
-               onClick={() => setShowScheduleCallModal(true)}
+              onClick={() => {
+                setShowScheduleCallModal(true);
+              }}
                className="bg-purple-600 text-white p-4 rounded-lg hover:bg-purple-700 transition-colors flex flex-col items-center space-y-2"
              >
                <FaPhone className="h-6 w-6" />
@@ -873,9 +1157,13 @@ export default function SalesManagementPage() {
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <option>Select Customer</option>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
+                  <select 
+                    value={newActivity.customerId}
+                    onChange={(e) => setNewActivity(prev => ({ ...prev, customerId: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select Customer</option>
                     {leads.map(lead => (
                       <option key={lead.id} value={lead.id}>{lead.name} - {lead.company}</option>
                     ))}
@@ -883,15 +1171,32 @@ export default function SalesManagementPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Visit Date</label>
-                  <input type="date" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                  <input 
+                    type="date" 
+                    value={newActivity.visitDate}
+                    onChange={(e) => setNewActivity(prev => ({ ...prev, visitDate: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Purpose</label>
-                  <textarea className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows={3}></textarea>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Purpose *</label>
+                  <textarea 
+                    value={newActivity.purpose}
+                    onChange={(e) => setNewActivity(prev => ({ ...prev, purpose: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                    rows={3}
+                    placeholder="Describe the purpose of the visit"
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Outcome</label>
-                  <textarea className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows={3}></textarea>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Outcome *</label>
+                  <textarea 
+                    value={newActivity.outcome}
+                    onChange={(e) => setNewActivity(prev => ({ ...prev, outcome: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                    rows={3}
+                    placeholder="Describe the outcome of the visit"
+                  />
                 </div>
                 <div className="flex space-x-3 pt-4">
                   <button 
@@ -900,7 +1205,10 @@ export default function SalesManagementPage() {
                   >
                     Cancel
                   </button>
-                  <button className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                  <button 
+                    onClick={handleLogActivity}
+                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  >
                     Log Visit
                   </button>
                 </div>
@@ -924,9 +1232,13 @@ export default function SalesManagementPage() {
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <option>Select Customer</option>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
+                  <select 
+                    value={newQuote.customerId}
+                    onChange={(e) => setNewQuote(prev => ({ ...prev, customerId: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select Customer</option>
                     {leads.map(lead => (
                       <option key={lead.id} value={lead.id}>{lead.name} - {lead.company}</option>
                     ))}
@@ -934,20 +1246,45 @@ export default function SalesManagementPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Service Type</label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <option>Car Rental</option>
-                    <option>Airport Transfer</option>
-                    <option>Tour Package</option>
-                    <option>Custom Service</option>
+                  <select 
+                    value={newQuote.serviceType}
+                    onChange={(e) => setNewQuote(prev => ({ ...prev, serviceType: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="Car Rental">Car Rental</option>
+                    <option value="Airport Transfer">Airport Transfer</option>
+                    <option value="Tour Package">Tour Package</option>
+                    <option value="Custom Service">Custom Service</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount (RWF)</label>
-                  <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount (RWF) *</label>
+                  <input 
+                    type="number" 
+                    value={newQuote.amount}
+                    onChange={(e) => setNewQuote(prev => ({ ...prev, amount: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                    placeholder="Enter amount"
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Valid Until</label>
-                  <input type="date" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Valid Until *</label>
+                  <input 
+                    type="date" 
+                    value={newQuote.validUntil}
+                    onChange={(e) => setNewQuote(prev => ({ ...prev, validUntil: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                  <textarea 
+                    value={newQuote.notes}
+                    onChange={(e) => setNewQuote(prev => ({ ...prev, notes: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                    rows={3}
+                    placeholder="Additional notes (optional)"
+                  />
                 </div>
                 <div className="flex space-x-3 pt-4">
                   <button 
@@ -956,7 +1293,10 @@ export default function SalesManagementPage() {
                   >
                     Cancel
                   </button>
-                  <button className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                  <button 
+                    onClick={handleCreateQuote}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
                     Create Quote
                   </button>
                 </div>
@@ -980,25 +1320,45 @@ export default function SalesManagementPage() {
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <option>Select Customer</option>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
+                  <select 
+                    value={newCall.customerId}
+                    onChange={(e) => setNewCall(prev => ({ ...prev, customerId: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select Customer</option>
                     {leads.map(lead => (
                       <option key={lead.id} value={lead.id}>{lead.name} - {lead.company}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Call Date</label>
-                  <input type="date" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Call Date *</label>
+                  <input 
+                    type="date" 
+                    value={newCall.callDate}
+                    onChange={(e) => setNewCall(prev => ({ ...prev, callDate: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Call Time</label>
-                  <input type="time" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Call Time *</label>
+                  <input 
+                    type="time" 
+                    value={newCall.callTime}
+                    onChange={(e) => setNewCall(prev => ({ ...prev, callTime: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Purpose</label>
-                  <textarea className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows={3}></textarea>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Purpose *</label>
+                  <textarea 
+                    value={newCall.purpose}
+                    onChange={(e) => setNewCall(prev => ({ ...prev, purpose: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                    rows={3}
+                    placeholder="Describe the purpose of the call"
+                  />
                 </div>
                 <div className="flex space-x-3 pt-4">
                   <button 
@@ -1007,7 +1367,10 @@ export default function SalesManagementPage() {
                   >
                     Cancel
                   </button>
-                  <button className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                  <button 
+                    onClick={handleScheduleCall}
+                    className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                  >
                     Schedule Call
                   </button>
                 </div>
@@ -1031,24 +1394,82 @@ export default function SalesManagementPage() {
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Campaign Name</label>
-                  <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Campaign Name *</label>
+                  <input 
+                    type="text" 
+                    value={newCampaign.name}
+                    onChange={(e) => setNewCampaign(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                    placeholder="Enter campaign name"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Target Reach</label>
-                  <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                  <input 
+                    type="number" 
+                    value={newCampaign.reach}
+                    onChange={(e) => setNewCampaign(prev => ({ ...prev, reach: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Engagement</label>
+                  <input 
+                    type="number" 
+                    value={newCampaign.engagement}
+                    onChange={(e) => setNewCampaign(prev => ({ ...prev, engagement: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Leads</label>
+                  <input 
+                    type="number" 
+                    value={newCampaign.leads}
+                    onChange={(e) => setNewCampaign(prev => ({ ...prev, leads: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Conversions</label>
+                  <input 
+                    type="number" 
+                    value={newCampaign.conversions}
+                    onChange={(e) => setNewCampaign(prev => ({ ...prev, conversions: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                    placeholder="0"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Budget (RWF)</label>
-                  <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                  <input 
+                    type="number" 
+                    value={newCampaign.budget}
+                    onChange={(e) => setNewCampaign(prev => ({ ...prev, budget: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                    placeholder="0"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-                  <input type="date" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                  <input 
+                    type="date" 
+                    value={newCampaign.startDate}
+                    onChange={(e) => setNewCampaign(prev => ({ ...prev, startDate: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-                  <input type="date" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
+                  <input 
+                    type="date" 
+                    value={newCampaign.endDate}
+                    onChange={(e) => setNewCampaign(prev => ({ ...prev, endDate: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                  />
                 </div>
                 <div className="flex space-x-3 pt-4">
                   <button 
@@ -1057,7 +1478,10 @@ export default function SalesManagementPage() {
                   >
                     Cancel
                   </button>
-                  <button className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                  <button 
+                    onClick={handleCreateCampaign}
+                    className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                  >
                     Add Campaign
                   </button>
                 </div>

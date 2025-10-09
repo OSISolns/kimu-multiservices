@@ -1,3 +1,5 @@
+'use client'
+
 import { FaWhatsapp, FaPhone, FaCheck } from 'react-icons/fa';
 
 type HotelBooking = {

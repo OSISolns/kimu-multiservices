@@ -1,4 +1,8 @@
 "use client";
+
+// Force dynamic rendering for all staff pages to prevent prerendering issues
+export const dynamic = 'force-dynamic';
+
 import StaffSidebar from '../../components/StaffSidebar';
 import '../../app/globals.css';
 import { usePathname } from 'next/navigation';

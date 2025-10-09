@@ -52,20 +52,6 @@ interface Vehicle {
   image?: string;
 }
 
-interface TransportAggregate {
-  totalVehicles: number
-  availableVehicles: number
-  inUseVehicles: number
-  maintenanceVehicles: number
-  totalMileage: number
-  averageFuelEfficiency: number
-  mostUsedVehicle: string
-  leastUsedVehicle: string
-  maintenanceDue: number
-  upcomingMaintenance: Array<{ vehicleName: string; maintenanceDate: string; type: string }>
-  recentActiveVehicles?: Array<{ id: number; name: string; status: string }>
-}
-
 export default function TransportOfficerPage() {
   const { user, isLoading: userLoading, resetInactivityTimer } = useUser();
   const router = useRouter();
@@ -76,7 +62,6 @@ export default function TransportOfficerPage() {
   const [vehicleFilter, setVehicleFilter] = useState('all');
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [showFleetModal, setShowFleetModal] = useState(false);
-  const [aggregate, setAggregate] = useState<TransportAggregate | null>(null);
 
   const fetchBookings = useCallback(async () => {
     if (!user?.username) return;
@@ -106,23 +91,13 @@ export default function TransportOfficerPage() {
     }
   }, [user?.username]);
 
-  const fetchAggregate = useCallback(async () => {
-    try {
-      const res = await fetch('/api/reports/transport?days=30&type=overview');
-      if (!res.ok) return;
-      const data = await res.json();
-      setAggregate(data);
-    } catch (_) {}
-  }, []);
-
   useEffect(() => {
     if (user && !userLoading) {
       fetchBookings();
       fetchVehicles();
-      fetchAggregate();
       setLoading(false);
     }
-  }, [user, userLoading, fetchBookings, fetchVehicles, fetchAggregate]);
+  }, [user, userLoading, fetchBookings, fetchVehicles]);
 
   // Reset inactivity timer on user activity
   useEffect(() => {
@@ -235,7 +210,7 @@ export default function TransportOfficerPage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Available Vehicles</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {aggregate?.availableVehicles ?? vehicles.filter(v => v.isAvailable && v.status === 'available').length}
+                  {vehicles.filter(v => v.isAvailable && v.status === 'available').length}
                 </p>
               </div>
             </div>
@@ -243,13 +218,13 @@ export default function TransportOfficerPage() {
 
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <FaGasPump className="text-red-600 text-xl" />
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <FaClock className="text-yellow-600 text-xl" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Maintenance Due</p>
+                <p className="text-sm font-medium text-gray-600">Pending Pickups</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {aggregate?.maintenanceDue ?? 0}
+                  {bookings.filter(b => b.status === 'confirmed').length}
                 </p>
               </div>
             </div>
@@ -261,9 +236,9 @@ export default function TransportOfficerPage() {
                 <FaRoute className="text-purple-600 text-xl" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">In Use</p>
+                <p className="text-sm font-medium text-gray-600">In Transit</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {aggregate?.inUseVehicles ?? bookings.filter(b => b.status === 'in-progress').length}
+                  {bookings.filter(b => b.status === 'in-progress').length}
                 </p>
               </div>
             </div>
@@ -271,24 +246,6 @@ export default function TransportOfficerPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Recent Active Vehicles (from aggregate) */}
-          {aggregate?.recentActiveVehicles && aggregate.recentActiveVehicles.length > 0 && (
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">Recently Active Vehicles</h2>
-              </div>
-              <div className="p-6">
-                <ul className="divide-y divide-gray-200">
-                  {aggregate.recentActiveVehicles.map(v => (
-                    <li key={v.id} className="py-3 flex items-center justify-between">
-                      <span className="text-gray-800">{v.name}</span>
-                      <span className={`text-xs px-2 py-1 rounded ${getVehicleStatusColor(v.status)}`}>{v.status}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          )}
           {/* Active Bookings */}
           <div className="bg-white rounded-lg shadow">
             <div className="px-6 py-4 border-b border-gray-200">
@@ -505,10 +462,13 @@ export default function TransportOfficerPage() {
                   </button>
                 </div>
 
-                {/* Vehicle Status Badge (single, non-redundant) */}
+                {/* Vehicle Status Badge */}
                 <div className="mb-6">
                   <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${getVehicleStatusColor(selectedVehicle.status)}`}>
-                    {(selectedVehicle.isAvailable ? 'Available' : 'Not Available').toUpperCase()}
+                    {selectedVehicle.status.toUpperCase()}
+                  </span>
+                  <span className={`ml-3 inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${selectedVehicle.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    {selectedVehicle.isAvailable ? 'AVAILABLE' : 'NOT AVAILABLE'}
                   </span>
                 </div>
 
@@ -553,33 +513,26 @@ export default function TransportOfficerPage() {
                       Technical Specs
                     </h4>
                     <div className="space-y-3">
-                      {(() => {
-                        const isElectric = (selectedVehicle.fuel || '').toLowerCase() === 'electric' || (selectedVehicle.type || '').toLowerCase() === 'electric';
-                        return (
-                          <>
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">{isElectric ? 'Motor' : 'Engine'}:</span>
-                              <span className="font-medium">{selectedVehicle.engine || (isElectric ? 'Electric Motor' : 'N/A')}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Transmission:</span>
-                              <span className="font-medium">{selectedVehicle.transmission || (isElectric ? 'Single-Speed' : 'N/A')}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">{isElectric ? 'Energy Source' : 'Fuel Type'}:</span>
-                              <span className="font-medium">{selectedVehicle.fuel || (isElectric ? 'Electric' : 'N/A')}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Power:</span>
-                              <span className="font-medium">{selectedVehicle.power || 'N/A'}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">{isElectric ? 'Energy Consumption' : 'Fuel Efficiency'}:</span>
-                              <span className="font-medium">{selectedVehicle.fuelEfficiency || (isElectric ? 'N/A' : 'N/A')}</span>
-                            </div>
-                          </>
-                        );
-                      })()}
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Engine:</span>
+                        <span className="font-medium">{selectedVehicle.engine || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Transmission:</span>
+                        <span className="font-medium">{selectedVehicle.transmission || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Fuel Type:</span>
+                        <span className="font-medium">{selectedVehicle.fuel || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Power:</span>
+                        <span className="font-medium">{selectedVehicle.power || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Fuel Efficiency:</span>
+                        <span className="font-medium">{selectedVehicle.fuelEfficiency || 'N/A'}</span>
+                      </div>
                     </div>
                   </div>
 
@@ -629,7 +582,16 @@ export default function TransportOfficerPage() {
                           <span className="font-medium text-gray-400">No record</span>
                         </div>
                       )}
-                      {/* Status rows removed to avoid redundancy with the badge above */}
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Status:</span>
+                        <span className="font-medium">{selectedVehicle.status}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Availability:</span>
+                        <span className={`font-medium ${selectedVehicle.isAvailable ? 'text-green-600' : 'text-red-600'}`}>
+                          {selectedVehicle.isAvailable ? 'Available' : 'Not Available'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>

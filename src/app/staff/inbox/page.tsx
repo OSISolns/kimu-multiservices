@@ -1,4 +1,9 @@
+'use client'
+
 import { FaInbox } from 'react-icons/fa'
+
+// Force dynamic rendering to avoid prerendering issues
+export const dynamic = 'force-dynamic'
 
 export default function Inbox() {
   return (

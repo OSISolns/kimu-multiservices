@@ -1,23 +1,28 @@
 "use client";
 
+// This page uses useUser hook and should not be prerendered
+
 import { FaFileAlt, FaCar, FaTaxi, FaPlane, FaHotel, FaHandshake, FaDownload, FaCheck, FaHourglassHalf, FaTimes, FaExclamationTriangle, FaMoneyBillWave, FaChartLine, FaCalculator, FaCalendarAlt, FaPiggyBank, FaChartPie } from 'react-icons/fa';
-import dynamic from 'next/dynamic';
+import dynamicImport from 'next/dynamic';
 
 // Dynamically import charts to reduce initial bundle size
-const Pie = dynamic(() => import('react-chartjs-2').then(mod => ({ default: mod.Pie })), {
+const Pie = dynamicImport(() => import('react-chartjs-2').then(mod => ({ default: mod.Pie })), {
   loading: () => <div className="h-64 bg-gray-100 animate-pulse rounded-lg" />,
   ssr: false
 });
 
-const Line = dynamic(() => import('react-chartjs-2').then(mod => ({ default: mod.Line })), {
+const Line = dynamicImport(() => import('react-chartjs-2').then(mod => ({ default: mod.Line })), {
   loading: () => <div className="h-64 bg-gray-100 animate-pulse rounded-lg" />,
   ssr: false
 });
 
-const Bar = dynamic(() => import('react-chartjs-2').then(mod => ({ default: mod.Bar })), {
+const Bar = dynamicImport(() => import('react-chartjs-2').then(mod => ({ default: mod.Bar })), {
   loading: () => <div className="h-64 bg-gray-100 animate-pulse rounded-lg" />,
   ssr: false
 });
+
+// Force dynamic rendering to prevent prerendering issues
+export const dynamic = 'force-dynamic'
 import {
   Chart as ChartJS,
   ArcElement,
@@ -200,19 +205,6 @@ const serviceBarData = {
   ],
 };
 
-  // Effects
-  useEffect(() => {
-    fetchReportData();
-  }, [dateRange]);
-
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/staff/login');
-    } else if (!isLoading && user && !['admin', 'accountant'].includes(user.role)) {
-      router.push('/staff/dashboard');
-    }
-  }, [isLoading, user, router]);
-
   // Optimized API Functions with caching
   const fetchReportData = useCallback(async (): Promise<void> => {
     setDataLoading(true);
@@ -289,6 +281,19 @@ const serviceBarData = {
       setFinancialLoading(false);
     }
   }, [financialPeriod, financialStartDate, financialEndDate, user?.username]);
+
+  // Effects
+  useEffect(() => {
+    fetchReportData();
+  }, [dateRange, fetchReportData]);
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/staff/login');
+    } else if (!isLoading && user && !['admin', 'accountant'].includes(user.role)) {
+      router.push('/staff/dashboard');
+    }
+  }, [isLoading, user, router]);
 
   // Computed Values
   const filteredStaff = sortStaff(

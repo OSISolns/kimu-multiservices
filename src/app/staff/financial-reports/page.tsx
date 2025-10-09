@@ -1,4 +1,8 @@
 "use client"
+
+// Force dynamic rendering to prevent prerendering issues
+export const dynamic = 'force-dynamic'
+
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaDownload, FaChartBar, FaFileExport, FaCalendarAlt, FaMoneyBillWave, FaReceipt, FaChartLine } from 'react-icons/fa';

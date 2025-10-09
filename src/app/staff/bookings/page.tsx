@@ -39,14 +39,14 @@ export default function BookingsPage() {
     
     try {
       const response = await fetch('/api/bookings');
-      if (response.ok) {
+        if (response.ok) {
         const data = await response.json();
         console.log('Bookings API response:', data); // Debug log
         setBookings(data.bookings || []);
-      }
-    } catch (error) {
+        }
+      } catch (error) {
       console.error('Error fetching bookings:', error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   }, [user?.username]);
@@ -95,7 +95,7 @@ export default function BookingsPage() {
 
   const filteredBookings = bookings.filter(booking => {
     const matchesFilter = filter === 'all' || booking.status.toLowerCase() === filter.toLowerCase();
-    const matchesSearch = 
+      const matchesSearch = 
       booking.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.phone.includes(searchTerm) ||
       (booking.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -103,7 +103,7 @@ export default function BookingsPage() {
       booking.nationality.toLowerCase().includes(searchTerm.toLowerCase());
     
     return matchesFilter && matchesSearch;
-  });
+    });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -192,21 +192,21 @@ export default function BookingsPage() {
                             <span className="flex items-center">
                               <FaPhone className="mr-2" />
                               {booking.phone}
-                            </span>
+                        </span>
                             {booking.email && (
                               <span className="flex items-center">
                                 <FaEnvelope className="mr-2" />
                                 {booking.email}
-                              </span>
+                          </span>
                             )}
                             <span className="flex items-center">
                               <FaCar className="mr-2" />
                               {booking.carType}
                             </span>
-                          </div>
-                        </div>
         </div>
-
+          </div>
+              </div>
+              
                       {/* Trip Details */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -216,32 +216,32 @@ export default function BookingsPage() {
                             <span className="text-sm text-gray-600">
                               {new Date(booking.pickupDate).toLocaleDateString()} at {booking.pickupTime}
                             </span>
-                          </div>
-                          <div className="flex items-center space-x-2">
+                  </div>
+                    <div className="flex items-center space-x-2">
                             <FaCalendarAlt className="text-red-500" />
                             <span className="text-sm font-medium text-gray-700">Return:</span>
                             <span className="text-sm text-gray-600">
                               {new Date(booking.returnDate).toLocaleDateString()} at {booking.returnTime}
                             </span>
-                          </div>
-                        </div>
+                    </div>
+                  </div>
                         <div className="space-y-2">
                           <div className="flex items-center space-x-2">
                             <FaCar className="text-blue-500" />
                             <span className="text-sm font-medium text-gray-700">Duration:</span>
                             <span className="text-sm text-gray-600">
                               {booking.rentalDays} day{booking.rentalDays !== 1 ? 's' : ''}
-                            </span>
-                          </div>
+                    </span>
+                  </div>
                           <div className="flex items-center space-x-2">
                             <FaCheckCircle className="text-green-500" />
                             <span className="text-sm font-medium text-gray-700">Status:</span>
                             <span className="text-sm text-gray-600">
                               {booking.returnConfirmed ? 'Return Confirmed' : 'Return Pending'}
                             </span>
-                          </div>
-                        </div>
-                      </div>
+                  </div>
+                  </div>
+                </div>
 
                       {/* Additional Info */}
                       <div className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
@@ -249,19 +249,19 @@ export default function BookingsPage() {
                           <FaCar className="text-blue-500" />
                           <span className="text-sm font-medium text-gray-700">Car Type:</span>
                           <span className="text-sm text-gray-600">{booking.carType}</span>
-                        </div>
+                      </div>
                         <div className="flex items-center space-x-2">
                           <FaCheckCircle className="text-green-500" />
                           <span className="text-sm font-medium text-gray-700">Full Tank:</span>
                           <span className="text-sm text-gray-600">{booking.fullTank ? 'Yes' : 'No'}</span>
-                        </div>
+                      </div>
                         <div className="flex items-center space-x-2">
                           <FaCar className="text-blue-500" />
                           <span className="text-sm font-medium text-gray-700">Nationality:</span>
                           <span className="text-sm text-gray-600">{booking.nationality}</span>
-                        </div>
                       </div>
-                    </div>
+                      </div>
+                        </div>
 
                     {/* Status and Actions */}
                     <div className="flex flex-col items-end space-y-4 mt-4 lg:mt-0">

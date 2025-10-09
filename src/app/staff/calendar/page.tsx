@@ -61,7 +61,7 @@ export default function AgentCalendarPage() {
     };
 
     fetchBookings();
-  }, []);
+  }, [user?.username]);
 
   // Filter bookings for current month
   const monthBookings = bookings.filter(b => {

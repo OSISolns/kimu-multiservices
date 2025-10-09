@@ -1,7 +1,11 @@
 "use client"
-import { useEffect, useState } from 'react';
+
+// Force dynamic rendering to prevent prerendering issues
+export const dynamic = 'force-dynamic'
+
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { FaMoneyBillWave, FaChartLine, FaCreditCard, FaReceipt, FaCalculator, FaFileInvoiceDollar, FaDollarSign, FaChartBar, FaCalendarAlt, FaUsers, FaCar, FaHotel, FaTaxi, FaPiggyBank, FaChartPie, FaBalanceScale, FaFileAlt, FaDownload, FaPrint, FaEye, FaEdit, FaTrash, FaPlus, FaMinus, FaPercentage, FaClock, FaExclamationTriangle, FaCheckCircle, FaTimesCircle, FaTable, FaSave, FaUndo, FaInfoCircle, FaCompress, FaExpand, FaTag } from 'react-icons/fa';
+import { FaMoneyBillWave, FaChartLine, FaCreditCard, FaReceipt, FaCalculator, FaFileInvoiceDollar, FaDollarSign, FaChartBar, FaCalendarAlt, FaUsers, FaCar, FaHotel, FaTaxi, FaPiggyBank, FaChartPie, FaBalanceScale, FaFileAlt, FaDownload, FaPrint, FaEye, FaEdit, FaTrash, FaPlus, FaMinus, FaPercentage, FaClock, FaExclamationTriangle, FaCheckCircle, FaTimesCircle, FaTable, FaSave, FaUndo, FaInfoCircle, FaCompress, FaExpand, FaTag, FaSync } from 'react-icons/fa';
 import { useUser } from '../../UserContext';
 import * as ExcelJS from 'exceljs';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -97,20 +101,9 @@ export default function AccountantDashboard() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [activeTab, setActiveTab] = useState<'ledger' | 'summary' | 'reports' | 'payroll'>('ledger');
   const [loading, setLoading] = useState(true);
+  const [employeeLoading, setEmployeeLoading] = useState(false);
 
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/staff/login');
-    } else if (!isLoading && user && user.role !== 'accountant') {
-      // Log unauthorized access attempt for security monitoring
-      console.warn(`SECURITY ALERT: Unauthorized access attempt to accountant dashboard by user: ${user.username} (role: ${user.role}) at ${new Date().toISOString()}`);
-      router.push('/staff/dashboard');
-    } else if (!isLoading && user) {
-      fetchFinancialData();
-    }
-  }, [router, user, isLoading]);
-
-  const fetchFinancialData = async () => {
+  const fetchFinancialData = useCallback(async () => {
     try {
       const response = await fetch('/api/financial-summary');
       if (!response.ok) {
@@ -123,7 +116,60 @@ export default function AccountantDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  const fetchEmployeeData = useCallback(async () => {
+    setEmployeeLoading(true);
+    try {
+      const response = await fetch('/api/employees');
+      if (!response.ok) {
+        throw new Error('Failed to fetch employee data');
+      }
+      const data = await response.json();
+      if (data.success && data.employees) {
+        setPayrollData(prev => ({
+          ...prev,
+          employees: data.employees
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching employee data:', error);
+    } finally {
+      setEmployeeLoading(false);
+    }
+  }, []);
+
+  const fetchPayrollHistory = useCallback(async () => {
+    try {
+      const response = await fetch('/api/payroll');
+      if (!response.ok) {
+        throw new Error('Failed to fetch payroll history');
+      }
+      const data = await response.json();
+      if (data.success && data.payrollHistory) {
+        setPayrollData(prev => ({
+          ...prev,
+          payrollHistory: data.payrollHistory
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching payroll history:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/staff/login');
+    } else if (!isLoading && user && user.role !== 'accountant') {
+      // Log unauthorized access attempt for security monitoring
+      console.warn(`SECURITY ALERT: Unauthorized access attempt to accountant dashboard by user: ${user.username} (role: ${user.role}) at ${new Date().toISOString()}`);
+      router.push('/staff/dashboard');
+    } else if (!isLoading && user) {
+      fetchFinancialData();
+      fetchEmployeeData();
+      fetchPayrollHistory();
+    }
+  }, [router, user, isLoading, fetchFinancialData, fetchEmployeeData, fetchPayrollHistory]);
 
   // Filter data based on time period
   const filterDataByTime = (data: any[], filter: string, date: string) => {
@@ -490,38 +536,46 @@ export default function AccountantDashboard() {
     
     console.log('SECURITY AUDIT:', auditLog);
     
-    const newEmployee = {
-      id: Date.now(),
-      ...employeeData,
-      employeeId: generateEmployeeId(employeeData.position),
-      allowances: 0,
-      deductions: 0,
-      netSalary: employeeData.salary,
-      status: 'active',
-      joinDate: new Date().toISOString().split('T')[0]
-    };
-    
-    setPayrollData(prev => ({
-      ...prev,
-      employees: [...prev.employees, newEmployee]
-    }));
-
-    // Send notification
     try {
-      await fetch('/api/notifications', {
+      // Create employee via API
+      const response = await fetch('/api/employees', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-username': user?.username || '',
         },
-        body: JSON.stringify({
-          message: `New employee added: ${employeeData.name} (${employeeData.position}) - ${employeeData.salary.toLocaleString('en-US')} RWF`,
-          type: 'employee',
-          userId: null
-        })
+        body: JSON.stringify(employeeData)
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to create employee');
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // Refresh employee data to get the updated list
+        await fetchEmployeeData();
+        
+        // Send notification
+        try {
+          await fetch('/api/notifications', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-username': user?.username || '',
+            },
+            body: JSON.stringify({
+              message: `New employee added: ${employeeData.name} (${employeeData.position}) - ${employeeData.salary.toLocaleString('en-US')} RWF`,
+              type: 'employee',
+              userId: null
+            })
+          });
+        } catch (error) {
+          console.error('Error sending employee notification:', error);
+        }
+      }
     } catch (error) {
-      console.error('Error sending employee notification:', error);
+      console.error('Error creating employee:', error);
     }
     
     setShowAddEmployeeModal(false);
@@ -540,40 +594,53 @@ export default function AccountantDashboard() {
     const totalSalary = payrollData.employees.reduce((sum, emp) => sum + emp.salary, 0);
     const netPayroll = totalSalary; // No allowances or deductions
     
-    const newPayroll = {
-      id: Date.now(),
-      month: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' }),
-      totalSalary,
-      totalAllowances: 0,
-      totalDeductions: 0,
-      netPayroll,
-      status: 'paid',
-      paymentDate: new Date().toISOString().split('T')[0]
-    };
-    
-    setPayrollData(prev => ({
-      ...prev,
-      payrollHistory: [newPayroll, ...prev.payrollHistory]
-    }));
-
-    // Send notification for each employee
     try {
-      for (const employee of payrollData.employees) {
-        await fetch('/api/notifications', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-username': user?.username || '',
-          },
-          body: JSON.stringify({
-            message: `Payroll processed: ${employee.name} - ${employee.salary.toLocaleString('en-US')} RWF (${newPayroll.month})`,
-            type: 'payroll',
-            userId: null
-          })
-        });
+      // Process payroll via API
+      const response = await fetch('/api/payroll', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          month: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' }),
+          year: new Date().getFullYear(),
+          totalSalary,
+          employees: payrollData.employees
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to process payroll');
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // Refresh payroll history
+        await fetchPayrollHistory();
+        
+        // Send notification for each employee
+        try {
+          for (const employee of payrollData.employees) {
+            await fetch('/api/notifications', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-username': user?.username || '',
+              },
+              body: JSON.stringify({
+                message: `Payroll processed: ${employee.name} - ${employee.salary.toLocaleString('en-US')} RWF (${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' })})`,
+                type: 'payroll',
+                userId: null
+              })
+            });
+          }
+        } catch (error) {
+          console.error('Error sending payroll notifications:', error);
+        }
       }
     } catch (error) {
-      console.error('Error sending payroll notifications:', error);
+      console.error('Error processing payroll:', error);
     }
     
     setShowPayrollModal(false);
@@ -969,10 +1036,9 @@ export default function AccountantDashboard() {
   }
 
   return (
-    <>
-      <main className="flex-1 max-w-full mx-auto p-8 flex flex-col gap-8">
-        {/* Security Header */}
-        <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-6 shadow-sm border">
+    <div className="min-h-screen bg-gray-50 p-6 space-y-6">
+      {/* Security Header */}
+      <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-6 shadow-sm border">
           <div className="flex justify-between items-start">
             <div>
           <h2 className="text-2xl font-bold text-green-700 mb-2">
@@ -1506,12 +1572,21 @@ export default function AccountantDashboard() {
           <div className="space-y-6">
             {/* Payroll Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-2xl p-6 shadow">
+                      <div className="bg-white rounded-2xl p-6 shadow">
                 <div className="flex items-center gap-2 mb-2">
                   <FaUsers className="text-blue-600 text-2xl" />
                   <span className="text-lg font-bold text-blue-700">Total Employees</span>
                 </div>
-                <div className="text-3xl font-bold text-blue-700">{payrollData.employees.length}</div>
+                <div className="text-3xl font-bold text-blue-700">
+                  {employeeLoading ? (
+                    <div className="flex items-center gap-2">
+                      <FaSync className="animate-spin" size={20} />
+                      Loading...
+                    </div>
+                  ) : (
+                    payrollData.employees.length
+                  )}
+                </div>
                 <div className="text-sm text-gray-500 mt-1">Active staff members</div>
               </div>
               
@@ -1520,7 +1595,16 @@ export default function AccountantDashboard() {
                   <FaMoneyBillWave className="text-green-600 text-2xl" />
                   <span className="text-lg font-bold text-green-700">Monthly Payroll</span>
                 </div>
-                <div className="text-3xl font-bold text-green-700">{formatRWF(payrollData.employees.reduce((sum, emp) => sum + emp.netSalary, 0))}</div>
+                <div className="text-3xl font-bold text-green-700">
+                  {employeeLoading ? (
+                    <div className="flex items-center gap-2">
+                      <FaSync className="animate-spin" size={20} />
+                      Loading...
+                    </div>
+                  ) : (
+                    formatRWF(payrollData.employees.reduce((sum, emp) => sum + emp.netSalary, 0))
+                  )}
+                </div>
                 <div className="text-sm text-gray-500 mt-1">Total net salary</div>
               </div>
               
@@ -1529,7 +1613,16 @@ export default function AccountantDashboard() {
                   <FaUsers className="text-purple-600 text-2xl" />
                   <span className="text-lg font-bold text-purple-700">Active Employees</span>
                 </div>
-                <div className="text-3xl font-bold text-purple-700">{payrollData.employees.filter(emp => emp.status === 'active').length}</div>
+                <div className="text-3xl font-bold text-purple-700">
+                  {employeeLoading ? (
+                    <div className="flex items-center gap-2">
+                      <FaSync className="animate-spin" size={20} />
+                      Loading...
+                    </div>
+                  ) : (
+                    payrollData.employees.filter(emp => emp.status === 'active').length
+                  )}
+                </div>
                 <div className="text-sm text-gray-500 mt-1">Currently employed</div>
               </div>
               
@@ -1550,13 +1643,24 @@ export default function AccountantDashboard() {
                   <FaUsers className="text-blue-600" />
                   Employee Management
           </h3>
-                <button
-                  onClick={() => setShowAddEmployeeModal(true)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                >
-                  <FaPlus />
-                  Add Employee
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={fetchEmployeeData}
+                    disabled={employeeLoading}
+                    className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Refresh Employee Data"
+                  >
+                    <FaSync className={employeeLoading ? 'animate-spin' : ''} />
+                    {employeeLoading ? 'Refreshing...' : 'Refresh'}
+                  </button>
+                  <button
+                    onClick={() => setShowAddEmployeeModal(true)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  >
+                    <FaPlus />
+                    Add Employee
+                  </button>
+                </div>
               </div>
               
           <div className="overflow-x-auto">
@@ -1572,49 +1676,66 @@ export default function AccountantDashboard() {
                 </tr>
               </thead>
               <tbody>
-                    {payrollData.employees.map((employee) => (
-                      <tr key={employee.id} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => viewEmployeeDetails(employee)}>
-                        <td className="py-3 px-4 font-medium">{employee.employeeId}</td>
-                        <td className="py-3 px-4">{employee.name}</td>
-                    <td className="py-3 px-4">
-                          <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
-                            {employee.position}
-                          </span>
+                {employeeLoading ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-gray-500">
+                      <div className="flex items-center justify-center gap-2">
+                        <FaSync className="animate-spin" />
+                        Loading employees...
+                      </div>
                     </td>
-                        <td className="py-3 px-4 font-bold text-green-600">{formatRWF(employee.salary)}</td>
-                    <td className="py-3 px-4">
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            employee.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                          }`}>
-                            {employee.status}
-                      </span>
-                    </td>
-                        <td className="py-3 px-4">
-                          <div className="flex gap-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                viewEmployeeDetails(employee);
-                              }}
-                              className="text-blue-600 hover:text-blue-800 transition-colors"
-                              title="View Details"
-                            >
-                              <FaEye size={16} />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteEmployee(employee.id);
-                              }}
-                              className="text-red-600 hover:text-red-800 transition-colors"
-                              title="Delete Employee"
-                            >
-                              <FaTrash size={16} />
-                            </button>
-                          </div>
-                        </td>
                   </tr>
-                ))}
+                ) : payrollData.employees.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-gray-500">
+                      No employees found. Click &quot;Add Employee&quot; to get started.
+                    </td>
+                  </tr>
+                ) : (
+                  payrollData.employees.map((employee) => (
+                    <tr key={employee.id} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => viewEmployeeDetails(employee)}>
+                      <td className="py-3 px-4 font-medium">{employee.employeeId}</td>
+                      <td className="py-3 px-4">{employee.name}</td>
+                      <td className="py-3 px-4">
+                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+                          {employee.position}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 font-bold text-green-600">{formatRWF(employee.salary)}</td>
+                      <td className="py-3 px-4">
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          employee.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        }`}>
+                          {employee.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              viewEmployeeDetails(employee);
+                            }}
+                            className="text-blue-600 hover:text-blue-800 transition-colors"
+                            title="View Details"
+                          >
+                            <FaEye size={16} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteEmployee(employee.id);
+                            }}
+                            className="text-red-600 hover:text-red-800 transition-colors"
+                            title="Delete Employee"
+                          >
+                            <FaTrash size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -1682,7 +1803,6 @@ export default function AccountantDashboard() {
             </div>
           </div>
         )}
-      </main>
 
       {/* Add Transaction Modal */}
       {showAddModal && (
@@ -2660,7 +2780,7 @@ export default function AccountantDashboard() {
 
       {/* Process Payroll Modal */}
       {showPayrollModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
           <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold mb-4">Process Monthly Payroll</h3>
             <div className="space-y-4">
@@ -2701,6 +2821,6 @@ export default function AccountantDashboard() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 } 

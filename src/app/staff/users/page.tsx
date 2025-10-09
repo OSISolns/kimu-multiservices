@@ -1,5 +1,9 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+
+// Force dynamic rendering to prevent prerendering issues
+export const dynamic = 'force-dynamic'
+
+import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -78,7 +82,7 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('username');
+  const [sortBy, setSortBy] = useState<keyof User>('username');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [showUserModal, setShowUserModal] = useState(false);
@@ -113,17 +117,8 @@ export default function UsersPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordResetLoading, setPasswordResetLoading] = useState(false);
 
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/staff/login');
-    } else if (!isLoading && user && user.role !== 'admin') {
-      router.push('/staff/dashboard');
-    } else if (!isLoading && user && user.role === 'admin') {
-      fetchUsers();
-    }
-  }, [user, isLoading, router]);
-
-  async function fetchUsers() {
+  const fetchUsers = useCallback(async () => {
+    console.log('UsersPage: fetchUsers called with user:', user ? { username: user.username, role: user.role } : null);
     setLoading(true);
     setError('');
     try {
@@ -132,7 +127,9 @@ export default function UsersPage() {
           'x-username': user?.username || '',
         },
       });
+      console.log('UsersPage: API response status:', res.status);
       const data = await res.json();
+      console.log('UsersPage: API response data:', data);
       if (res.ok && Array.isArray(data.users)) {
         setUsers(data.users);
       } else {
@@ -140,12 +137,27 @@ export default function UsersPage() {
         setError(data.error || 'Failed to fetch users');
       }
     } catch (err) {
+      console.error('UsersPage: fetchUsers error:', err);
       setUsers([]);
       setError('Network error');
     } finally {
       setLoading(false);
     }
-  }
+  }, [user]);
+
+  useEffect(() => {
+    console.log('UsersPage: useEffect triggered', { isLoading, user: user ? { username: user.username, role: user.role } : null });
+    if (!isLoading && !user) {
+      console.log('UsersPage: No user, redirecting to login');
+      router.push('/staff/login');
+    } else if (!isLoading && user && user.role !== 'admin') {
+      console.log('UsersPage: User is not admin, redirecting to dashboard', { role: user.role });
+      router.push('/staff/dashboard');
+    } else if (!isLoading && user && user.role === 'admin') {
+      console.log('UsersPage: User is admin, fetching users');
+      fetchUsers();
+    }
+  }, [user, isLoading, router, fetchUsers]);
 
   // Filter and sort users
   const filteredAndSortedUsers = users
@@ -680,7 +692,7 @@ export default function UsersPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
+                  onChange={(e) => setSortBy(e.target.value as keyof User)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="username">Username</option>
@@ -821,7 +833,7 @@ export default function UsersPage() {
                         </span>
                       </td>
                       <td className="py-4 px-6 text-sm">
-                        {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
+                        {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never'}
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex gap-2">
@@ -1352,6 +1364,7 @@ export default function UsersPage() {
                      <h4 className="font-semibold text-gray-800 mb-3">Profile Picture</h4>
                      <ProfilePictureUpload
                        userId={selectedUser?.id || 0}
+                       username={selectedUser?.username || ''}
                        currentProfilePicture={selectedUser?.profilePicture}
                        adminUsername={user?.username || ''}
                        onUploadSuccess={(profilePicture) => {

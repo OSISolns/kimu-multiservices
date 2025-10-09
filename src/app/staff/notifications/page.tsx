@@ -1,4 +1,8 @@
 'use client';
+
+// Force dynamic rendering to prevent prerendering issues
+export const dynamic = 'force-dynamic'
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/UserContext';
@@ -74,8 +78,12 @@ export default function NotificationsPage() {
 
   const markAsRead = async (notificationId: number) => {
     try {
-      const response = await fetch(`/api/notifications/${notificationId}/read`, {
-        method: 'PUT',
+      const response = await fetch(`/api/notifications/${notificationId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ read: true }),
       });
       
       if (response.ok) {
@@ -181,10 +189,10 @@ export default function NotificationsPage() {
             <div className="md:col-span-2">
               <div className="relative">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                          <input
-                  type="text"
+          <input
+            type="text"
                   placeholder="Search by type or message..."
-                  value={searchTerm}
+            value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
@@ -247,7 +255,7 @@ export default function NotificationsPage() {
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeColor(notification.type)}`}>
                             {notification.type}
                           </span>
-                            {!notification.read && (
+                          {!notification.read && (
                               <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                           )}
                         </div>

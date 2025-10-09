@@ -37,35 +37,35 @@ export default function ActivityLogsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
 
-  const fetchActivityLogs = async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (filters.action) params.append('action', filters.action);
-      if (filters.startDate) params.append('startDate', filters.startDate);
-      if (filters.endDate) params.append('endDate', filters.endDate);
-      params.append('page', filters.page.toString());
-      params.append('limit', filters.limit.toString());
-      
-      const response = await fetch(`/api/activity-log?${params.toString()}`, {
-      headers: {
-        'x-username': user?.username || '',
-      },
-    });
-      if (!response.ok) throw new Error('Failed to fetch activity logs');
-      const data = await response.json();
-      setActivityLogs(data.activityLogs);
-      setPagination(data.pagination);
-    } catch (error) {
-      console.error('Error fetching activity logs:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchActivityLogs = async () => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams();
+        if (filters.action) params.append('action', filters.action);
+        if (filters.startDate) params.append('startDate', filters.startDate);
+        if (filters.endDate) params.append('endDate', filters.endDate);
+        params.append('page', filters.page.toString());
+        params.append('limit', filters.limit.toString());
+        
+        const response = await fetch(`/api/activity-log?${params.toString()}`, {
+          headers: {
+            'x-username': user?.username || '',
+          },
+        });
+        if (!response.ok) throw new Error('Failed to fetch activity logs');
+        const data = await response.json();
+        setActivityLogs(data.activityLogs);
+        setPagination(data.pagination);
+      } catch (error) {
+        console.error('Error fetching activity logs:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchActivityLogs();
-  }, [filters, fetchActivityLogs]);
+  }, [filters, user?.username]);
 
   const handleFilterChange = (key: string, value: string | number) => {
     setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
