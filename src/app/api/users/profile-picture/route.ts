@@ -22,7 +22,16 @@ export async function POST(req: NextRequest) {
     const file = formData.get('profilePicture') as File;
     const username = formData.get('username') as string;
 
+    console.log('Profile picture upload - Received data:');
+    console.log('File:', file ? { name: file.name, size: file.size, type: file.type } : 'null');
+    console.log('Username:', username);
+    console.log('FormData entries:');
+    for (const [key, value] of formData.entries()) {
+      console.log(`  ${key}:`, value);
+    }
+
     if (!file || !username) {
+      console.log('Missing required fields - file:', !!file, 'username:', !!username);
       return NextResponse.json(
         { error: 'Missing required fields: profilePicture or username' },
         { status: 400 }

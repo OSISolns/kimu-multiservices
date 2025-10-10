@@ -63,9 +63,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Set expiration to 7 days from now
+    // Set expiration to 30 days from now
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
+    expiresAt.setDate(expiresAt.getDate() + 30);
 
     // Check if device is already trusted
     const existingDevice = await prisma.trustedDevice.findUnique({
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ 
       success: true,
-      message: 'Device has been trusted for 7 days',
+      message: 'Device has been trusted for 30 days',
       trustedDevice: {
         id: trustedDevice.id,
         deviceName: trustedDevice.deviceName,

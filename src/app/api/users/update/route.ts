@@ -15,7 +15,7 @@ export async function PATCH(req: NextRequest) {
     console.log('Admin username:', adminUsername);
     const admin = adminUsername ? await prisma.user.findUnique({ where: { username: adminUsername } }) : null;
     console.log('Admin found:', !!admin);
-    if (!admin || !hasRole(admin, ['admin', 'tofficer'])) {
+    if (!admin || !hasRole(admin, ['admin'])) {
       console.log('Not authorized');
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }

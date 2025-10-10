@@ -3,9 +3,9 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import Image from 'next/image'
 import Link from 'next/link'
-import FloatingBackground from '@/components/FloatingBackground'
-import MobileNav from '@/components/MobileNav'
-import { UserProvider } from './UserContext'
+
+// import MobileNav from '@/components/MobileNav'
+import ClientLayoutWrapper from './ClientLayoutWrapper';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -68,8 +68,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <UserProvider>
-        {/* <FloatingBackground /> */}
+
         <header className="bg-white shadow-md">
           <nav className="container mx-auto px-4 py-4">
             <div className="flex justify-between items-center">
@@ -95,11 +94,13 @@ export default function RootLayout({
                 <Link href="/rent-a-car" className="relative font-semibold px-2 py-1 transition-colors duration-200 text-blue-700 hover:text-orange-600 after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-0.5 after:bg-blue-700 after:transition-all after:duration-300 hover:after:w-full after:rounded-full">Book a Car</Link>
                 <Link href="/contact" className="relative font-semibold px-2 py-1 transition-colors duration-200 text-gray-800 hover:text-orange-600 after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-0.5 after:bg-orange-600 after:transition-all after:duration-300 hover:after:w-full after:rounded-full">Contact</Link>
               </div>
-              <MobileNav />
+              {/* <MobileNav /> */}
             </div>
           </nav>
         </header>
-        <main>{children}</main>
+        <ClientLayoutWrapper>
+          <main>{children}</main>
+        </ClientLayoutWrapper>
         <footer className="bg-gradient-to-r from-blue-700 via-blue-800 to-blue-900 text-white py-8 relative overflow-hidden">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -221,7 +222,7 @@ export default function RootLayout({
             />
           </div>
         </footer>
-        </UserProvider>
+
       </body>
     </html>
   )

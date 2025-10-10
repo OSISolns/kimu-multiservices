@@ -55,7 +55,8 @@ export async function POST(req: NextRequest) {
         const { token, maxAgeSec, jti } = await issueMfaTrustToken({ 
           userId: user.id.toString(), 
           userAgent: ua, 
-          ip: normalizedIp 
+          ip: normalizedIp,
+          maxAgeSec: 30 * 24 * 60 * 60 // 30 days in seconds
         });
 
         // Store the JTI in database for revocation capability

@@ -29,62 +29,66 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    // Fetch staff performance data
-    const staffPerformance = await Promise.all(
-      users.map(async (user) => {
-        // Get bookings for this user
-        const userBookings = await prisma.booking.findMany({
-          where: {
-            ...dateFilter,
-            // Note: You might need to add a field to track which staff member created the booking
-            // For now, we'll use all bookings in the period
-          }
-        });
-
-        // Get payments for this user's bookings
-        const userPayments = await prisma.payment.findMany({
-          where: {
-            ...dateFilter,
-            status: 'completed'
-            // Note: You might need to link payments to specific users
-          }
-        });
-
-        // Calculate metrics
-        const totalBookings = userBookings.length;
-        const completedBookings = userBookings.filter(b => b.status === 'Completed').length;
-        const pendingBookings = userBookings.filter(b => b.status === 'Pending').length;
-        const cancelledBookings = userBookings.filter(b => b.status === 'Cancelled').length;
-        
-        // For now, we'll distribute revenue equally among staff
-        // In a real system, you'd track which staff member generated which revenue
-        const totalRevenue = userPayments.reduce((sum, p) => sum + p.amount, 0) / Math.max(users.length, 1);
-        
-        // Mock data for fields not yet in database
-        const leads = Math.floor(Math.random() * 50) + 10; // Mock leads
-        const feedback = Math.floor(Math.random() * 20) + 5; // Mock feedback
-        const reviews = Math.floor(Math.random() * 15) + 3; // Mock reviews
-
-        return {
-          id: user.id,
-          name: user.fullName || user.username,
-          role: user.role,
-          bookings: totalBookings,
-          revenue: Math.round(totalRevenue),
-          completed: completedBookings,
-          pending: pendingBookings,
-          cancelled: cancelledBookings,
-          leads,
-          feedback,
-          reviews,
-          usersManaged: user.role === 'admin' ? Math.floor(Math.random() * 10) + 5 : 0,
-          systemActions: Math.floor(Math.random() * 100) + 20,
-          repeatCustomers: Math.floor(Math.random() * 15) + 3,
-          vehiclesManaged: user.role === 'tofficer' ? Math.floor(Math.random() * 20) + 10 : 0,
-          maintenanceActions: user.role === 'tofficer' ? Math.floor(Math.random() * 30) + 15 : 0
-        };
+    // OPTIMIZED: Fetch all data in parallel instead of N+1 queries
+    const [allBookings, allPayments] = await Promise.all([
+      prisma.booking.findMany({
+        where: dateFilter,
+        select: {
+          id: true,
+          status: true,
+          createdAt: true
+        }
+      }),
+      prisma.payment.findMany({
+        where: {
+          ...dateFilter,
+          status: 'completed'
+        },
+        select: {
+          id: true,
+          amount: true,
+          paymentDate: true
+        }
       })
-    );
+    ]);
+
+    // Calculate total revenue once
+    const totalRevenue = allPayments.reduce((sum, p) => sum + p.amount, 0);
+    const revenuePerUser = totalRevenue / Math.max(users.length, 1);
+
+    // Process staff performance data
+    const staffPerformance = users.map((user) => {
+      // For now, distribute bookings and revenue equally among staff
+      // In a real system, you'd track which staff member created which booking
+      const totalBookings = Math.floor(allBookings.length / users.length);
+      const completedBookings = Math.floor(allBookings.filter(b => b.status === 'Completed').length / users.length);
+      const pendingBookings = Math.floor(allBookings.filter(b => b.status === 'Pending').length / users.length);
+      const cancelledBookings = Math.floor(allBookings.filter(b => b.status === 'Cancelled').length / users.length);
+      
+      // Mock data for fields not yet in database
+      const leads = Math.floor(Math.random() * 50) + 10; // Mock leads
+      const feedback = Math.floor(Math.random() * 20) + 5; // Mock feedback
+      const reviews = Math.floor(Math.random() * 15) + 3; // Mock reviews
+
+      return {
+        id: user.id,
+        name: user.fullName || user.username,
+        role: user.role,
+        bookings: totalBookings,
+        revenue: Math.round(revenuePerUser),
+        completed: completedBookings,
+        pending: pendingBookings,
+        cancelled: cancelledBookings,
+        leads,
+        feedback,
+        reviews,
+        usersManaged: user.role === 'admin' ? Math.floor(Math.random() * 10) + 5 : 0,
+        systemActions: Math.floor(Math.random() * 100) + 20,
+        repeatCustomers: Math.floor(Math.random() * 15) + 3,
+        vehiclesManaged: user.role === 'tofficer' ? Math.floor(Math.random() * 20) + 10 : 0,
+        maintenanceActions: user.role === 'tofficer' ? Math.floor(Math.random() * 30) + 15 : 0
+      };
+    });
 
     // Get monthly trends for staff performance
     const months = [];

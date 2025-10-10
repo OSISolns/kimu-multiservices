@@ -11,8 +11,11 @@ export async function GET(req: NextRequest) {
   try {
     // Extract user from session or headers (placeholder)
     const username = req.headers.get('x-username');
+    console.log('API /users: Received username:', username);
     const user = username ? await prisma.user.findUnique({ where: { username } }) : null;
-    if (!user || !hasRole(user, ['admin', 'tofficer'])) {
+    console.log('API /users: Found user:', user ? { username: user.username, role: user.role } : null);
+    if (!user || !hasRole(user, ['admin'])) {
+      console.log('API /users: Not authorized', { hasUser: !!user, role: user?.role });
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
     const users = await prisma.user.findMany({
@@ -26,6 +29,7 @@ export async function GET(req: NextRequest) {
         department: true,
         status: true,
         createdAt: true, 
+        lastLogin: true,
         totpSecret: true, 
         emailNotifications: true, 
         whatsappNotifications: true 
@@ -42,7 +46,7 @@ export async function POST(req: NextRequest) {
   try {
     const username = req.headers.get('x-username');
     const user = username ? await prisma.user.findUnique({ where: { username } }) : null;
-    if (!user || !hasRole(user, ['admin', 'tofficer'])) {
+    if (!user || !hasRole(user, ['admin'])) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
     const { username: newUsername, password, role, fullName, email, phone, department } = await req.json();
@@ -72,7 +76,7 @@ export async function PUT(req: NextRequest) {
   try {
     const username = req.headers.get('x-username');
     const user = username ? await prisma.user.findUnique({ where: { username } }) : null;
-    if (!user || !hasRole(user, ['admin', 'tofficer'])) {
+    if (!user || !hasRole(user, ['admin'])) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
     const { id, username: updateUsername, password, role } = await req.json();

@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import {
-  logActivity,
-  ActivityActions,
-  getIpAddress,
-  getUserAgent
-} from '../../../services/activityLog'
+import { logActivity, logError } from '@/lib/logger'
 
 export async function PATCH(
   req: NextRequest,
@@ -25,24 +20,24 @@ export async function PATCH(
       }
     })
 
-    await logActivity({
-      userId: notification.userId || undefined,
-      action:
-        data.read !== undefined
-          ? ActivityActions.NOTIFICATION_READ
-          : ActivityActions.NOTIFICATION_CREATED,
-      details: {
-        notificationId: parsedId,
-        action: data.read !== undefined ? 'marked as read' : 'updated',
-        read: data.read
-      },
-      ipAddress: getIpAddress(req),
-      userAgent: getUserAgent(req)
-    })
+    if (notification.userId) {
+      await logActivity(
+        notification.userId,
+        data.read !== undefined ? 'NOTIFICATION_READ' : 'NOTIFICATION_UPDATED',
+        `Notification ${parsedId} ${data.read !== undefined ? 'marked as read' : 'updated'}`,
+        {
+          ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
+          userAgent: req.headers.get('user-agent') || 'unknown'
+        }
+      )
+    }
 
     return NextResponse.json({ success: true, notification })
   } catch (error) {
     console.error('Error updating notification:', error)
+    await logError('Failed to update notification', error as Error, {
+      action: 'UPDATE_NOTIFICATION_FAILED'
+    })
     return NextResponse.json(
       { success: false, error: 'Failed to update notification' },
       { status: 500 }
@@ -92,21 +87,25 @@ export async function DELETE(
     })
     console.log('Notification deleted from database');
 
-    await logActivity({
-      userId: notification?.userId || undefined,
-      action: ActivityActions.NOTIFICATION_DELETED,
-      details: {
-        notificationId: parsedId,
-        message: notification?.message
-      },
-      ipAddress: getIpAddress(req),
-      userAgent: getUserAgent(req)
-    })
+    if (notification?.userId) {
+      await logActivity(
+        notification.userId,
+        'NOTIFICATION_DELETED',
+        `Notification ${parsedId} deleted: ${notification.message}`,
+        {
+          ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
+          userAgent: req.headers.get('user-agent') || 'unknown'
+        }
+      )
+    }
     console.log('Activity logged');
 
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting notification:', error)
+    await logError('Failed to delete notification', error as Error, {
+      action: 'DELETE_NOTIFICATION_FAILED'
+    })
     return NextResponse.json(
       { success: false, error: 'Failed to delete notification' },
       { status: 500 }

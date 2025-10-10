@@ -1,15 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
             
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const { prisma } = await import('@/lib/prisma');
-    const leads = await prisma.lead.findMany({
-      orderBy: {
-        createdAt: 'desc'
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = Math.min(100, parseInt(searchParams.get('limit') || '50'));
+    const skip = (page - 1) * limit;
+    
+    const [leads, total] = await Promise.all([
+      prisma.lead.findMany({
+        orderBy: {
+          createdAt: 'desc'
+        },
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          name: true,
+          company: true,
+          stage: true,
+          value: true,
+          contact: true,
+          email: true,
+          location: true,
+          lastContact: true,
+          nextFollowUp: true,
+          createdAt: true
+        }
+      }),
+      prisma.lead.count()
+    ]);
+    
+    return NextResponse.json({
+      data: leads,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
       }
     });
-    
-    return NextResponse.json(leads);
   } catch (error) {
     console.error('Error fetching leads:', error);
     return NextResponse.json(

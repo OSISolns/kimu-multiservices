@@ -87,7 +87,8 @@ export default function NotificationBell({
   }, [autoRefresh, refreshInterval, fetchUnreadCount, user?.id]);
 
   // Handle click to navigate to notifications
-  const handleClick = useCallback(() => {
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent default link behavior
     router.push('/staff/notifications');
   }, [router]);
 

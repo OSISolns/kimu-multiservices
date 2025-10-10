@@ -1,45 +1,129 @@
 import { NextRequest, NextResponse } from 'next/server';
-            
-export async function GET() {
+import { PrismaClient } from '@/generated/prisma';
+import { validateInput, sanitizeString } from '@/lib/validation';
+import { handleApiError, createSuccessResponse, createValidationErrorResponse } from '@/lib/errors';
+import { logActivity, logError, logInfo } from '@/lib/logger';
+import { z } from 'zod';
+
+// Create a new Prisma client instance
+const prisma = new PrismaClient();
+
+const createActivitySchema = z.object({
+  client: z.string().min(1, 'Client name is required'),
+  activity: z.string().min(1, 'Activity description is required'),
+  outcome: z.string().min(1, 'Outcome is required'),
+  type: z.enum(['call', 'meeting', 'email', 'visit']),
+  date: z.string().datetime('Date must be a valid date').optional(),
+  createdBy: z.number().int().positive('Created by must be a positive integer')
+});
+
+export async function POST(req: NextRequest) {
   try {
-    const { prisma } = await import('@/lib/prisma');
-    const activities = await prisma.activity.findMany({
-      orderBy: {
-        date: 'desc'
+    const body = await req.json();
+    
+    // Validate input
+    const validation = validateInput(createActivitySchema, body);
+    if (!validation.success) {
+      return createValidationErrorResponse(validation.errors!);
+    }
+
+    const { client, activity, outcome, type, date, createdBy } = validation.data!;
+    
+    // Sanitize string inputs
+    const sanitizedClient = sanitizeString(client);
+    const sanitizedActivity = sanitizeString(activity);
+    const sanitizedOutcome = sanitizeString(outcome);
+    
+    // Create the activity
+    const newActivity = await prisma.activityLog.create({
+      data: {
+        action: sanitizedActivity,
+        details: `Client: ${sanitizedClient}, Outcome: ${sanitizedOutcome}, Type: ${type}`,
+        userId: createdBy
       }
     });
-    
-    return NextResponse.json(activities);
-  } catch (error) {
-    console.error('Error fetching activities:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch activities' },
-      { status: 500 }
+
+    // Log the activity creation
+    await logActivity(
+      createdBy,
+      'ACTIVITY_LOGGED',
+      `Activity logged: ${sanitizedActivity} for ${sanitizedClient} (ID: ${newActivity.id})`
     );
+
+    await logInfo(`Activity logged successfully`, {
+      userId: createdBy,
+      action: 'ACTIVITY_CREATED',
+      details: {
+        activityId: newActivity.id,
+        client: sanitizedClient
+      }
+    });
+
+    return createSuccessResponse({
+      activity: {
+        id: newActivity.id.toString(),
+        date: newActivity.createdAt.toISOString(),
+        client: sanitizedClient,
+        activity: sanitizedActivity,
+        outcome: sanitizedOutcome,
+        type: type,
+        createdAt: newActivity.createdAt
+      }
+    });
+
+  } catch (error) {
+    await logError('Failed to log activity', error as Error, {
+      action: 'LOG_ACTIVITY_FAILED'
+    });
+    return handleApiError(error, '/api/activities');
   }
 }
-            
-export async function POST(request: NextRequest) {
+
+export async function GET(req: NextRequest) {
   try {
-    const { prisma } = await import('@/lib/prisma');
-    const body = await request.json();
-    
-    const activity = await prisma.activity.create({
-      data: {
-        date: body.date || new Date().toISOString(),
-        client: body.client,
-        activity: body.activity,
-        outcome: body.outcome,
-        type: body.type || 'call'
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get('userId');
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (userId) where.userId = parseInt(userId);
+
+    const [activities, total] = await Promise.all([
+      prisma.activityLog.findMany({
+        where,
+        orderBy: {
+          createdAt: 'desc'
+        },
+        skip,
+        take: limit
+      }),
+      prisma.activityLog.count({ where })
+    ]);
+
+    return createSuccessResponse({
+      activities: activities.map(activity => ({
+        id: activity.id.toString(),
+        date: activity.createdAt.toISOString(),
+        client: activity.details?.split(',')[0]?.replace('Client: ', '') || 'Unknown',
+        activity: activity.action,
+        outcome: activity.details?.split(',')[1]?.replace(' Outcome: ', '') || 'Unknown',
+        type: activity.details?.split(',')[2]?.replace(' Type: ', '') || 'call',
+        createdAt: activity.createdAt
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
       }
     });
-    
-    return NextResponse.json(activity, { status: 201 });
+
   } catch (error) {
-    console.error('Error creating activity:', error);
-    return NextResponse.json(
-      { error: 'Failed to create activity' },
-      { status: 500 }
-    );
+    await logError('Failed to fetch activities', error as Error, {
+      action: 'FETCH_ACTIVITIES_FAILED'
+    });
+    return handleApiError(error, '/api/activities');
   }
 }

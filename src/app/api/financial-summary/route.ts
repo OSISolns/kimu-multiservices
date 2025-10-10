@@ -10,12 +10,29 @@ export async function GET(req: NextRequest) {
     const endDate = searchParams.get('endDate');
     const generatedBy = searchParams.get('generatedBy') || 'System';
 
-    // Fetch real data from database
+    // Add cache headers
+    const headers = new Headers();
+    headers.set('Cache-Control', 'public, max-age=300'); // 5 minutes cache
+
+    // Optimized database queries with select only needed fields
     const [payments, bookings] = await Promise.all([
       prisma.payment.findMany({
+        select: {
+          id: true,
+          amount: true,
+          paymentMethod: true,
+          status: true,
+          paymentDate: true
+        },
         orderBy: { paymentDate: 'desc' }
       }),
       prisma.booking.findMany({
+        select: {
+          id: true,
+          type: true,
+          status: true,
+          createdAt: true
+        },
         orderBy: { createdAt: 'desc' }
       })
     ]);
@@ -131,7 +148,7 @@ export async function GET(req: NextRequest) {
       console.error('Error creating financial summary notification:', error);
     }
 
-    return NextResponse.json(summaryData);
+    return NextResponse.json(summaryData, { headers });
   } catch (error) {
     console.error('Error generating financial summary:', error);
     return NextResponse.json({ error: 'Failed to generate financial summary' }, { status: 500 });

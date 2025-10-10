@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
     const adminUsername = req.headers.get('x-username');
     const admin = adminUsername ? await prisma.user.findUnique({ where: { username: adminUsername } }) : null;
     
-    if (!admin || !['admin', 'tofficer'].includes(admin.role)) {
+    if (!admin || admin.role !== 'admin') {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 

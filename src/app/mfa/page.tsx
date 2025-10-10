@@ -1,6 +1,10 @@
 'use client';
+
+// Force dynamic rendering to avoid prerendering issues
+export const dynamic = 'force-dynamic'
+
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FaShieldAlt, FaClock, FaLock, FaMobileAlt } from 'react-icons/fa';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
@@ -62,7 +66,7 @@ export default function MfaPage() {
     return () => clearInterval(timer);
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser) {
       setError('Session expired. Please login again.');
@@ -99,7 +103,7 @@ export default function MfaPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUser, code, trustDevice, router, next]);
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, ''); // Only allow digits
@@ -113,7 +117,7 @@ export default function MfaPage() {
     if (code.length === 6 && !loading) {
       handleSubmit(new Event('submit') as any);
     }
-  }, [code]);
+  }, [code, loading, handleSubmit]);
 
   if (!currentUser) {
     return (
