@@ -1,11 +1,11 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+  // Use default output in node_modules/.prisma to avoid Windows file locks on engine DLLs
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model User {
@@ -20,6 +20,7 @@ model User {
   status                String   @default("active")
   profilePicture        String?
   createdAt             DateTime @default(now())
+  lastLogin             DateTime?
   totpSecret            String?
   emailNotifications    Boolean  @default(false)
   whatsappNotifications Boolean  @default(false)
@@ -146,6 +147,8 @@ model Lead {
   nextFollowUp  DateTime
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  
+  quotes        Quote[]
 }
 
 model Campaign {
@@ -170,4 +173,19 @@ model Activity {
   outcome  String
   type     String   @default("call")
   createdAt DateTime @default(now())
+}
+
+model Quote {
+  id          Int      @id @default(autoincrement())
+  customerId  Int
+  customer    Lead     @relation(fields: [customerId], references: [id])
+  serviceType String
+  amount      Float
+  currency    String   @default("RWF")
+  validUntil  DateTime
+  status      String   @default("draft") // draft, sent, accepted, rejected, expired
+  notes       String?
+  createdBy   Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
