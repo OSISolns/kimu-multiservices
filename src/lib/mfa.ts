@@ -2,7 +2,7 @@
 import { SignJWT, jwtVerify, JWTPayload } from 'jose';
 import crypto from 'node:crypto';
 
-const MFA_TRUST_SECRET = new TextEncoder().encode(process.env.MFA_TRUST_SECRET!);
+const MFA_TRUST_SECRET = new TextEncoder().encode(process.env.MFA_TRUST_SECRET || 'fallback-secret-for-development-only');
 const EIGHT_HOURS = 8 * 60 * 60; // seconds
 
 export function hash(v: string) {
