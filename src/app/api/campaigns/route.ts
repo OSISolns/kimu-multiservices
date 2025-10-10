@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@/generated/prisma';
+import { PrismaClient } from '@prisma/client';
 import { validateInput, sanitizeString } from '@/lib/validation';
 import { handleApiError, createSuccessResponse, createValidationErrorResponse } from '@/lib/errors';
 import { logActivity, logError, logInfo } from '@/lib/logger';
