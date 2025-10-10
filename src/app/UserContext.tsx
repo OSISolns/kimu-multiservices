@@ -14,6 +14,7 @@ interface User {
   status: string;
   profilePicture: string | null;
   createdAt: Date;
+  lastLogin: Date | null;
   totpSecret: string | null;
   emailNotifications: boolean;
   whatsappNotifications: boolean;
@@ -50,10 +51,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
     console.log('UserContext: Logging in user', userData);
     setUser(userData);
     if (isMounted) {
-      localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('isStaff', 'true');
+      try {
+        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('isStaff', 'true');
+        console.log('UserContext: User data set and stored in localStorage');
+      } catch (error) {
+        console.error('Error storing user data in localStorage:', error);
+      }
     }
-    console.log('UserContext: User data set and stored in localStorage');
   };
 
   const logoutUser = useCallback(() => {
@@ -62,8 +67,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setShowInactivityWarning(false);
     
     if (isMounted) {
-      localStorage.removeItem('user');
-      localStorage.removeItem('isStaff');
+      try {
+        localStorage.removeItem('user');
+        localStorage.removeItem('isStaff');
+      } catch (error) {
+        console.error('Error removing user data from localStorage:', error);
+      }
     }
     
     // Clear all timers
@@ -162,28 +171,34 @@ export function UserProvider({ children }: { children: ReactNode }) {
     // Only load user from localStorage after mounting to avoid hydration mismatch
     if (!isMounted) return;
     
-    // Load user from localStorage (for now)
-    const storedUser = localStorage.getItem('user');
-    const isStaff = localStorage.getItem('isStaff');
-    
-    console.log('UserContext: Loading user data', { storedUser, isStaff });
-    
-    if (storedUser && isStaff) {
-      try {
-        const userData = JSON.parse(storedUser);
-        console.log('UserContext: Parsed user data', userData);
-        setUser(userData);
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
-        // Clear invalid data
-        localStorage.removeItem('user');
-        localStorage.removeItem('isStaff');
+    try {
+      // Load user from localStorage (for now)
+      const storedUser = localStorage.getItem('user');
+      const isStaff = localStorage.getItem('isStaff');
+      
+      console.log('UserContext: Loading user data', { storedUser, isStaff });
+      
+      if (storedUser && isStaff) {
+        try {
+          const userData = JSON.parse(storedUser);
+          console.log('UserContext: Parsed user data', userData);
+          setUser(userData);
+        } catch (error) {
+          console.error('Error parsing stored user:', error);
+          // Clear invalid data
+          localStorage.removeItem('user');
+          localStorage.removeItem('isStaff');
+        }
+      } else {
+        console.log('UserContext: No user data found, clearing state');
+        setUser(null);
       }
-    } else {
-      console.log('UserContext: No user data found, clearing state');
+    } catch (error) {
+      console.error('Error accessing localStorage:', error);
       setUser(null);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, [isMounted]);
 
   // Listen for storage changes (when user logs in/out from other tabs)
@@ -193,18 +208,23 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'user' || e.key === 'isStaff') {
         console.log('UserContext: Storage changed, reloading user data');
-        const storedUser = localStorage.getItem('user');
-        const isStaff = localStorage.getItem('isStaff');
-        
-        if (storedUser && isStaff) {
-          try {
-            setUser(JSON.parse(storedUser));
-          } catch (error) {
-            console.error('Error parsing stored user after storage change:', error);
-            localStorage.removeItem('user');
-            localStorage.removeItem('isStaff');
+        try {
+          const storedUser = localStorage.getItem('user');
+          const isStaff = localStorage.getItem('isStaff');
+          
+          if (storedUser && isStaff) {
+            try {
+              setUser(JSON.parse(storedUser));
+            } catch (error) {
+              console.error('Error parsing stored user after storage change:', error);
+              localStorage.removeItem('user');
+              localStorage.removeItem('isStaff');
+            }
+          } else {
+            setUser(null);
           }
-        } else {
+        } catch (error) {
+          console.error('Error accessing localStorage in storage change handler:', error);
           setUser(null);
         }
       }

@@ -36,10 +36,13 @@ export default function StaffSidebar() {
             {/* Special Notifications Item with Bell */}
             {user && ['admin', 'staff', 'accountant', 'transport-officer'].includes(user.role) && (
               <li>
-                <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105 font-semibold cursor-pointer">
+                <a 
+                  href="/staff/notifications" 
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105 font-semibold"
+                >
                   <NotificationBell size="sm" className="flex-shrink-0" />
                   <span>Notifications</span>
-                </div>
+                </a>
               </li>
             )}
           </ul>
