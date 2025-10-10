@@ -31,16 +31,6 @@ export default function TransportReportsPage() {
   const [dateRange, setDateRange] = useState('30') // days
   const [reportType, setReportType] = useState('overview')
 
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/staff/login')
-    } else if (!isLoading && user && !['admin', 'transport-officer'].includes(user.role)) {
-      router.push('/staff/dashboard')
-    } else if (user && ['admin', 'transport-officer'].includes(user.role)) {
-      fetchTransportReport()
-    }
-  }, [user, isLoading, router, dateRange, reportType, fetchTransportReport])
-
   const fetchTransportReport = useCallback(async () => {
     setLoading(true)
     setError('')
@@ -58,6 +48,16 @@ export default function TransportReportsPage() {
       setLoading(false)
     }
   }, [dateRange, reportType])
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/staff/login')
+    } else if (!isLoading && user && !['admin', 'transport-officer'].includes(user.role)) {
+      router.push('/staff/dashboard')
+    } else if (user && ['admin', 'transport-officer'].includes(user.role)) {
+      fetchTransportReport()
+    }
+  }, [user, isLoading, router, dateRange, reportType, fetchTransportReport])
 
   const exportReport = () => {
     // TODO: Implement report export functionality
