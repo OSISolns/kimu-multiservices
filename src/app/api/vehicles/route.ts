@@ -9,6 +9,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(vehicles);
   } catch (error) {
     console.error('Vehicles API: Error:', error);
-    return NextResponse.json({ error: 'Server error', details: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'Server error', details: message }, { status: 500 });
   }
 } 
