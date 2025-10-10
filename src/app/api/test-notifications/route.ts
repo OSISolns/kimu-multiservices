@@ -46,12 +46,14 @@ export async function GET(req: NextRequest) {
       notifications: notifications.slice(0, 5) // Return first 5 for testing
     });
     
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error testing notifications:', error);
+    const message = error instanceof Error ? error.message : String(error);
+    const stack = error instanceof Error ? error.stack : undefined;
     return NextResponse.json({
       success: false,
-      error: error.message,
-      stack: error.stack
+      error: message,
+      stack
     }, { status: 500 });
   }
 }
