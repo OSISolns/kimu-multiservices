@@ -181,7 +181,7 @@ export default function RootLayout({
 
                 {/* YouTube */}
                 <a 
-                  href="https://www.youtube.com/@kimu_transport" 
+                  href="https://www.youtube.com/@KIMUTRANSPORT" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="group text-gray-400 hover:text-orange-500 transition-all duration-300 transform hover:scale-110"
