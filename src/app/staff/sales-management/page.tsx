@@ -49,7 +49,7 @@ export default function SalesManagementPage() {
   const router = useRouter();
   const { user, isLoading } = useUser();
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<'pipeline' | 'activities' | 'customers' | 'campaigns'>('pipeline');
+  const [activeTab, setActiveTab] = useState<'pipeline' | 'activities' | 'customers' | 'campaigns' | 'quotes' | 'bills' | 'receipts'>('pipeline');
   const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
   const [showLogVisitModal, setShowLogVisitModal] = useState(false);
   const [showCreateQuoteModal, setShowCreateQuoteModal] = useState(false);
@@ -112,6 +112,9 @@ export default function SalesManagementPage() {
   const [isLoadingData, setIsLoadingData] = useState(true);
 
   const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [quotes, setQuotes] = useState<any[]>([]);
+  const [bills, setBills] = useState<any[]>([]);
+  const [receipts, setReceipts] = useState<any[]>([]);
 
   const [activities, setActivities] = useState<Activity[]>([]);
 
@@ -140,10 +143,13 @@ export default function SalesManagementPage() {
         setIsLoadingData(true);
         
         // Parallel API calls for better performance
-        const [leadsResponse, campaignsResponse, activitiesResponse] = await Promise.allSettled([
+        const [leadsResponse, campaignsResponse, activitiesResponse, quotesResponse, billsResponse, receiptsResponse] = await Promise.allSettled([
           fetch('/api/leads?limit=50'), // Limit data
           fetch('/api/campaigns?limit=20'),
-          fetch('/api/activities?limit=30')
+          fetch('/api/activities?limit=30'),
+          fetch('/api/quotes?limit=50'),
+          fetch('/api/bills?limit=50'),
+          fetch('/api/receipts?limit=50')
         ]);
         
         // Process leads
@@ -162,6 +168,24 @@ export default function SalesManagementPage() {
         if (activitiesResponse.status === 'fulfilled' && activitiesResponse.value.ok) {
           const activitiesData = await activitiesResponse.value.json();
           setActivities(activitiesData.activities || activitiesData);
+        }
+
+        // Process quotes
+        if (quotesResponse.status === 'fulfilled' && quotesResponse.value.ok) {
+          const quotesData = await quotesResponse.value.json();
+          setQuotes(quotesData.data?.quotes || quotesData.quotes || quotesData);
+        }
+
+        // Process bills
+        if (billsResponse.status === 'fulfilled' && billsResponse.value.ok) {
+          const billsData = await billsResponse.value.json();
+          setBills(billsData.data || billsData);
+        }
+
+        // Process receipts
+        if (receiptsResponse.status === 'fulfilled' && receiptsResponse.value.ok) {
+          const receiptsData = await receiptsResponse.value.json();
+          setReceipts(receiptsData.data || receiptsData);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -689,7 +713,10 @@ export default function SalesManagementPage() {
                 { id: 'pipeline', label: 'Sales Pipeline', count: leads.length },
                 { id: 'activities', label: 'Recent Activities', count: Array.isArray(activities) ? activities.length : 0 },
                 { id: 'customers', label: 'Customer Database', count: leads.length },
-                { id: 'campaigns', label: 'Marketing Campaigns', count: Array.isArray(campaigns) ? campaigns.length : 0 }
+                { id: 'campaigns', label: 'Marketing Campaigns', count: Array.isArray(campaigns) ? campaigns.length : 0 },
+                { id: 'quotes', label: 'Quotes', count: Array.isArray(quotes) ? quotes.length : 0 },
+                { id: 'bills', label: 'Bills', count: Array.isArray(bills) ? bills.length : 0 },
+                { id: 'receipts', label: 'Receipts', count: Array.isArray(receipts) ? receipts.length : 0 }
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -999,6 +1026,210 @@ export default function SalesManagementPage() {
                           <div className="flex space-x-2">
                             <button className="text-blue-600 hover:text-blue-800">View</button>
                             <button className="text-green-600 hover:text-green-800">Edit</button>
+                            <button className="text-red-600 hover:text-red-800">Delete</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Quotes Tab */}
+        {activeTab === 'quotes' && (
+          <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">Quotes Management</h2>
+              <button 
+                onClick={() => setShowCreateQuoteModal(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              >
+                <FaPlus className="h-4 w-4" />
+                <span>Create Quote</span>
+              </button>
+            </div>
+            
+            {!Array.isArray(quotes) || quotes.length === 0 ? (
+              <div className="text-center py-12">
+                <FaFileInvoiceDollar className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No quotes yet</h3>
+                <p className="text-gray-500 mb-4">Create your first quote to get started with the sales process.</p>
+                <button 
+                  onClick={() => setShowCreateQuoteModal(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Create First Quote
+                </button>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Quote #</th>
+                      <th className="py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                      <th className="py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Service Type</th>
+                      <th className="py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                      <th className="py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Valid Until</th>
+                      <th className="py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {quotes.map((quote) => (
+                      <tr key={quote.id} className="hover:bg-gray-50">
+                        <td className="py-4 px-4 text-sm font-medium text-gray-900">#{quote.id}</td>
+                        <td className="py-4 px-4 text-sm text-gray-900">{quote.customer?.name || 'Unknown'}</td>
+                        <td className="py-4 px-4 text-sm text-gray-900">{quote.serviceType}</td>
+                        <td className="py-4 px-4 text-sm text-gray-900">{quote.amount?.toLocaleString()} {quote.currency || 'RWF'}</td>
+                        <td className="py-4 px-4 text-sm">
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            quote.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                            quote.status === 'sent' ? 'bg-blue-100 text-blue-800' :
+                            quote.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                            'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {quote.status}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4 text-sm text-gray-900">{new Date(quote.validUntil).toLocaleDateString()}</td>
+                        <td className="py-4 px-4 text-sm text-gray-500">
+                          <div className="flex space-x-2">
+                            <button className="text-blue-600 hover:text-blue-800">View</button>
+                            <button className="text-green-600 hover:text-green-800">Edit</button>
+                            <button className="text-purple-600 hover:text-purple-800">Convert</button>
+                            <button className="text-red-600 hover:text-red-800">Delete</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Bills Tab */}
+        {activeTab === 'bills' && (
+          <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">Bills Management</h2>
+              <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2">
+                <FaPlus className="h-4 w-4" />
+                <span>Create Bill</span>
+              </button>
+            </div>
+            
+            {!Array.isArray(bills) || bills.length === 0 ? (
+              <div className="text-center py-12">
+                <FaFileInvoiceDollar className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No bills yet</h3>
+                <p className="text-gray-500 mb-4">Create bills for your services and track payments.</p>
+                <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                  Create First Bill
+                </button>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Bill #</th>
+                      <th className="py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                      <th className="py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                      <th className="py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                      <th className="py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                      <th className="py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {bills.map((bill) => (
+                      <tr key={bill.id} className="hover:bg-gray-50">
+                        <td className="py-4 px-4 text-sm font-medium text-gray-900">#{bill.id}</td>
+                        <td className="py-4 px-4 text-sm text-gray-900">{bill.customerName || 'Unknown'}</td>
+                        <td className="py-4 px-4 text-sm text-gray-900">{bill.description || 'Service Bill'}</td>
+                        <td className="py-4 px-4 text-sm text-gray-900">{bill.amount?.toLocaleString()} {bill.currency || 'RWF'}</td>
+                        <td className="py-4 px-4 text-sm">
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            bill.status === 'paid' ? 'bg-green-100 text-green-800' :
+                            bill.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            bill.status === 'overdue' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {bill.status || 'pending'}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4 text-sm text-gray-900">{bill.dueDate ? new Date(bill.dueDate).toLocaleDateString() : 'N/A'}</td>
+                        <td className="py-4 px-4 text-sm text-gray-500">
+                          <div className="flex space-x-2">
+                            <button className="text-blue-600 hover:text-blue-800">View</button>
+                            <button className="text-green-600 hover:text-green-800">Edit</button>
+                            <button className="text-purple-600 hover:text-purple-800">Send</button>
+                            <button className="text-red-600 hover:text-red-800">Delete</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Receipts Tab */}
+        {activeTab === 'receipts' && (
+          <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">Receipts Management</h2>
+              <button className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2">
+                <FaPlus className="h-4 w-4" />
+                <span>Create Receipt</span>
+              </button>
+            </div>
+            
+            {!Array.isArray(receipts) || receipts.length === 0 ? (
+              <div className="text-center py-12">
+                <FaFileInvoiceDollar className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No receipts yet</h3>
+                <p className="text-gray-500 mb-4">Generate receipts for completed payments and services.</p>
+                <button className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                  Create First Receipt
+                </button>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Receipt #</th>
+                      <th className="py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                      <th className="py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Service</th>
+                      <th className="py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                      <th className="py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Payment Method</th>
+                      <th className="py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                      <th className="py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {receipts.map((receipt) => (
+                      <tr key={receipt.id} className="hover:bg-gray-50">
+                        <td className="py-4 px-4 text-sm font-medium text-gray-900">#{receipt.id}</td>
+                        <td className="py-4 px-4 text-sm text-gray-900">{receipt.customerName || 'Unknown'}</td>
+                        <td className="py-4 px-4 text-sm text-gray-900">{receipt.serviceType || 'Service'}</td>
+                        <td className="py-4 px-4 text-sm text-gray-900">{receipt.amount?.toLocaleString()} {receipt.currency || 'RWF'}</td>
+                        <td className="py-4 px-4 text-sm text-gray-900">{receipt.paymentMethod || 'N/A'}</td>
+                        <td className="py-4 px-4 text-sm text-gray-900">{receipt.createdAt ? new Date(receipt.createdAt).toLocaleDateString() : 'N/A'}</td>
+                        <td className="py-4 px-4 text-sm text-gray-500">
+                          <div className="flex space-x-2">
+                            <button className="text-blue-600 hover:text-blue-800">View</button>
+                            <button className="text-green-600 hover:text-green-800">Download</button>
+                            <button className="text-purple-600 hover:text-purple-800">Email</button>
                             <button className="text-red-600 hover:text-red-800">Delete</button>
                           </div>
                         </td>

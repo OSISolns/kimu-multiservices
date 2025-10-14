@@ -1,4 +1,4 @@
-const { PrismaClient } = require('../src/generated/prisma');
+const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 // Helper function to generate random license plates
@@ -3225,8 +3225,7 @@ async function main() {
     
     // Create all vehicles
     await prisma.vehicle.createMany({
-      data: vehicles,
-      skipDuplicates: true,
+      data: vehicles
     });
     console.log(`Seeded ${vehicles.length} vehicles successfully.`);
   } catch (error) {

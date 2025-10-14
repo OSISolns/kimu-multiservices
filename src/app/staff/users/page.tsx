@@ -1364,7 +1364,6 @@ export default function UsersPage() {
                      <h4 className="font-semibold text-gray-800 mb-3">Profile Picture</h4>
                      <ProfilePictureUpload
                        userId={selectedUser?.id || 0}
-                       username={selectedUser?.username || ''}
                        currentProfilePicture={selectedUser?.profilePicture}
                        adminUsername={user?.username || ''}
                        onUploadSuccess={(profilePicture) => {

@@ -35,7 +35,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 var _this = this;
-var PrismaClient = require('../src/generated/prisma').PrismaClient;
+var { PrismaClient } = require('@prisma/client');
 var speakeasy = require('speakeasy');
 var bcrypt = require('bcryptjs');
 var prisma = new PrismaClient();

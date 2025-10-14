@@ -1,4 +1,4 @@
-const { PrismaClient } = require('../src/generated/prisma');
+const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
@@ -171,7 +171,6 @@ async function seedBookings() {
     
     const result = await prisma.booking.createMany({
       data: bookings,
-      skipDuplicates: true
     });
     
     console.log(`✅ Successfully seeded ${result.count} bookings`);

@@ -27,13 +27,15 @@ export default function Home() {
   // Group vehicles by brand
   const brandGroups = useMemo(() => {
     const groups: { [key: string]: any[] } = {};
-    vehicles.forEach(vehicle => {
-      const brand = vehicle.name?.split(' ')[0] || 'Other';
-      if (!groups[brand]) {
-        groups[brand] = [];
-      }
-      groups[brand].push(vehicle);
-    });
+    if (Array.isArray(vehicles)) {
+      vehicles.forEach(vehicle => {
+        const brand = vehicle.name?.split(' ')[0] || 'Other';
+        if (!groups[brand]) {
+          groups[brand] = [];
+        }
+        groups[brand].push(vehicle);
+      });
+    }
     return Object.entries(groups).map(([brand, vehicles]) => ({
       brand,
       vehicles,
@@ -52,16 +54,18 @@ export default function Home() {
     fetch('/api/vehicles')
       .then(res => res.json())
       .then(data => {
-        setVehicles(data);
-        setVehiclesWithAvailability(data);
+        setVehicles(Array.isArray(data) ? data : []);
+        setVehiclesWithAvailability(Array.isArray(data) ? data : []);
       })
       .catch(err => {
         console.error('Error fetching vehicles:', err);
+        setVehicles([]);
+        setVehiclesWithAvailability([]);
       });
     fetch('/api/bookings')
       .then(res => res.json())
       .then(data => {
-        setBookings(data);
+        setBookings(Array.isArray(data) ? data : []);
       })
       .catch(err => {
         console.error('Error fetching bookings:', err);
