@@ -1,7 +1,3 @@
-import { Resend } from 'resend';
-
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-
 export async function sendEmail({
   to,
   subject,
@@ -13,12 +9,17 @@ export async function sendEmail({
   text: string;
   html?: string;
 }) {
-  if (!resend) {
+  // Check if Resend API key is available
+  if (!process.env.RESEND_API_KEY) {
     console.warn('Resend API key not configured. Email not sent:', { to, subject });
     return { id: 'no-resend-key', success: false };
   }
 
   try {
+    // Dynamic import to avoid build-time issues
+    const { Resend } = await import('resend');
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    
     const info = await resend.emails.send({
       from: process.env.SMTP_FROM || 'valery.osisolns@gmail.com',
       to,
