@@ -58,42 +58,42 @@ export default function AdminDashboardPage() {
         const username = user?.username || "";
         console.log('Admin dashboard loading data for user:', username);
         
-        const [bookingsRes, paymentsRes, notificationsRes, usersRes, vehiclesRes, quotesRes, leadsRes, systemLogsRes, activityLogsRes] = await Promise.all([
+        const [bookingsRes, paymentsRes, notificationsRes, usersRes, vehiclesRes, quotesRes, leadsRes, systemLogsRes, activityLogsRes] = await Promise.allSettled([
           fetch("/api/bookings").then((r) => {
             console.log('Bookings API status:', r.status);
-            return r.ok ? r.json() : Promise.reject(`Bookings API failed: ${r.status}`);
+            return r.ok ? r.json() : { error: `Bookings API failed: ${r.status}`, data: [] };
           }),
           fetch("/api/payments").then((r) => {
             console.log('Payments API status:', r.status);
-            return r.ok ? r.json() : Promise.reject(`Payments API failed: ${r.status}`);
+            return r.ok ? r.json() : { error: `Payments API failed: ${r.status}`, data: [] };
           }),
           fetch("/api/notifications").then((r) => {
             console.log('Notifications API status:', r.status);
-            return r.ok ? r.json() : Promise.reject(`Notifications API failed: ${r.status}`);
+            return r.ok ? r.json() : { error: `Notifications API failed: ${r.status}`, data: [] };
           }),
           fetch("/api/users", { headers: { "x-username": username } }).then((r) => {
             console.log('Users API status:', r.status);
-            return r.ok ? r.json() : Promise.reject(`Users API failed: ${r.status}`);
+            return r.ok ? r.json() : { error: `Users API failed: ${r.status}`, users: [] };
           }),
           fetch("/api/vehicles").then((r) => {
             console.log('Vehicles API status:', r.status);
-            return r.ok ? r.json() : Promise.reject(`Vehicles API failed: ${r.status}`);
+            return r.ok ? r.json() : { error: `Vehicles API failed: ${r.status}`, data: [] };
           }),
           fetch("/api/quotes").then((r) => {
             console.log('Quotes API status:', r.status);
-            return r.ok ? r.json() : Promise.reject(`Quotes API failed: ${r.status}`);
+            return r.ok ? r.json() : { error: `Quotes API failed: ${r.status}`, quotes: [] };
           }),
           fetch("/api/leads").then((r) => {
             console.log('Leads API status:', r.status);
-            return r.ok ? r.json() : Promise.reject(`Leads API failed: ${r.status}`);
+            return r.ok ? r.json() : { error: `Leads API failed: ${r.status}`, leads: [] };
           }),
           fetch("/api/system-logs").then((r) => {
             console.log('System Logs API status:', r.status);
-            return r.ok ? r.json() : Promise.reject(`System Logs API failed: ${r.status}`);
+            return r.ok ? r.json() : { error: `System Logs API failed: ${r.status}`, data: [] };
           }),
           fetch("/api/activity-log").then((r) => {
             console.log('Activity Logs API status:', r.status);
-            return r.ok ? r.json() : Promise.reject(`Activity Logs API failed: ${r.status}`);
+            return r.ok ? r.json() : { error: `Activity Logs API failed: ${r.status}`, data: [] };
           }),
         ]);
         
@@ -101,16 +101,26 @@ export default function AdminDashboardPage() {
         
         console.log('API Responses:', { bookingsRes, paymentsRes, notificationsRes, usersRes });
         
+        // Extract data from Promise.allSettled results
+        const extractData = (result: any, fallback: any = []) => {
+          if (result.status === 'fulfilled') {
+            return result.value;
+          } else {
+            console.warn('API call failed:', result.reason);
+            return fallback;
+          }
+        };
+        
         // Handle different response structures
-        const bookingsData = bookingsRes?.data || bookingsRes?.bookings || bookingsRes || [];
-        const paymentsData = Array.isArray(paymentsRes) ? paymentsRes : [];
-        const notificationsData = Array.isArray(notificationsRes) ? notificationsRes : [];
-        const usersData = usersRes?.users || [];
-        const vehiclesData = Array.isArray(vehiclesRes) ? vehiclesRes : [];
-        const quotesData = quotesRes?.quotes || quotesRes?.data || (Array.isArray(quotesRes) ? quotesRes : []);
-        const leadsData = leadsRes?.leads || leadsRes?.data || (Array.isArray(leadsRes) ? leadsRes : []);
-        const systemLogsData = Array.isArray(systemLogsRes) ? systemLogsRes : [];
-        const activityLogsData = Array.isArray(activityLogsRes) ? activityLogsRes : [];
+        const bookingsData = extractData(bookingsRes, [])?.data || extractData(bookingsRes, [])?.bookings || extractData(bookingsRes, []) || [];
+        const paymentsData = Array.isArray(extractData(paymentsRes, [])) ? extractData(paymentsRes, []) : [];
+        const notificationsData = Array.isArray(extractData(notificationsRes, [])) ? extractData(notificationsRes, []) : [];
+        const usersData = extractData(usersRes, {})?.users || [];
+        const vehiclesData = Array.isArray(extractData(vehiclesRes, [])) ? extractData(vehiclesRes, []) : [];
+        const quotesData = extractData(quotesRes, {})?.quotes || extractData(quotesRes, {})?.data || (Array.isArray(extractData(quotesRes, [])) ? extractData(quotesRes, []) : []);
+        const leadsData = extractData(leadsRes, {})?.leads || extractData(leadsRes, {})?.data || (Array.isArray(extractData(leadsRes, [])) ? extractData(leadsRes, []) : []);
+        const systemLogsData = Array.isArray(extractData(systemLogsRes, [])) ? extractData(systemLogsRes, []) : [];
+        const activityLogsData = Array.isArray(extractData(activityLogsRes, [])) ? extractData(activityLogsRes, []) : [];
         
         console.log('Parsed data:', { 
           bookings: bookingsData.length, 
