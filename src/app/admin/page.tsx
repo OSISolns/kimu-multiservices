@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useUser } from "../UserContext";
 import {
   FaUsers,
@@ -23,7 +24,7 @@ import {
   FaTrash,
   FaPlus,
   FaDownload,
-  FaRefresh,
+  FaSync,
 } from "react-icons/fa";
 
 type Booking = any;
@@ -147,7 +148,7 @@ export default function AdminDashboardPage() {
   }, [isLoading, user]);
 
   const totalRevenue = useMemo(
-    () => payments.filter((x) => x.status === "completed").reduce((s, x) => s + (x.amount || 0), 0),
+    () => Array.isArray(payments) ? payments.filter((x) => x.status === "completed").reduce((s, x) => s + (x.amount || 0), 0) : 0,
     [payments]
   );
 
@@ -157,51 +158,52 @@ export default function AdminDashboardPage() {
   );
 
   const availableVehicles = useMemo(
-    () => vehicles.filter((v: any) => v.isAvailable && v.status === "available").length,
+    () => Array.isArray(vehicles) ? vehicles.filter((v: any) => v.isAvailable && v.status === "available").length : 0,
     [vehicles]
   );
 
   const pendingBookings = useMemo(
-    () => bookings.filter((b: any) => b.status === "Pending" || b.status === "Active").length,
+    () => Array.isArray(bookings) ? bookings.filter((b: any) => b.status === "Pending" || b.status === "Active").length : 0,
     [bookings]
   );
 
   const completedBookings = useMemo(
-    () => bookings.filter((b: any) => b.status === "Completed").length,
+    () => Array.isArray(bookings) ? bookings.filter((b: any) => b.status === "Completed").length : 0,
     [bookings]
   );
 
   const totalQuotes = useMemo(
-    () => quotes.length,
+    () => Array.isArray(quotes) ? quotes.length : 0,
     [quotes]
   );
 
   const pendingQuotes = useMemo(
-    () => quotes.filter((q: any) => q.status === "draft" || q.status === "sent").length,
+    () => Array.isArray(quotes) ? quotes.filter((q: any) => q.status === "draft" || q.status === "sent").length : 0,
     [quotes]
   );
 
   const acceptedQuotes = useMemo(
-    () => quotes.filter((q: any) => q.status === "accepted").length,
+    () => Array.isArray(quotes) ? quotes.filter((q: any) => q.status === "accepted").length : 0,
     [quotes]
   );
 
   const totalLeads = useMemo(
-    () => leads.length,
+    () => Array.isArray(leads) ? leads.length : 0,
     [leads]
   );
 
   const activeLeads = useMemo(
-    () => leads.filter((l: any) => l.stage !== "Closed").length,
+    () => Array.isArray(leads) ? leads.filter((l: any) => l.stage !== "Closed").length : 0,
     [leads]
   );
 
   const recentActivity = useMemo(
-    () => activityLogs.slice(0, 10).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    () => Array.isArray(activityLogs) ? activityLogs.slice(0, 10).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) : [],
     [activityLogs]
   );
 
   const systemHealth = useMemo(() => {
+    if (!Array.isArray(systemLogs)) return { status: 'healthy', percentage: 100 };
     const errorLogs = systemLogs.filter((log: any) => log.action.includes('error') || log.action.includes('Error')).length;
     const totalLogs = systemLogs.length;
     if (totalLogs === 0) return { status: 'healthy', percentage: 100 };
@@ -213,6 +215,7 @@ export default function AdminDashboardPage() {
   }, [systemLogs]);
 
   const bookingTypes = useMemo(() => {
+    if (!Array.isArray(bookings)) return {};
     const types = bookings.reduce((acc: any, booking: any) => {
       acc[booking.type] = (acc[booking.type] || 0) + 1;
       return acc;
@@ -271,7 +274,7 @@ export default function AdminDashboardPage() {
           onClick={refreshData}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
         >
-          <FaRefresh /> Refresh Data
+          <FaSync /> Refresh Data
         </button>
       </div>
 
@@ -364,15 +367,15 @@ export default function AdminDashboardPage() {
         <div className="bg-white rounded-2xl p-6 shadow">
           <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><FaCog className="text-blue-500" /> Quick Actions</h3>
           <div className="space-y-2">
-            <a href="/staff/users" className="block w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+            <Link href="/staff/users" className="block w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
               <FaUsers /> Manage Users
-            </a>
-            <a href="/staff/vehicles" className="block w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+            </Link>
+            <Link href="/staff/vehicles" className="block w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
               <FaCar /> Manage Vehicles
-            </a>
-            <a href="/staff/bookings" className="block w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2">
+            </Link>
+            <Link href="/staff/bookings" className="block w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2">
               <FaCalendarAlt /> View Bookings
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -418,7 +421,7 @@ export default function AdminDashboardPage() {
             <div className="text-gray-500 text-sm">No system alerts</div>
           ) : (
             <div className="space-y-3 max-h-64 overflow-y-auto">
-              {systemLogs.slice(0, 5).map((log: any) => (
+              {Array.isArray(systemLogs) ? systemLogs.slice(0, 5).map((log: any) => (
                 <div key={log.id} className={`p-3 rounded-lg ${
                   log.action.includes('error') ? 'bg-red-50 border-l-4 border-red-400' :
                   log.action.includes('warning') ? 'bg-yellow-50 border-l-4 border-yellow-400' :
@@ -428,7 +431,7 @@ export default function AdminDashboardPage() {
                   <div className="text-xs text-gray-600 mt-1">{log.details}</div>
                   <div className="text-xs text-gray-400 mt-1">{new Date(log.createdAt).toLocaleString()}</div>
                 </div>
-              ))}
+              )) : []}
             </div>
           )}
         </div>
@@ -442,7 +445,7 @@ export default function AdminDashboardPage() {
             <div className="text-gray-500 text-sm">No notifications</div>
           ) : (
             <ul className="space-y-3 max-h-64 overflow-y-auto">
-              {notifications.slice(0, 6).map((n: any) => (
+              {Array.isArray(notifications) ? notifications.slice(0, 6).map((n: any) => (
                 <li key={n.id} className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
                   <span className="w-2 h-2 rounded-full mt-2 bg-blue-500"></span>
                   <div className="flex-1">
@@ -451,7 +454,7 @@ export default function AdminDashboardPage() {
                     <div className="text-xs text-gray-400">{new Date(n.createdAt).toLocaleString()}</div>
                   </div>
                 </li>
-              ))}
+              )) : []}
             </ul>
           )}
         </div>
@@ -472,7 +475,7 @@ export default function AdminDashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {bookings.slice(0, 8).map((b: any) => (
+                  {Array.isArray(bookings) ? bookings.slice(0, 8).map((b: any) => (
                     <tr key={b.id} className="border-b last:border-0 hover:bg-gray-50">
                       <td className="py-2 px-4">
                         <span className={`px-2 py-1 rounded-full text-xs ${
@@ -495,7 +498,7 @@ export default function AdminDashboardPage() {
                         </span>
                       </td>
                     </tr>
-                  ))}
+                  )) : []}
                 </tbody>
               </table>
             </div>
@@ -511,7 +514,7 @@ export default function AdminDashboardPage() {
             <div className="text-gray-500 text-sm">No quotes available</div>
           ) : (
             <div className="space-y-3 max-h-64 overflow-y-auto">
-              {quotes.slice(0, 6).map((quote: any) => (
+              {Array.isArray(quotes) ? quotes.slice(0, 6).map((quote: any) => (
                 <div key={quote.id} className="p-3 border rounded-lg hover:bg-gray-50">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
@@ -535,7 +538,7 @@ export default function AdminDashboardPage() {
                     Valid until: {new Date(quote.validUntil).toLocaleDateString()}
                   </div>
                 </div>
-              ))}
+              )) : []}
             </div>
           )}
         </div>
@@ -546,7 +549,7 @@ export default function AdminDashboardPage() {
             <div className="text-gray-500 text-sm">No leads available</div>
           ) : (
             <div className="space-y-3 max-h-64 overflow-y-auto">
-              {leads.slice(0, 6).map((lead: any) => (
+              {Array.isArray(leads) ? leads.slice(0, 6).map((lead: any) => (
                 <div key={lead.id} className="p-3 border rounded-lg hover:bg-gray-50">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
@@ -571,7 +574,7 @@ export default function AdminDashboardPage() {
                     Last contact: {new Date(lead.lastContact).toLocaleDateString()}
                   </div>
                 </div>
-              ))}
+              )) : []}
             </div>
           )}
         </div>
@@ -581,7 +584,7 @@ export default function AdminDashboardPage() {
       <div className="bg-white rounded-2xl p-6 shadow">
         <h3 className="text-lg font-bold mb-6 flex items-center gap-2"><FaDatabase className="text-gray-600" /> Advanced Management</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-          <a href="/admin/system-logs" className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+          <Link href="/admin/system-logs" className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
             <div className="flex items-center gap-3">
               <FaDatabase className="text-gray-600" />
               <div>
@@ -589,8 +592,8 @@ export default function AdminDashboardPage() {
                 <div className="text-sm text-gray-500">{systemLogs.length} entries</div>
               </div>
             </div>
-          </a>
-          <a href="/staff/reports" className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+          </Link>
+          <Link href="/staff/reports" className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
             <div className="flex items-center gap-3">
               <FaFileAlt className="text-gray-600" />
               <div>
@@ -598,8 +601,8 @@ export default function AdminDashboardPage() {
                 <div className="text-sm text-gray-500">Analytics & Reports</div>
               </div>
             </div>
-          </a>
-          <a href="/staff/vehicles" className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+          </Link>
+          <Link href="/staff/vehicles" className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
             <div className="flex items-center gap-3">
               <FaCar className="text-gray-600" />
               <div>
@@ -607,8 +610,8 @@ export default function AdminDashboardPage() {
                 <div className="text-sm text-gray-500">{vehicles.length} vehicles</div>
               </div>
             </div>
-          </a>
-          <a href="/staff/users" className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+          </Link>
+          <Link href="/staff/users" className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
             <div className="flex items-center gap-3">
               <FaUsers className="text-gray-600" />
               <div>
@@ -616,8 +619,8 @@ export default function AdminDashboardPage() {
                 <div className="text-sm text-gray-500">{users.length} users</div>
               </div>
             </div>
-          </a>
-          <a href="/staff/sales-management" className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+          </Link>
+          <Link href="/staff/sales-management" className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
             <div className="flex items-center gap-3">
               <FaFileAlt className="text-indigo-600" />
               <div>
@@ -625,8 +628,8 @@ export default function AdminDashboardPage() {
                 <div className="text-sm text-gray-500">{quotes.length} quotes, {leads.length} leads</div>
               </div>
             </div>
-          </a>
-          <a href="/staff/bookings" className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+          </Link>
+          <Link href="/staff/bookings" className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
             <div className="flex items-center gap-3">
               <FaCalendarAlt className="text-purple-600" />
               <div>
@@ -634,7 +637,7 @@ export default function AdminDashboardPage() {
                 <div className="text-sm text-gray-500">{bookings.length} total</div>
               </div>
             </div>
-          </a>
+          </Link>
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { FaEye, FaEyeSlash, FaUser, FaLock, FaShieldAlt, FaQrcode, FaCheckCircle, FaExclamationTriangle, FaSpinner } from 'react-icons/fa';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useUser } from '@/app/UserContext';
@@ -266,9 +267,11 @@ export default function LoginForm() {
           {/* Logo and header */}
           <div className="text-center mb-8">
             <div className="w-20 h-20 bg-white rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg border-2 border-gray-100">
-              <img 
+              <Image 
                 src="/logo.png" 
                 alt="KIMU Transport Logo" 
+                width={64}
+                height={64}
                 className="w-16 h-16 object-contain"
                 onError={(e) => {
                   // Fallback to gradient K if logo fails to load
