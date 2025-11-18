@@ -21,6 +21,7 @@ import {
 } from 'react-icons/fa'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import CarListModal from '@/components/CarListModal'
+import Auto24Integration from '@/components/auto24/Auto24Integration'
 
 const tabs = [
   { id: 'car-rental', name: 'Car Rental', icon: FaCar, color: 'blue' },
@@ -98,8 +99,9 @@ export default function Offers() {
     // Convert to array and add metadata
     return Object.entries(groups).map(([modelKey, cars]) => {
       const firstCar = cars[0];
-      const availableCars = cars.filter(car => car.isAvailable);
-      const totalCars = cars.length;
+      // In this schema, one record represents a model with a quantity count
+      const totalCars = typeof firstCar.quantity === 'number' ? firstCar.quantity : cars.length;
+      const availableCarsCount = firstCar.isAvailable ? totalCars : 0;
       
       return {
         modelKey,
@@ -113,9 +115,9 @@ export default function Offers() {
         transmission: firstCar.transmission,
         fuel: firstCar.fuel,
         totalCars,
-        availableCars: availableCars.length,
-        cars: cars, // All cars in this model
-        isAvailable: availableCars.length > 0
+        availableCars: availableCarsCount,
+        cars: cars, // Underlying records fetched for this model
+        isAvailable: availableCarsCount > 0
       };
     });
   }, [vehicles]);
@@ -660,112 +662,7 @@ export default function Offers() {
          );
 
              case 'sales':
-         return (
-           <div className="text-center py-16">
-             <div className="max-w-4xl mx-auto">
-               {/* Hero Section with Sparkle Effect */}
-               <div className="relative mb-12">
-                 <div className="w-32 h-32 bg-gradient-to-br from-purple-400 via-indigo-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl animate-pulse">
-                   <FaHandshake className="text-5xl text-white animate-bounce" />
-                 </div>
-                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-200/30 to-transparent animate-pulse rounded-full blur-xl"></div>
-                 
-                 {/* Sparkle Elements */}
-                 <div className="absolute top-0 left-1/4 w-4 h-4 bg-purple-400 rounded-full animate-ping opacity-75"></div>
-                 <div className="absolute top-8 right-1/4 w-3 h-3 bg-indigo-400 rounded-full animate-ping opacity-75" style={{animationDelay: '0.4s'}}></div>
-                 <div className="absolute top-16 left-1/3 w-2 h-2 bg-blue-400 rounded-full animate-ping opacity-75" style={{animationDelay: '0.8s'}}></div>
-                 <div className="absolute top-4 right-1/3 w-5 h-5 bg-purple-300 rounded-full animate-ping opacity-75" style={{animationDelay: '1.2s'}}></div>
-               </div>
-               
-               <h2 className="text-4xl font-bold text-gray-900 mb-4 bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                 Automotive Sales & Consultancy
-               </h2>
-               <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
-                 Professional vehicle sales services with expert guidance and after-sales support.
-               </p>
-               
-               {/* Service Cards with Interactive Effects */}
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-                 <div className="group relative">
-                   <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-indigo-500 rounded-2xl blur opacity-0 group-hover:opacity-75 transition-all duration-500"></div>
-                   <div className="relative bg-white rounded-2xl p-8 shadow-xl border border-purple-100 group-hover:shadow-2xl group-hover:-translate-y-2 transition-all duration-500 hover:scale-105">
-                     <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                       <FaCar className="text-2xl text-purple-600" />
-                     </div>
-                     <h3 className="font-bold text-xl mb-3 text-gray-900">Vehicle Sales</h3>
-                     <p className="text-gray-600 leading-relaxed">Quality used and new vehicles with comprehensive warranties</p>
-                     <div className="mt-4 flex items-center text-purple-600 text-sm">
-                       <span className="animate-pulse">🚗</span>
-                       <span className="ml-2">Quality Assured</span>
-                     </div>
-                     <div className="mt-2 flex items-center text-purple-600 text-sm font-bold">
-                       <span className="text-lg">💰</span>
-                       <span className="ml-2">Competitive Prices</span>
-                     </div>
-                   </div>
-                 </div>
-                 
-                 <div className="group relative">
-                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-blue-500 rounded-2xl blur opacity-0 group-hover:opacity-75 transition-all duration-500"></div>
-                   <div className="relative bg-white rounded-2xl p-8 shadow-xl border border-indigo-100 group-hover:shadow-2xl group-hover:-translate-y-2 transition-all duration-500 hover:scale-105">
-                     <div className="w-16 h-16 bg-gradient-to-br from-indigo-100 to-blue-100 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                       <FaUsers className="text-2xl text-indigo-600" />
-                     </div>
-                     <h3 className="font-bold text-xl mb-3 text-gray-900">Expert Consultancy</h3>
-                     <p className="text-gray-600 leading-relaxed">Professional advice on vehicle selection and financing options</p>
-                     <div className="mt-4 flex items-center text-indigo-600 text-sm">
-                       <span className="animate-pulse">💡</span>
-                       <span className="ml-2">Expert Guidance</span>
-                     </div>
-                     <div className="mt-2 flex items-center text-indigo-600 text-sm font-bold">
-                       <span className="text-lg">🎁</span>
-                       <span className="ml-2">Free Consultation</span>
-                     </div>
-                   </div>
-                 </div>
-               </div>
-               
-               {/* Additional Features Grid */}
-               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                 <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-6 border border-purple-200 hover:shadow-lg transition-all duration-300">
-                   <div className="text-center">
-                     <span className="text-3xl mb-2 block">🔧</span>
-                     <h4 className="font-semibold text-gray-900">After-Sales Support</h4>
-                     <p className="text-sm text-gray-600 mt-2">Comprehensive maintenance and support</p>
-                   </div>
-                 </div>
-                 
-                 <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl p-6 border border-indigo-200 hover:shadow-lg transition-all duration-300">
-                   <div className="text-center">
-                     <span className="text-3xl mb-2 block">📋</span>
-                     <h4 className="font-semibold text-gray-900">Documentation</h4>
-                     <p className="text-sm text-gray-600 mt-2">Complete paperwork and registration</p>
-                   </div>
-                 </div>
-                 
-                 <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-200 hover:shadow-lg transition-all duration-300">
-                   <div className="text-center">
-                     <span className="text-3xl mb-2 block">🚀</span>
-                     <h4 className="font-semibold text-gray-900">Fast Delivery</h4>
-                     <p className="text-sm text-gray-600 mt-2">Quick processing and delivery</p>
-                   </div>
-                 </div>
-               </div>
-               
-               {/* CTA Button with Shimmer */}
-               <div className="relative group">
-                 <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-indigo-500 rounded-2xl blur opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
-                 <Link 
-                   href="/contact" 
-                   className="relative bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-12 py-4 rounded-2xl font-bold text-lg shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105 hover:-translate-y-1 inline-flex items-center gap-3"
-                 >
-                   <span>Get Free Consultation</span>
-                   <FaHandshake className="text-xl animate-bounce" />
-                 </Link>
-               </div>
-             </div>
-           </div>
-         );
+         return <Auto24Integration />;
 
       default:
         return (

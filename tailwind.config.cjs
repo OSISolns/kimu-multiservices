@@ -64,6 +64,12 @@ module.exports = {
         'pulse-soft': {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.8' }
+        },
+        'blob': {
+          '0%': { transform: 'translate(0px, 0px) scale(1)' },
+          '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+          '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+          '100%': { transform: 'translate(0px, 0px) scale(1)' }
         }
       },
       animation: {
@@ -74,7 +80,8 @@ module.exports = {
         'scale-in': 'scale-in 0.4s ease-out forwards',
         'bounce-gentle': 'bounce-gentle 2s ease-in-out infinite',
         'wiggle': 'wiggle 1s ease-in-out infinite',
-        'pulse-soft': 'pulse-soft 2s ease-in-out infinite'
+        'pulse-soft': 'pulse-soft 2s ease-in-out infinite',
+        'blob': 'blob 7s infinite'
       },
       transitionTimingFunction: {
         'bounce-in': 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',

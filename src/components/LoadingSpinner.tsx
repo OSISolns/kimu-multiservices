@@ -47,7 +47,7 @@ const LoadingSpinner = function LoadingSpinner({
       logo: 'w-16 h-16',
       text: 'text-base',
       dots: 'w-2 h-2',
-      border: 'border-3'
+      border: 'border-2'
     },
     lg: {
       spinner: 'w-8 h-8',
@@ -112,28 +112,17 @@ const LoadingSpinner = function LoadingSpinner({
   }), []);
 
   const config = useMemo(() => sizeConfigs[size], [sizeConfigs, size]);
-  // Memoize colors based on variant and color prop
+  // Memoize colors based on variant and color prop - using colorSchemes to avoid dynamic class issues
   const colors = useMemo(() => {
-    const baseColors = {
-      primary: 'text-blue-600',
-      secondary: 'text-gray-600',
-      success: 'text-green-600',
-      warning: 'text-yellow-600',
-      error: 'text-red-600',
-      info: 'text-blue-600',
-      light: 'text-gray-400',
-      dark: 'text-gray-800',
-      auto: 'text-blue-600',
-    };
-
+    const scheme = colorSchemes[color === 'auto' ? 'auto' : color] || colorSchemes.auto;
     return {
-      primary: baseColors[color as keyof typeof baseColors] || baseColors.auto,
-      secondary: baseColors[color as keyof typeof baseColors] || baseColors.auto,
-      background: color === 'auto' ? 'bg-blue-500' : `bg-${color}-500`,
-      gradient: color === 'auto' ? 'from-blue-500 to-orange-500' : `from-${color}-500 to-${color}-600`,
-      text: baseColors[color as keyof typeof baseColors] || baseColors.auto,
+      primary: scheme.primary,
+      secondary: scheme.secondary,
+      background: scheme.background,
+      gradient: scheme.gradient,
+      text: scheme.text,
     };
-  }, [color]);
+  }, [color, colorSchemes]);
 
   // Progress animation effect
   useEffect(() => {
@@ -173,7 +162,7 @@ const LoadingSpinner = function LoadingSpinner({
       case 'logo':
         return (
           <div className="relative">
-            <div className={`${config.logo} ${config.border} ${colors.secondary} border-t-${color === 'auto' ? 'blue' : color}-600 rounded-full animate-spin absolute inset-0`} />
+            <div className={`${config.logo} ${config.border} ${colors.primary} border-t-transparent rounded-full animate-spin absolute inset-0`} />
             <Image 
               src="/logo.png" 
               alt="KIMU Transport Logo" 

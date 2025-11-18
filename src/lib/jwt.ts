@@ -1,9 +1,14 @@
 import { SignJWT, jwtVerify, JWTPayload } from 'jose';
 import { cookies } from 'next/headers';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production'
-);
+function getJwtSecret(): Uint8Array {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) {
+    // Require a reasonably strong secret; avoid weak defaults
+    throw new Error('JWT_SECRET must be set and at least 32 characters long');
+  }
+  return new TextEncoder().encode(secret);
+}
 
 export interface JWTPayloadData extends JWTPayload {
   userId: string;
@@ -32,7 +37,7 @@ export async function createToken(payload: {
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(expiresIn)
-    .sign(JWT_SECRET);
+    .sign(getJwtSecret());
 
   return token;
 }
@@ -42,7 +47,7 @@ export async function createToken(payload: {
  */
 export async function verifyToken(token: string): Promise<JWTPayloadData | null> {
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET, {
+    const { payload } = await jwtVerify(token, getJwtSecret(), {
       algorithms: ['HS256'],
     });
     
@@ -94,18 +99,32 @@ export async function getUserFromCookie(): Promise<JWTPayloadData | null> {
  * Set authentication cookie
  */
 export function setAuthCookie(token: string, maxAge: number = 24 * 60 * 60) {
-  return {
-    'Set-Cookie': `auth-token=${token}; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}; Path=/`,
-  };
+  const isProd = process.env.NODE_ENV === 'production';
+  const parts = [
+    `auth-token=${token}`,
+    'HttpOnly',
+    isProd ? 'Secure' : '',
+    'SameSite=Strict',
+    `Max-Age=${maxAge}`,
+    'Path=/',
+  ].filter(Boolean);
+  return { 'Set-Cookie': parts.join('; ') };
 }
 
 /**
  * Clear authentication cookie
  */
 export function clearAuthCookie() {
-  return {
-    'Set-Cookie': 'auth-token=; HttpOnly; Secure; SameSite=Strict; Max-Age=0; Path=/',
-  };
+  const isProd = process.env.NODE_ENV === 'production';
+  const parts = [
+    'auth-token=',
+    'HttpOnly',
+    isProd ? 'Secure' : '',
+    'SameSite=Strict',
+    'Max-Age=0',
+    'Path=/',
+  ].filter(Boolean);
+  return { 'Set-Cookie': parts.join('; ') };
 }
 
 /**

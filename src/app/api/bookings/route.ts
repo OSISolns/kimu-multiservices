@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { prisma, retryDatabaseOperation } from '@/lib/prisma'
 import { sendBookingNotification, sendBookingStatusUpdate } from '@/app/services/notifications'
 import { logActivity, ActivityActions, getIpAddress, getUserAgent } from '@/app/services/activityLog'
 
@@ -80,15 +80,17 @@ export async function GET(req: NextRequest) {
     
     console.log('GET /api/bookings - Where clause:', whereClause);
     
-    const [bookings, total] = await Promise.all([
-      prisma.booking.findMany({
-        where: whereClause,
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-      }),
-      prisma.booking.count({ where: whereClause })
-    ])
+    const [bookings, total] = await retryDatabaseOperation(async () => {
+      return await Promise.all([
+        prisma.booking.findMany({
+          where: whereClause,
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: limit,
+        }),
+        prisma.booking.count({ where: whereClause })
+      ]);
+    });
     
     console.log('GET /api/bookings - Found bookings:', bookings.length, 'Total:', total);
     console.log('GET /api/bookings - Sample booking:', bookings[0]);

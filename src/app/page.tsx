@@ -18,6 +18,13 @@ export default function Home() {
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const autoPlayIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [showDealBanner, setShowDealBanner] = useState(true);
+
+  const featuredDeal = {
+    title: 'Drive Now, Pay Later with Auto24 Rwanda',
+    description: 'Own a Toyota Corolla Levin or BYD EV today with only 20% deposit. Limited slots available.',
+    link: '/offers?tab=sales',
+  };
 
   // Ensure we're on the client side to avoid hydration mismatch
   useEffect(() => {
@@ -232,6 +239,36 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-gray-100 text-gray-900">
+      {showDealBanner && (
+        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-4 py-3">
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center gap-3">
+            <div className="flex-1">
+              <p className="text-sm uppercase tracking-widest text-white/80">Limited-Time Deal</p>
+              <h2 className="text-xl font-semibold">{featuredDeal.title}</h2>
+              <p className="text-sm text-white/80">{featuredDeal.description}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Link
+                href={featuredDeal.link}
+                className="inline-flex items-center gap-2 bg-white/90 text-blue-700 px-4 py-2 rounded-full font-semibold hover:bg-white transition"
+              >
+                Explore Offer
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M12.9 4.6 11.5 6l2.1 2.1H5v2h8.6L11.5 12l1.4 1.4 4.6-4.6-4.6-4.6z" />
+                </svg>
+              </Link>
+              <button
+                className="text-white/70 hover:text-white"
+                onClick={() => setShowDealBanner(false)}
+                aria-label="Dismiss deal announcement"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Hero Section */}
       <section className="relative flex flex-col md:flex-row items-center justify-between px-4 py-24 max-w-7xl mx-auto">
         <div className="max-w-xl z-10">

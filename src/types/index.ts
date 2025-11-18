@@ -16,6 +16,12 @@ export interface User {
   whatsappNotifications: boolean;
 }
 
+// Re-export payroll types
+export * from './payroll';
+
+// Re-export analytics types
+export * from './analytics';
+
 export interface Vehicle {
   id: number;
   name: string;

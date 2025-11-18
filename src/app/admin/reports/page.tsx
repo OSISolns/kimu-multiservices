@@ -1,37 +1,36 @@
-"use client";
-import { useUser } from '../../UserContext';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+'use client';
 
-// This is a dedicated admin reports page to avoid layout conflicts
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useUser } from '../../UserContext';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import ReportsDashboard from '@/components/admin/ReportsDashboard';
+
 export default function AdminReportsPage() {
-  const { user, isLoading } = useUser();
   const router = useRouter();
-  const [redirecting, setRedirecting] = useState(false);
+  const { user, isLoading } = useUser();
 
   useEffect(() => {
-    if (!isLoading && (!user || user.role !== 'admin')) {
-      router.replace('/admin/login');
-      return;
+    if (!isLoading && !user) {
+      router.push('/staff/login');
+    } else if (!isLoading && user && user.role !== 'admin') {
+      router.push('/staff/dashboard');
     }
+  }, [router, user, isLoading]);
 
-    if (user && user.role === 'admin') {
-      setRedirecting(true);
-      // Redirect to staff reports page but maintain admin context
-      window.location.href = '/staff/reports';
-    }
-  }, [user, isLoading, router]);
-
-  if (isLoading || redirecting) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading reports...</p>
-        </div>
-      </div>
-    );
+  if (isLoading) {
+    return <LoadingSpinner />;
   }
 
-  return null;
+  if (!user || user.role !== 'admin') {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <ReportsDashboard user={user} />
+      </div>
+    </div>
+  );
 }

@@ -297,6 +297,9 @@ export const API_ENDPOINTS = {
     LIST: '/api/payroll',
     CREATE: '/api/payroll',
     PROCESS: '/api/payroll/process',
+    EMPLOYEES: '/api/payroll/employees',
+    REPORTS: '/api/payroll/reports',
+    SALARY_STRUCTURES: '/api/payroll/salary-structures',
   },
   
   // Vehicles
@@ -340,5 +343,12 @@ export const API_ENDPOINTS = {
   SYSTEM: {
     LOGS: '/api/system-logs',
     TEST_ENV: '/api/test-env',
+  },
+  
+  // Admin Reports & Analytics
+  ADMIN: {
+    REPORTS: '/api/admin/reports',
+    ANALYTICS_DASHBOARD: '/api/admin/analytics/dashboard',
+    GENERATE_REPORT: '/api/admin/reports/generate',
   },
 } as const;

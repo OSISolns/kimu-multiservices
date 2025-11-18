@@ -1,5 +1,5 @@
 'use client';
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef, useMemo } from 'react';
 import InactivityWarning from '@/components/InactivityWarning';
 
 interface User {
@@ -39,8 +39,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [isMounted, setIsMounted] = useState(false);
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
   const warningTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes in milliseconds
-  const WARNING_TIME = 60 * 1000; // Show warning 60 seconds before logout
+  const INACTIVITY_TIMEOUT = useMemo(() => 15 * 60 * 1000, []); // 15 minutes in milliseconds
+  const WARNING_TIME = useMemo(() => 60 * 1000, []); // Show warning 60 seconds before logout
 
   // Ensure we're on the client side to avoid hydration mismatch
   useEffect(() => {

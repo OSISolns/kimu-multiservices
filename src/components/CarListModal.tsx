@@ -38,8 +38,44 @@ interface CarListModalProps {
 export default function CarListModal({ isOpen, onClose, modelName, cars }: CarListModalProps) {
   if (!isOpen) return null
 
-  const availableCars = cars.filter(car => car.isAvailable)
-  const unavailableCars = cars.filter(car => !car.isAvailable)
+  // Support model-level quantity by generating a list of available cars
+  const first = cars[0]
+  const quantity = first?.quantity && first.quantity > 0 ? first.quantity : cars.length
+  function generatePlate(): string {
+    // Rwanda series: restrict to RAD .. RAI only
+    const allowedSeries = ['RAD', 'RAE', 'RAF', 'RAG', 'RAH', 'RAI']
+    const series = allowedSeries[Math.floor(Math.random() * allowedSeries.length)]
+    const num = String(Math.floor(Math.random() * 900) + 100)
+    return `${series} ${num}`
+  }
+  function randomizeMileage(baseMileage: string): string {
+    const numeric = parseInt((baseMileage || '50000').replace(/[^0-9]/g, '')) || 50000
+    const factor = 0.8 + Math.random() * 0.4
+    const value = Math.max(5000, Math.round(numeric * factor))
+    return value.toLocaleString() + 'km'
+  }
+  function randomizeRecentYear(baseYear: number): number {
+    const now = new Date().getFullYear()
+    const min = now - 4
+    const max = now - 1
+    const target = Math.floor(Math.random() * (max - min + 1)) + min
+    // Keep within recent range while respecting the base year upper bound
+    return Math.min(max, Math.max(min, baseYear || target))
+  }
+  const synthesizedCars: Car[] = (cars.length === 1 && quantity > 1)
+    ? Array.from({ length: quantity }, (_, i) => ({
+        ...first,
+        id: Number.isFinite(first.id) ? Number(first.id) * 1000 + i : i + 1,
+        licensePlate: generatePlate(),
+        mileage: randomizeMileage(first.mileage),
+        year: randomizeRecentYear(first.year),
+        isAvailable: first.isAvailable,
+        status: first.status,
+      }))
+    : cars
+
+  const availableCars = synthesizedCars.filter(car => car.isAvailable)
+  const unavailableCars = synthesizedCars.filter(car => !car.isAvailable)
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -50,7 +86,7 @@ export default function CarListModal({ isOpen, onClose, modelName, cars }: CarLi
             <div>
               <h2 className="text-3xl font-bold text-blue-900">{modelName}</h2>
               <p className="text-gray-600 mt-2">
-                {availableCars.length} cars available • {cars.length} total in fleet
+                {availableCars.length} cars available • {quantity} total in fleet
               </p>
             </div>
             <button

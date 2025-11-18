@@ -1,372 +1,401 @@
-"use client"
+'use client';
 
-// Force dynamic rendering to prevent prerendering issues
-export const dynamic = 'force-dynamic'
-
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FaDownload, FaChartBar, FaFileExport, FaCalendarAlt, FaMoneyBillWave, FaReceipt, FaChartLine } from 'react-icons/fa';
 import { useUser } from '../../UserContext';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { 
+  FaChartBar, 
+  FaBalanceScale, 
+  FaChartLine, 
+  FaReceipt, 
+  FaDownload, 
+  FaFileExport,
+  FaPrint,
+  FaEye,
+  FaCalendarAlt,
+  FaFilter,
+  FaArrowDown,
+  FaArrowUp
+} from 'react-icons/fa';
 
-function formatRWF(num: number) {
-  return num.toLocaleString('en-US') + ' RWF';
+interface FinancialReport {
+  reportType: string;
+  period: string;
+  generatedAt: string;
+  summary: any;
+  [key: string]: any;
 }
 
-export default function FinancialReports() {
+export default function FinancialReportsPage() {
   const router = useRouter();
   const { user, isLoading } = useUser();
-  const [payments, setPayments] = useState<any[]>([]);
-  const [bookings, setBookings] = useState<any[]>([]);
-  const [dateRange, setDateRange] = useState('month');
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [isDataLoading, setIsDataLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [activeReport, setActiveReport] = useState<string>('summary');
+  const [period, setPeriod] = useState('month');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [reportData, setReportData] = useState<FinancialReport | null>(null);
+  const [isLoadingReport, setIsLoadingReport] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/staff/login');
-    } else if (!isLoading && user && user.role !== 'accountant' && user.role !== 'admin') {
+    } else if (!isLoading && user && !['admin', 'accountant'].includes(user.role)) {
       router.push('/staff/dashboard');
-    } else if (!isLoading && user) {
-      fetchData();
     }
-  }, [router, user, isLoading]);
+  }, [isLoading, user, router]);
 
-  const fetchData = () => {
-    setIsDataLoading(true);
-    setError(null);
-    // Fetch payments
-    fetch('/api/payments')
-      .then(res => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        return res.json();
-      })
-      .then(data => {
-        console.log('Payments data:', data);
-        setPayments(Array.isArray(data) ? data : []);
-      })
-      .catch(err => {
-        console.error('Error fetching payments:', err);
-        setError('Failed to fetch payments data');
-        setPayments([]);
-      });
+  const reportTypes = [
+    {
+      id: 'summary',
+      name: 'Financial Summary',
+      description: 'Overview of income, expenses, and profit',
+      icon: FaChartBar,
+      color: 'blue'
+    },
+    {
+      id: 'income-statement',
+      name: 'Income Statement',
+      description: 'Revenue and expenses breakdown',
+      icon: FaReceipt,
+      color: 'green'
+    },
+    {
+      id: 'balance-sheet',
+      name: 'Balance Sheet',
+      description: 'Assets, liabilities, and equity',
+      icon: FaBalanceScale,
+      color: 'purple'
+    },
+    {
+      id: 'cash-flow',
+      name: 'Cash Flow Statement',
+      description: 'Cash inflows and outflows',
+      icon: FaChartLine,
+      color: 'orange'
+    },
+    {
+      id: 'expense-breakdown',
+      name: 'Expense Analysis',
+      description: 'Detailed expense categorization',
+      icon: FaReceipt,
+      color: 'red'
+    },
+    {
+      id: 'revenue-analysis',
+      name: 'Revenue Analysis',
+      description: 'Revenue by category and trends',
+      icon: FaChartBar,
+      color: 'emerald'
+    }
+  ];
 
-    // Fetch bookings
-    fetch('/api/bookings')
-      .then(res => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        return res.json();
-      })
-      .then(data => {
-        console.log('Bookings data:', data);
-        if (data && Array.isArray(data.bookings)) {
-          setBookings(data.bookings);
-        } else {
-          setBookings([]);
-        }
-      })
-      .catch(err => {
-        console.error('Error fetching bookings:', err);
-        setError('Failed to fetch bookings data');
-        setBookings([]);
-      });
+  const generateReport = async () => {
+    setIsLoadingReport(true);
+    try {
+      const params = new URLSearchParams();
+      params.append('type', activeReport);
+      params.append('period', period);
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
 
-    setTimeout(() => {
-      setIsLoaded(true);
-      setIsDataLoading(false);
-    }, 100);
-  };
-
-  const getFilteredPayments = () => {
-    const now = new Date();
-    const filtered = payments.filter(payment => {
-      const paymentDate = new Date(payment.paymentDate);
-      switch (dateRange) {
-        case 'week':
-          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          return paymentDate >= weekAgo;
-        case 'month':
-          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-          return paymentDate >= monthAgo;
-        case 'quarter':
-          const quarterAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-          return paymentDate >= quarterAgo;
-        default:
-          return true;
+      const response = await fetch(`/api/financial-reports?${params}`);
+      if (response.ok) {
+        const data = await response.json();
+        setReportData(data);
+      } else {
+        console.error('Failed to generate report');
       }
-    });
-    return filtered;
+    } catch (error) {
+      console.error('Error generating report:', error);
+    } finally {
+      setIsLoadingReport(false);
+    }
   };
 
-  const filteredPayments = getFilteredPayments();
-  const totalRevenue = filteredPayments
-    .filter(p => p.status === 'completed')
-    .reduce((sum, p) => sum + (p.amount || 0), 0);
+  const exportReport = async (format: 'excel' | 'pdf') => {
+    if (!reportData) return;
+    
+    try {
+      // For now, we'll implement Excel export
+      if (format === 'excel') {
+        const response = await fetch('/api/export/financial-report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reportData, format: 'excel' })
+        });
+        
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `financial-report-${activeReport}-${period}-${new Date().toISOString().split('T')[0]}.xlsx`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        }
+      }
+    } catch (error) {
+      console.error('Error exporting report:', error);
+    }
+  };
 
-  const paymentMethods = filteredPayments.reduce((acc, payment) => {
-    acc[payment.paymentMethod] = (acc[payment.paymentMethod] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const printReport = () => {
+    window.print();
+  };
 
-  if (isDataLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <LoadingSpinner message="Loading financial reports..." size="md" />
-        </div>
-      </div>
-    );
+  if (isLoading) {
+    return <LoadingSpinner />;
   }
 
-  if (error) {
+  if (!user || !['admin', 'accountant'].includes(user.role)) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-600 text-4xl mb-4">⚠️</div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">Error Loading Data</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button 
-            onClick={fetchData}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Retry
-          </button>
-        </div>
+      <div className="min-h-screen flex items-center justify-center text-xl font-bold text-red-600">
+        Not Authorized
       </div>
     );
   }
 
   return (
-    <>
-      <main className="flex-1 max-w-full mx-auto p-8 flex flex-col gap-8">
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 shadow">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Financial Reports</h1>
-          <p className="text-gray-600">Comprehensive financial analytics and reporting</p>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Financial Reports</h1>
+          <p className="mt-2 text-gray-600">Generate and export comprehensive financial reports</p>
         </div>
 
-        {/* Date Range Filter */}
-        <div className="bg-white rounded-2xl p-6 shadow">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold">Report Period</h2>
-            <div className="flex items-center gap-4">
-              <select 
-                value={dateRange} 
-                onChange={(e) => setDateRange(e.target.value)}
-                className="border rounded-lg px-4 py-2"
-              >
-                <option value="week">Last Week</option>
-                <option value="month">Last Month</option>
-                <option value="quarter">Last Quarter</option>
-                <option value="all">All Time</option>
-              </select>
-                             <button 
-                 onClick={fetchData}
-                 disabled={isDataLoading}
-                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-               >
-                 {isDataLoading ? (
-                  <>
-                    <LoadingSpinner size="sm" />
-                    Loading...
-                  </>
-                ) : (
-                  <>
-                    <FaDownload />
-                    Refresh Data
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-2xl p-6 shadow">
-            <div className="flex items-center gap-3 mb-4">
-              <FaMoneyBillWave className="text-green-600 text-2xl" />
-              <h3 className="text-lg font-semibold">Total Revenue</h3>
-            </div>
-            <p className="text-3xl font-bold text-green-600">{formatRWF(totalRevenue)}</p>
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 shadow">
-            <div className="flex items-center gap-3 mb-4">
-              <FaReceipt className="text-blue-600 text-2xl" />
-              <h3 className="text-lg font-semibold">Total Payments</h3>
-            </div>
-            <p className="text-3xl font-bold text-blue-600">{filteredPayments.length}</p>
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 shadow">
-            <div className="flex items-center gap-3 mb-4">
-              <FaChartLine className="text-purple-600 text-2xl" />
-              <h3 className="text-lg font-semibold">Success Rate</h3>
-            </div>
-            <p className="text-3xl font-bold text-purple-600">
-              {filteredPayments.length > 0 
-                ? Math.round((filteredPayments.filter(p => p.status === 'completed').length / filteredPayments.length) * 100)
-                : 0}%
-            </p>
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 shadow">
-            <div className="flex items-center gap-3 mb-4">
-              <FaCalendarAlt className="text-orange-600 text-2xl" />
-              <h3 className="text-lg font-semibold">Period</h3>
-            </div>
-            <p className="text-xl font-bold text-orange-600 capitalize">{dateRange}</p>
-          </div>
-        </div>
-
-        {/* Payment Methods Breakdown */}
-        <div className="bg-white rounded-2xl p-6 shadow">
-          <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
-            <FaChartBar className="text-blue-600" />
-            Payment Methods Distribution
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {Object.entries(paymentMethods).map(([method, count]) => (
-              <div key={method} className="bg-gray-50 rounded-lg p-4">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold capitalize">{method}</span>
-                  <span className="text-2xl font-bold text-blue-600">{count as number}</span>
-                </div>
-                                  <div className="mt-2">
-                    <div className="bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full" 
-                        style={{ width: `${((count as number) / filteredPayments.length) * 100}%` }}
-                      ></div>
-                    </div>
+        {/* Report Type Selection */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Select Report Type</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {reportTypes.map((report) => {
+              const IconComponent = report.icon;
+              const isActive = activeReport === report.id;
+              
+              return (
+                <button
+                  key={report.id}
+                  onClick={() => setActiveReport(report.id)}
+                  className={`p-4 border rounded-lg text-left transition-all ${
+                    isActive 
+                      ? `border-${report.color}-500 bg-${report.color}-50` 
+                      : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                >
+                  <IconComponent className={`h-6 w-6 mb-2 ${
+                    isActive ? `text-${report.color}-600` : 'text-gray-500'
+                  }`} />
+                  <div className={`font-medium ${
+                    isActive ? `text-${report.color}-900` : 'text-gray-900'
+                  }`}>
+                    {report.name}
                   </div>
-              </div>
-            ))}
+                  <div className="text-sm text-gray-500">{report.description}</div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Detailed Payments Table */}
-        <div className="bg-white rounded-2xl p-6 shadow">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xl font-semibold flex items-center gap-2">
-              <FaReceipt className="text-green-600" />
-              Payment Details
-            </h3>
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
-              <FaDownload />
-              Export CSV
+        {/* Filters and Controls */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Report Settings</h2>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 text-blue-600 hover:text-blue-700"
+            >
+              <FaFilter />
+              {showFilters ? 'Hide Filters' : 'Show Filters'}
+              {showFilters ? <FaArrowUp /> : <FaArrowDown />}
             </button>
           </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="text-gray-500 text-left border-b">
-                  <th className="py-3 px-4">Date</th>
-                  <th className="py-3 px-4">Booking ID</th>
-                  <th className="py-3 px-4">Type</th>
-                  <th className="py-3 px-4">Amount</th>
-                  <th className="py-3 px-4">Method</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4">Transaction ID</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredPayments.map((payment) => (
-                  <tr key={payment.id} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4">
-                      {new Date(payment.paymentDate).toLocaleDateString()}
-                    </td>
-                    <td className="py-3 px-4 font-mono">#{payment.bookingId}</td>
-                    <td className="py-3 px-4">{payment.bookingType}</td>
-                    <td className="py-3 px-4 font-bold">{formatRWF(payment.amount)}</td>
-                    <td className="py-3 px-4 capitalize">{payment.paymentMethod}</td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        payment.status === 'completed' ? 'bg-green-100 text-green-700' :
-                        payment.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-red-100 text-red-700'
-                      }`}>
-                        {payment.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 font-mono text-xs">
-                      {payment.transactionId || 'N/A'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Period</label>
+              <select
+                value={period}
+                onChange={(e) => setPeriod(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="week">Last Week</option>
+                <option value="month">This Month</option>
+                <option value="quarter">This Quarter</option>
+                <option value="year">This Year</option>
+                <option value="custom">Custom Range</option>
+              </select>
+            </div>
+
+            {period === 'custom' && showFilters && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={generateReport}
+              disabled={isLoadingReport}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+            >
+              {isLoadingReport ? (
+                <LoadingSpinner size="sm" inline />
+              ) : (
+                <FaEye />
+              )}
+              Generate Report
+            </button>
+
+            {reportData && (
+              <>
+                <button
+                  onClick={() => exportReport('excel')}
+                  className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
+                >
+                  <FaDownload />
+                  Export Excel
+                </button>
+                <button
+                  onClick={printReport}
+                  className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 flex items-center gap-2"
+                >
+                  <FaPrint />
+                  Print
+                </button>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Export Options */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-6 shadow">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <FaFileExport className="text-green-600" />
-              Export Options
-            </h3>
-            <div className="space-y-3">
-              <button className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-                Export to Excel
-              </button>
-              <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                Export to PDF
-              </button>
-              <button className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
-                Generate Report
-              </button>
+        {/* Report Results */}
+        {reportData && (
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">
+                {reportTypes.find(r => r.id === activeReport)?.name} Report
+              </h2>
+              <div className="text-sm text-gray-500">
+                Generated: {new Date(reportData.generatedAt).toLocaleString()}
+              </div>
+            </div>
+
+            {/* Report Content */}
+            <div className="space-y-6">
+              {activeReport === 'summary' && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <div className="text-sm text-green-600 font-medium">Total Income</div>
+                    <div className="text-2xl font-bold text-green-700">
+                      {reportData.summary?.totalIncome?.toLocaleString()} RWF
+                    </div>
+                  </div>
+                  <div className="bg-red-50 p-4 rounded-lg">
+                    <div className="text-sm text-red-600 font-medium">Total Expenses</div>
+                    <div className="text-2xl font-bold text-red-700">
+                      {reportData.summary?.totalExpenses?.toLocaleString()} RWF
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <div className="text-sm text-blue-600 font-medium">Net Profit</div>
+                    <div className="text-2xl font-bold text-blue-700">
+                      {reportData.summary?.netProfit?.toLocaleString()} RWF
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeReport === 'income-statement' && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-green-50 p-4 rounded-lg">
+                      <h3 className="font-semibold text-green-800 mb-2">Revenue</h3>
+                      <div className="text-2xl font-bold text-green-700">
+                        {reportData.summary?.totalRevenue?.toLocaleString()} RWF
+                      </div>
+                    </div>
+                    <div className="bg-red-50 p-4 rounded-lg">
+                      <h3 className="font-semibold text-red-800 mb-2">Expenses</h3>
+                      <div className="text-2xl font-bold text-red-700">
+                        {reportData.summary?.totalExpenses?.toLocaleString()} RWF
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-blue-800 mb-2">Net Income</h3>
+                    <div className="text-2xl font-bold text-blue-700">
+                      {reportData.summary?.netIncome?.toLocaleString()} RWF
+                    </div>
+                    <div className="text-sm text-blue-600">
+                      Profit Margin: {reportData.summary?.grossMargin?.toFixed(2)}%
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Add more report type displays as needed */}
             </div>
           </div>
+        )}
 
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 shadow">
-            <h3 className="text-lg font-semibold mb-4">Quick Stats</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Completed Payments:</span>
-                <span className="font-bold">{filteredPayments.filter(p => p.status === 'completed').length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Pending Payments:</span>
-                <span className="font-bold">{filteredPayments.filter(p => p.status === 'pending').length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Failed Payments:</span>
-                <span className="font-bold">{filteredPayments.filter(p => p.status === 'failed').length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Average Payment:</span>
-                <span className="font-bold">
-                  {filteredPayments.length > 0 
-                    ? formatRWF(Math.round(filteredPayments.reduce((sum, p) => sum + p.amount, 0) / filteredPayments.length))
-                    : '0 RWF'}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl p-6 shadow">
-            <h3 className="text-lg font-semibold mb-4">Report Actions</h3>
-            <div className="space-y-3">
-              <button className="w-full bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors">
-                Schedule Report
-              </button>
-              <button className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
-                Print Report
-              </button>
-              <button className="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
-                Share Report
-              </button>
-            </div>
+        {/* Quick Links */}
+        <div className="mt-8 bg-white rounded-lg shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Links</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <a
+              href="/staff/accountant-dashboard"
+              className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-center"
+            >
+              <FaChartBar className="h-8 w-8 text-blue-500 mx-auto mb-2" />
+              <div className="font-medium">Dashboard</div>
+            </a>
+            <a
+              href="/staff/reports"
+              className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-center"
+            >
+              <FaReceipt className="h-8 w-8 text-green-500 mx-auto mb-2" />
+              <div className="font-medium">All Reports</div>
+            </a>
+            <a
+              href="/staff/financial-reports"
+              className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-center"
+            >
+              <FaFileExport className="h-8 w-8 text-purple-500 mx-auto mb-2" />
+              <div className="font-medium">Financial Reports</div>
+            </a>
+            <a
+              href="/staff/enhanced-accountant-dashboard"
+              className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-center"
+            >
+              <FaBalanceScale className="h-8 w-8 text-orange-500 mx-auto mb-2" />
+              <div className="font-medium">Enhanced Dashboard</div>
+            </a>
           </div>
         </div>
-      </main>
-    </>
+      </div>
+    </div>
   );
-} 
+}
