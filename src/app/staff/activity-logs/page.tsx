@@ -47,7 +47,7 @@ export default function ActivityLogsPage() {
         if (filters.endDate) params.append('endDate', filters.endDate);
         params.append('page', filters.page.toString());
         params.append('limit', filters.limit.toString());
-        
+
         const response = await fetch(`/api/activity-log?${params.toString()}`, {
           headers: {
             'x-username': user?.username || '',
@@ -146,7 +146,7 @@ export default function ActivityLogsPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4">
         <div className="mb-4">
-          <Link href="/staff/dashboard" className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">&larr; Back to Dashboard</Link>
+          <Link href="/staff/sales-dashboard" className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">&larr; Back to Dashboard</Link>
         </div>
         <div className="bg-white rounded-2xl shadow-lg p-8">
           <div className="flex items-center gap-3 mb-8">
@@ -162,9 +162,8 @@ export default function ActivityLogsPage() {
             <div className="flex gap-2">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-                  showFilters ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${showFilters ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
               >
                 <FaFilter />
                 Filters

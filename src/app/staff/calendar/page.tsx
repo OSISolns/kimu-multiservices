@@ -37,7 +37,7 @@ export default function AgentCalendarPage() {
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth());
   const [year, setYear] = useState(now.getFullYear());
-  
+
   const days = getMonthDays(year, month);
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -45,10 +45,10 @@ export default function AgentCalendarPage() {
     const fetchBookings = async () => {
       try {
         const response = await fetch('/api/bookings', {
-      headers: {
-        'x-username': user?.username || '',
-      },
-    });
+          headers: {
+            'x-username': user?.username || '',
+          },
+        });
         if (!response.ok) throw new Error('Failed to fetch bookings');
         const data = await response.json();
         setBookings(data.bookings);
@@ -97,7 +97,7 @@ export default function AgentCalendarPage() {
     <div className="min-h-screen bg-blue-50 py-10 px-4">
       <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-4">
         <div className="mb-4">
-          <Link href="/staff/dashboard" className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">&larr; Back to Dashboard</Link>
+          <Link href="/staff/sales-dashboard" className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">&larr; Back to Dashboard</Link>
         </div>
         <h1 className="text-2xl font-bold mb-6 flex items-center gap-2"><FaCalendarAlt className="text-blue-500" /> Calendar</h1>
         <p className="text-gray-600 mb-8 text-lg">Manage your schedule and view upcoming bookings here.<br /><span className="font-semibold text-blue-600">More coming soon!</span></p>
@@ -116,7 +116,7 @@ export default function AgentCalendarPage() {
               {days.map((d, i) => d ? (
                 <div key={i} className={`rounded-lg p-2 h-16 flex flex-col items-center justify-start border
                   ${bookingsByDay[d] ? 'bg-blue-300 border-blue-600 text-white shadow-md' : 'bg-gray-50 border-gray-200'}
-                  ${new Date(year, month, d).toISOString().slice(0,10) === todayStr ? 'ring-2 ring-blue-500' : ''}
+                  ${new Date(year, month, d).toISOString().slice(0, 10) === todayStr ? 'ring-2 ring-blue-500' : ''}
                 `}>
                   <div className="font-bold mb-1">{d}</div>
                   {bookingsByDay[d] && (
@@ -133,7 +133,7 @@ export default function AgentCalendarPage() {
                     </div>
                   )}
                 </div>
-              ) : <div key={i}></div>) }
+              ) : <div key={i}></div>)}
             </div>
           </div>
           {/* Sidebar */}

@@ -3,9 +3,18 @@
 // Force dynamic rendering to prevent prerendering issues
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { FaMoneyBillWave, FaChartLine, FaCreditCard, FaReceipt, FaCalculator, FaFileInvoiceDollar, FaDollarSign, FaChartBar, FaCalendarAlt, FaUsers, FaCar, FaHotel, FaTaxi, FaPiggyBank, FaChartPie, FaBalanceScale, FaFileAlt, FaDownload, FaPrint, FaEye, FaEdit, FaTrash, FaPlus, FaMinus, FaPercentage, FaClock, FaExclamationTriangle, FaCheckCircle, FaTimesCircle, FaTable, FaSave, FaUndo, FaInfoCircle, FaCompress, FaExpand, FaTag, FaSync, FaTachometerAlt, FaArrowUp, FaArrowDown, FaFileExport } from 'react-icons/fa';
+import {
+  FaMoneyBillWave, FaChartLine, FaCreditCard, FaReceipt, FaCalculator,
+  FaFileInvoiceDollar, FaDollarSign, FaChartBar, FaCalendarAlt, FaUsers,
+  FaCar, FaHotel, FaTaxi, FaPiggyBank, FaChartPie, FaBalanceScale,
+  FaFileAlt, FaDownload, FaPrint, FaEye, FaEdit, FaTrash, FaPlus,
+  FaMinus, FaPercentage, FaClock, FaExclamationTriangle, FaCheckCircle,
+  FaTimesCircle, FaTable, FaSave, FaUndo, FaInfoCircle, FaCompress,
+  FaExpand, FaTag, FaSync, FaTachometerAlt, FaArrowUp, FaArrowDown,
+  FaFileExport, FaWallet
+} from 'react-icons/fa';
 import { useUser } from '../../UserContext';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import IncomeTracker from '@/components/accounting/IncomeTracker';
@@ -14,6 +23,31 @@ import InvoiceManager from '@/components/accounting/InvoiceManager';
 import BudgetTracker from '@/components/accounting/BudgetTracker';
 import GeneralLedger from '@/components/accounting/GeneralLedger';
 import PayrollDashboard from '@/components/payroll/PayrollDashboard';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+} from 'chart.js';
+import { Line, Bar, Doughnut } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement
+);
 
 function formatRWF(num: number | undefined | null) {
   if (num === undefined || num === null || isNaN(num)) {
@@ -43,7 +77,7 @@ type FinancialData = {
   expenses: FinancialRecord[];
 };
 
-type PayrollEmployee = { id: number; [key: string]: any };
+type PayrollEmployee = { id: number;[key: string]: any };
 type PayrollData = { employees: PayrollEmployee[]; payrollHistory: any[] };
 
 export default function UpgradedAccountantDashboard() {
@@ -79,18 +113,7 @@ export default function UpgradedAccountantDashboard() {
     } as FinancialData;
   };
 
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/staff/login');
-    } else if (!isLoading && user && user.role !== 'accountant' && user.role !== 'admin') {
-      router.push('/staff/dashboard');
-    } else if (!isLoading && user) {
-      fetchFinancialData();
-      fetchPayrollData();
-    }
-  }, [router, user, isLoading, dateRange]);
-
-  const fetchFinancialData = async () => {
+  const fetchFinancialData = useCallback(async () => {
     setIsDataLoading(true);
     try {
       const response = await fetch(`/api/financial-summary?period=${dateRange}`);
@@ -103,23 +126,23 @@ export default function UpgradedAccountantDashboard() {
     } finally {
       setIsDataLoading(false);
     }
-  };
+  }, [dateRange]);
 
-  const fetchPayrollData = async () => {
+  const fetchPayrollData = useCallback(async () => {
     try {
       const [employeesResponse, payrollResponse] = await Promise.all([
         fetch('/api/employees'),
         fetch('/api/payroll')
       ]);
-      
+
       if (employeesResponse.ok && payrollResponse.ok) {
         const employeesData = await employeesResponse.json();
         const payrollData = await payrollResponse.json();
-        
+
         // Extract the actual arrays from the API responses
         const employees = employeesData.success ? employeesData.employees : [];
         const payrollHistory = payrollData.success ? payrollData.payroll : [];
-        
+
         setPayrollData({ employees, payrollHistory });
       }
     } catch (error) {
@@ -127,7 +150,18 @@ export default function UpgradedAccountantDashboard() {
       // Set empty data on error to prevent crashes
       setPayrollData({ employees: [], payrollHistory: [] });
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/staff/login');
+    } else if (!isLoading && user && user.role !== 'accountant' && user.role !== 'admin') {
+      router.push('/staff/sales-dashboard');
+    } else if (!isLoading && user) {
+      fetchFinancialData();
+      fetchPayrollData();
+    }
+  }, [router, user, isLoading, fetchFinancialData, fetchPayrollData]);
 
   const handleDataUpdate = () => {
     setRefreshKey(prev => prev + 1);
@@ -155,41 +189,157 @@ export default function UpgradedAccountantDashboard() {
   }
 
   // Calculate totals
-  const totalIncome = financialData.income.reduce((sum, item) => 
+  const totalIncome = financialData.income.reduce((sum, item) =>
     sum + item.mtnMomoRWF + item.equityBankRWF + item.bkBankRWF, 0);
-  const totalExpenses = financialData.expenses.reduce((sum, item) => 
+  const totalExpenses = financialData.expenses.reduce((sum, item) =>
     sum + item.mtnMomoRWF + item.equityBankRWF + item.bkBankRWF, 0);
   const netProfit = totalIncome - totalExpenses;
 
+  // Chart Data Preparation
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'bottom' as const,
+        labels: {
+          color: '#4B5563',
+          font: {
+            family: "'Inter', sans-serif",
+            size: 12
+          }
+        }
+      },
+      title: {
+        display: false,
+      },
+    },
+    scales: {
+      y: {
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)',
+        },
+        ticks: {
+          color: '#6B7280',
+          font: {
+            family: "'Inter', sans-serif",
+          }
+        }
+      },
+      x: {
+        grid: {
+          display: false,
+        },
+        ticks: {
+          color: '#6B7280',
+          font: {
+            family: "'Inter', sans-serif",
+          }
+        }
+      }
+    }
+  };
+
+  const doughnutOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'right' as const,
+        labels: {
+          color: '#4B5563',
+          font: {
+            family: "'Inter', sans-serif",
+            size: 12
+          }
+        }
+      }
+    }
+  };
+
+  // Prepare data for charts (simplified for demo, ideally aggregate by date)
+  const incomeData = {
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    datasets: [
+      {
+        label: 'Income',
+        data: [120000, 190000, 30000, 50000, 20000, 30000, 45000], // Placeholder logic, replace with real aggregation
+        borderColor: 'rgb(34, 197, 94)',
+        backgroundColor: 'rgba(34, 197, 94, 0.5)',
+        tension: 0.4,
+      },
+    ],
+  };
+
+  const expenseData = {
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    datasets: [
+      {
+        label: 'Expenses',
+        data: [50000, 20000, 10000, 15000, 80000, 10000, 5000], // Placeholder logic
+        backgroundColor: 'rgba(239, 68, 68, 0.5)',
+      },
+    ],
+  };
+
+  const balanceDistributionData = {
+    labels: ['MTN Momo', 'Equity Bank', 'BK Bank'],
+    datasets: [
+      {
+        data: [
+          financialData.openingBalances.mtnMomoRWF,
+          financialData.openingBalances.equityBankRWF,
+          financialData.openingBalances.bkBankRWF
+        ],
+        backgroundColor: [
+          'rgba(59, 130, 246, 0.8)',
+          'rgba(16, 185, 129, 0.8)',
+          'rgba(139, 92, 246, 0.8)',
+        ],
+        borderColor: [
+          'rgba(59, 130, 246, 1)',
+          'rgba(16, 185, 129, 1)',
+          'rgba(139, 92, 246, 1)',
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+    <div className="min-h-screen bg-gray-50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed">
+      {/* Header with Glassmorphism */}
+      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-white/20 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Accounting Dashboard</h1>
-              <p className="mt-1 text-sm text-gray-500">
-                Comprehensive financial management and accounting tools
-              </p>
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-600 rounded-lg shadow-lg shadow-blue-500/30">
+                <FaCalculator className="text-white text-xl" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Accounting Dashboard</h1>
+                <p className="text-xs text-gray-500 font-medium">Financial Overview & Management</p>
+              </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <select
-                value={dateRange}
-                onChange={(e) => setDateRange(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-              >
-                <option value="all">All Time</option>
-                <option value="daily">Today</option>
-                <option value="weekly">This Week</option>
-                <option value="monthly">This Month</option>
-                <option value="yearly">This Year</option>
-              </select>
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <select
+                  value={dateRange}
+                  onChange={(e) => setDateRange(e.target.value)}
+                  className="appearance-none pl-4 pr-10 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all cursor:pointer hover:bg-gray-50"
+                >
+                  <option value="all">All Time</option>
+                  <option value="daily">Today</option>
+                  <option value="weekly">This Week</option>
+                  <option value="monthly">This Month</option>
+                  <option value="yearly">This Year</option>
+                </select>
+                <FaCalendarAlt className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </div>
               <button
                 onClick={handleDataUpdate}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
+                className="p-2 bg-white border border-gray-200 rounded-xl text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm active:scale-95"
+                title="Refresh Data"
               >
-                <FaSync /> Refresh
+                <FaSync className={isDataLoading ? "animate-spin" : ""} />
               </button>
             </div>
           </div>
@@ -198,21 +348,21 @@ export default function UpgradedAccountantDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tab Navigation */}
-        <div className="mb-8">
-          <nav className="flex space-x-8" aria-label="Tabs">
+        <div className="mb-8 overflow-x-auto pb-2 scrollbar-hide">
+          <nav className="flex space-x-2 p-1 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/40 shadow-sm w-max mx-auto md:mx-0 md:w-full md:justify-start">
             {tabs.map((tab) => {
               const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
+                  className={`${isActive
+                    ? 'bg-white text-blue-600 shadow-md shadow-blue-500/10 scale-100'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
+                    } whitespace-nowrap py-2.5 px-4 rounded-xl font-medium text-sm flex items-center gap-2 transition-all duration-200`}
                 >
-                  <Icon />
+                  <Icon className={isActive ? "text-blue-500" : "text-gray-400"} />
                   {tab.name}
                 </button>
               );
@@ -221,343 +371,335 @@ export default function UpgradedAccountantDashboard() {
         </div>
 
         {/* Tab Content */}
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fadeIn">
           {activeTab === 'overview' && (
             <div className="space-y-6">
               {/* Financial Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-white overflow-hidden shadow rounded-lg">
-                  <div className="p-5">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0">
-                        <FaDollarSign className="h-6 w-6 text-green-400" />
-                      </div>
-                      <div className="ml-5 w-0 flex-1">
-                        <dl>
-                          <dt className="text-sm font-medium text-gray-500 truncate">
-                            Total Income
-                          </dt>
-                          <dd className="text-lg font-medium text-gray-900">
-                            {formatRWF(totalIncome)}
-                          </dd>
-                        </dl>
-                      </div>
+                {/* Total Income */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 hover:shadow-md transition-all duration-300 group">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-green-100 rounded-xl group-hover:bg-green-200 transition-colors">
+                      <FaDollarSign className="h-6 w-6 text-green-600" />
                     </div>
+                    <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-lg border border-green-100">
+                      +12.5%
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-medium text-gray-500">Total Income</h3>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{formatRWF(totalIncome)}</p>
+                </div>
+
+                {/* Total Expenses */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 hover:shadow-md transition-all duration-300 group">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-red-100 rounded-xl group-hover:bg-red-200 transition-colors">
+                      <FaReceipt className="h-6 w-6 text-red-600" />
+                    </div>
+                    <span className="text-xs font-semibold text-red-600 bg-red-50 px-2 py-1 rounded-lg border border-red-100">
+                      +5.2%
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-medium text-gray-500">Total Expenses</h3>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{formatRWF(totalExpenses)}</p>
+                </div>
+
+                {/* Net Profit */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 hover:shadow-md transition-all duration-300 group">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`p-3 rounded-xl transition-colors ${netProfit >= 0 ? 'bg-blue-100 group-hover:bg-blue-200' : 'bg-orange-100 group-hover:bg-orange-200'}`}>
+                      <FaChartLine className={`h-6 w-6 ${netProfit >= 0 ? 'text-blue-600' : 'text-orange-600'}`} />
+                    </div>
+                    <span className={`text-xs font-semibold px-2 py-1 rounded-lg border ${netProfit >= 0 ? 'text-blue-600 bg-blue-50 border-blue-100' : 'text-orange-600 bg-orange-50 border-orange-100'}`}>
+                      {netProfit >= 0 ? 'Healthy' : 'Attention'}
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-medium text-gray-500">Net Profit</h3>
+                  <p className={`text-2xl font-bold mt-1 ${netProfit >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
+                    {formatRWF(netProfit)}
+                  </p>
+                </div>
+
+                {/* Transactions Count */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 hover:shadow-md transition-all duration-300 group">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-purple-100 rounded-xl group-hover:bg-purple-200 transition-colors">
+                      <FaTable className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <span className="text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-1 rounded-lg border border-purple-100">
+                      Active
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-medium text-gray-500">Total Transactions</h3>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">
+                    {financialData.income.length + financialData.expenses.length}
+                  </p>
+                </div>
+              </div>
+
+              {/* Charts Section */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Income Trend */}
+                <div className="lg:col-span-2 bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-bold text-gray-900">Income Overview</h3>
+                    <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">View Report</button>
+                  </div>
+                  <div className="h-64">
+                    <Line options={chartOptions} data={incomeData} />
                   </div>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow rounded-lg">
-                  <div className="p-5">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0">
-                        <FaReceipt className="h-6 w-6 text-red-400" />
-                      </div>
-                      <div className="ml-5 w-0 flex-1">
-                        <dl>
-                          <dt className="text-sm font-medium text-gray-500 truncate">
-                            Total Expenses
-                          </dt>
-                          <dd className="text-lg font-medium text-gray-900">
-                            {formatRWF(totalExpenses)}
-                          </dd>
-                        </dl>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white overflow-hidden shadow rounded-lg">
-                  <div className="p-5">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0">
-                        <FaChartLine className="h-6 w-6 text-blue-400" />
-                      </div>
-                      <div className="ml-5 w-0 flex-1">
-                        <dl>
-                          <dt className="text-sm font-medium text-gray-500 truncate">
-                            Net Profit
-                          </dt>
-                          <dd className={`text-lg font-medium ${
-                            netProfit >= 0 ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {formatRWF(netProfit)}
-                          </dd>
-                        </dl>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white overflow-hidden shadow rounded-lg">
-                  <div className="p-5">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0">
-                        <FaTable className="h-6 w-6 text-purple-400" />
-                      </div>
-                      <div className="ml-5 w-0 flex-1">
-                        <dl>
-                          <dt className="text-sm font-medium text-gray-500 truncate">
-                            Transactions
-                          </dt>
-                          <dd className="text-lg font-medium text-gray-900">
-                            {financialData.income.length + financialData.expenses.length}
-                          </dd>
-                        </dl>
-                      </div>
-                    </div>
+                {/* Balance Distribution */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50">
+                  <h3 className="text-lg font-bold text-gray-900 mb-6">Account Distribution</h3>
+                  <div className="h-64 flex items-center justify-center">
+                    <Doughnut options={doughnutOptions} data={balanceDistributionData} />
                   </div>
                 </div>
               </div>
 
-              {/* Account Balances */}
-              <div className="bg-white shadow rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                    Account Balances
+              {/* Account Balances & Quick Actions */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Account Balances */}
+                <div className="lg:col-span-1 bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 text-white shadow-lg shadow-gray-900/20">
+                  <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
+                    <FaWallet className="text-blue-400" /> Current Balances
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <div className="text-sm text-blue-600 font-medium">MTN Momo</div>
-                      <div className="text-2xl font-bold text-blue-700">
+                  <div className="space-y-4">
+                    <div className="p-4 bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 hover:bg-white/20 transition-colors">
+                      <div className="text-sm text-gray-300 mb-1">MTN Mobile Money</div>
+                      <div className="text-xl font-bold tracking-wide">
                         {formatRWF(financialData.openingBalances?.mtnMomoRWF || 0)}
                       </div>
                     </div>
-                    <div className="bg-green-50 p-4 rounded-lg">
-                      <div className="text-sm text-green-600 font-medium">Equity Bank</div>
-                      <div className="text-2xl font-bold text-green-700">
+                    <div className="p-4 bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 hover:bg-white/20 transition-colors">
+                      <div className="text-sm text-gray-300 mb-1">Equity Bank</div>
+                      <div className="text-xl font-bold tracking-wide">
                         {formatRWF(financialData.openingBalances?.equityBankRWF || 0)}
                       </div>
                     </div>
-                    <div className="bg-purple-50 p-4 rounded-lg">
-                      <div className="text-sm text-purple-600 font-medium">BK Bank</div>
-                      <div className="text-2xl font-bold text-purple-700">
+                    <div className="p-4 bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 hover:bg-white/20 transition-colors">
+                      <div className="text-sm text-gray-300 mb-1">BK Bank</div>
+                      <div className="text-xl font-bold tracking-wide">
                         {formatRWF(financialData.openingBalances?.bkBankRWF || 0)}
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Quick Actions */}
-              <div className="bg-white shadow rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                    Quick Actions
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Quick Actions */}
+                <div className="lg:col-span-2 bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50">
+                  <h3 className="text-lg font-bold text-gray-900 mb-6">Quick Actions</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <button
                       onClick={() => setActiveTab('income')}
-                      className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors"
+                      className="flex flex-col items-center justify-center p-4 rounded-xl border border-gray-100 bg-white hover:border-green-200 hover:bg-green-50 hover:shadow-md transition-all duration-300 group"
                     >
-                      <FaMoneyBillWave className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <div className="text-sm font-medium text-gray-900">Add Income</div>
-                      <div className="text-xs text-gray-500">Record new income</div>
+                      <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <FaPlus className="text-green-600 text-lg" />
+                      </div>
+                      <span className="text-sm font-semibold text-gray-700 group-hover:text-green-700">Add Income</span>
                     </button>
                     <button
                       onClick={() => setActiveTab('expenses')}
-                      className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors"
+                      className="flex flex-col items-center justify-center p-4 rounded-xl border border-gray-100 bg-white hover:border-red-200 hover:bg-red-50 hover:shadow-md transition-all duration-300 group"
                     >
-                      <FaReceipt className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <div className="text-sm font-medium text-gray-900">Add Expense</div>
-                      <div className="text-xs text-gray-500">Record new expense</div>
+                      <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <FaMinus className="text-red-600 text-lg" />
+                      </div>
+                      <span className="text-sm font-semibold text-gray-700 group-hover:text-red-700">Add Expense</span>
                     </button>
                     <button
                       onClick={() => setActiveTab('invoices')}
-                      className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+                      className="flex flex-col items-center justify-center p-4 rounded-xl border border-gray-100 bg-white hover:border-blue-200 hover:bg-blue-50 hover:shadow-md transition-all duration-300 group"
                     >
-                      <FaFileInvoiceDollar className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <div className="text-sm font-medium text-gray-900">Create Invoice</div>
-                      <div className="text-xs text-gray-500">Generate new invoice</div>
+                      <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <FaFileInvoiceDollar className="text-blue-600 text-lg" />
+                      </div>
+                      <span className="text-sm font-semibold text-gray-700 group-hover:text-blue-700">New Invoice</span>
                     </button>
                     <button
-                      onClick={() => setActiveTab('budget')}
-                      className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors"
+                      onClick={() => setActiveTab('reports')}
+                      className="flex flex-col items-center justify-center p-4 rounded-xl border border-gray-100 bg-white hover:border-purple-200 hover:bg-purple-50 hover:shadow-md transition-all duration-300 group"
                     >
-                      <FaChartPie className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <div className="text-sm font-medium text-gray-900">Set Budget</div>
-                      <div className="text-xs text-gray-500">Create budget plan</div>
+                      <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <FaChartBar className="text-purple-600 text-lg" />
+                      </div>
+                      <span className="text-sm font-semibold text-gray-700 group-hover:text-purple-700">View Reports</span>
                     </button>
                   </div>
                 </div>
               </div>
 
-              {/* Recent Transactions */}
-              <div className="bg-white shadow rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                    Recent Transactions
-                  </h3>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Date
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Description
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Type
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Amount
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {[...financialData.income.slice(0, 5), ...financialData.expenses.slice(0, 5)]
-                          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                          .slice(0, 10)
-                          .map((transaction, index) => {
-                            const isIncome = financialData.income.includes(transaction);
-                            const amount = transaction.mtnMomoRWF + transaction.equityBankRWF + transaction.bkBankRWF;
-                            return (
-                              <tr key={`${isIncome ? 'income' : 'expense'}-${transaction.id}`}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                  {new Date(transaction.date).toLocaleDateString()}
-                                </td>
-                                <td className="px-6 py-4 text-sm text-gray-900">
-                                  {transaction.description}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                    isIncome ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+              {/* Recent Transactions Table */}
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/50 overflow-hidden">
+                <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center">
+                  <h3 className="text-lg font-bold text-gray-900">Recent Transactions</h3>
+                  <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">View All</button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-100">
+                    <thead className="bg-gray-50/50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-100">
+                      {[...financialData.income.slice(0, 5), ...financialData.expenses.slice(0, 5)]
+                        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                        .slice(0, 10)
+                        .map((transaction) => {
+                          const isIncome = financialData.income.includes(transaction);
+                          const amount = transaction.mtnMomoRWF + transaction.equityBankRWF + transaction.bkBankRWF;
+                          return (
+                            <tr key={`${isIncome ? 'income' : 'expense'}-${transaction.id}`} className="hover:bg-gray-50/50 transition-colors">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">
+                                {new Date(transaction.date).toLocaleDateString()}
+                              </td>
+                              <td className="px-6 py-4 text-sm text-gray-900 font-medium">
+                                {transaction.description}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${isIncome ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                                   }`}>
-                                    {isIncome ? 'Income' : 'Expense'}
-                                  </span>
-                                </td>
-                                <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
-                                  isIncome ? 'text-green-600' : 'text-red-600'
+                                  {isIncome ? 'Income' : 'Expense'}
+                                </span>
+                              </td>
+                              <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold ${isIncome ? 'text-green-600' : 'text-red-600'
                                 }`}>
-                                  {isIncome ? '+' : '-'}{formatRWF(amount)}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                      </tbody>
-                    </table>
-                  </div>
+                                {isIncome ? '+' : '-'}{formatRWF(amount)}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                  Completed
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
           )}
 
           {activeTab === 'income' && (
-            <IncomeTracker onIncomeAdded={handleDataUpdate} />
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/50 p-6">
+              <IncomeTracker onIncomeAdded={handleDataUpdate} />
+            </div>
           )}
 
           {activeTab === 'expenses' && (
-            <ExpenseTracker onExpenseAdded={handleDataUpdate} />
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/50 p-6">
+              <ExpenseTracker onExpenseAdded={handleDataUpdate} />
+            </div>
           )}
 
           {activeTab === 'invoices' && (
-            <InvoiceManager onInvoiceCreated={handleDataUpdate} />
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/50 p-6">
+              <InvoiceManager onInvoiceCreated={handleDataUpdate} />
+            </div>
           )}
 
           {activeTab === 'budget' && (
-            <BudgetTracker onBudgetUpdated={handleDataUpdate} />
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/50 p-6">
+              <BudgetTracker onBudgetUpdated={handleDataUpdate} />
+            </div>
           )}
 
           {activeTab === 'ledger' && (
-            <GeneralLedger onDataExport={(data) => {
-              console.log('Exporting data:', data);
-            }} />
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/50 p-6">
+              <GeneralLedger onDataExport={(data) => {
+                console.log('Exporting data:', data);
+              }} />
+            </div>
           )}
 
           {activeTab === 'payroll' && (
-            <PayrollDashboard user={user} />
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/50 p-6">
+              <PayrollDashboard user={user} />
+            </div>
           )}
 
           {activeTab === 'reports' && (
-            <div className="bg-white shadow rounded-lg p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Financial Reports</h3>
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/50 p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-gray-900">Financial Reports</h3>
                 <a
                   href="/staff/financial-reports"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 flex items-center gap-2 shadow-lg shadow-blue-500/30 transition-all active:scale-95"
                 >
                   <FaFileAlt />
                   View All Reports
                 </a>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <a
                   href="/staff/financial-reports?type=income-statement"
-                  className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-left transition-colors"
+                  className="p-6 border border-gray-100 rounded-2xl bg-white hover:border-blue-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
                 >
-                  <FaChartBar className="h-6 w-6 text-blue-500 mb-2" />
-                  <div className="font-medium">Income Statement</div>
+                  <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-100 transition-colors">
+                    <FaChartBar className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div className="font-bold text-lg text-gray-900 mb-1">Income Statement</div>
                   <div className="text-sm text-gray-500">Revenue and expenses report</div>
                 </a>
                 <a
                   href="/staff/financial-reports?type=balance-sheet"
-                  className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-left transition-colors"
+                  className="p-6 border border-gray-100 rounded-2xl bg-white hover:border-green-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
                 >
-                  <FaBalanceScale className="h-6 w-6 text-green-500 mb-2" />
-                  <div className="font-medium">Balance Sheet</div>
+                  <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-green-100 transition-colors">
+                    <FaBalanceScale className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div className="font-bold text-lg text-gray-900 mb-1">Balance Sheet</div>
                   <div className="text-sm text-gray-500">Assets, liabilities, and equity</div>
                 </a>
                 <a
                   href="/staff/financial-reports?type=cash-flow"
-                  className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-left transition-colors"
+                  className="p-6 border border-gray-100 rounded-2xl bg-white hover:border-orange-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
                 >
-                  <FaChartLine className="h-6 w-6 text-purple-500 mb-2" />
-                  <div className="font-medium">Cash Flow</div>
+                  <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-orange-100 transition-colors">
+                    <FaChartLine className="h-6 w-6 text-orange-600" />
+                  </div>
+                  <div className="font-bold text-lg text-gray-900 mb-1">Cash Flow</div>
                   <div className="text-sm text-gray-500">Cash inflows and outflows</div>
                 </a>
                 <a
                   href="/staff/financial-reports?type=expense-breakdown"
-                  className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-left transition-colors"
+                  className="p-6 border border-gray-100 rounded-2xl bg-white hover:border-red-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
                 >
-                  <FaReceipt className="h-6 w-6 text-red-500 mb-2" />
-                  <div className="font-medium">Expense Report</div>
+                  <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-red-100 transition-colors">
+                    <FaReceipt className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div className="font-bold text-lg text-gray-900 mb-1">Expense Report</div>
                   <div className="text-sm text-gray-500">Detailed expense breakdown</div>
                 </a>
                 <a
                   href="/staff/financial-reports?type=revenue-analysis"
-                  className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-left transition-colors"
+                  className="p-6 border border-gray-100 rounded-2xl bg-white hover:border-yellow-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
                 >
-                  <FaFileInvoiceDollar className="h-6 w-6 text-yellow-500 mb-2" />
-                  <div className="font-medium">Revenue Analysis</div>
+                  <div className="w-12 h-12 bg-yellow-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-yellow-100 transition-colors">
+                    <FaFileInvoiceDollar className="h-6 w-6 text-yellow-600" />
+                  </div>
+                  <div className="font-bold text-lg text-gray-900 mb-1">Revenue Analysis</div>
                   <div className="text-sm text-gray-500">Revenue trends and analysis</div>
                 </a>
                 <a
                   href="/staff/financial-reports?type=summary"
-                  className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-left transition-colors"
+                  className="p-6 border border-gray-100 rounded-2xl bg-white hover:border-indigo-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
                 >
-                  <FaChartPie className="h-6 w-6 text-indigo-500 mb-2" />
-                  <div className="font-medium">Financial Summary</div>
+                  <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-indigo-100 transition-colors">
+                    <FaChartPie className="h-6 w-6 text-indigo-600" />
+                  </div>
+                  <div className="font-bold text-lg text-gray-900 mb-1">Financial Summary</div>
                   <div className="text-sm text-gray-500">Complete overview report</div>
                 </a>
-              </div>
-              
-              {/* Quick Actions */}
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Quick Actions</h4>
-                <div className="flex flex-wrap gap-3">
-                  <a
-                    href="/staff/reports"
-                    className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 flex items-center gap-2"
-                  >
-                    <FaReceipt />
-                    All Reports
-                  </a>
-                  <a
-                    href="/staff/financial-reports"
-                    className="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-200 flex items-center gap-2"
-                  >
-                    <FaFileExport />
-                    Generate Report
-                  </a>
-                  <a
-                    href="/staff/enhanced-accountant-dashboard"
-                    className="bg-green-100 text-green-700 px-4 py-2 rounded-lg hover:bg-green-200 flex items-center gap-2"
-                  >
-                    <FaChartBar />
-                    Enhanced Dashboard
-                  </a>
-                </div>
               </div>
             </div>
           )}

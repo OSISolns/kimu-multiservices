@@ -15,20 +15,20 @@ export default function MfaPage() {
   const [trustDevice, setTrustDevice] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30);
   const router = useRouter();
-  const [next, setNext] = useState('/staff/dashboard');
+  const [next, setNext] = useState('/staff/sales-dashboard');
   const [isMounted, setIsMounted] = useState(false);
-  
+
   // Ensure we're on the client side to avoid hydration mismatch
   useEffect(() => {
     setIsMounted(true);
   }, []);
-  
+
   useEffect(() => {
     // Get search params on client side to avoid SSR issues
     if (!isMounted) return;
-    
+
     const urlParams = new URLSearchParams(window.location.search);
-    setNext(urlParams.get('next') || '/staff/dashboard');
+    setNext(urlParams.get('next') || '/staff/sales-dashboard');
   }, [isMounted]);
 
   // Get current user from localStorage (simplified session management)
@@ -37,7 +37,7 @@ export default function MfaPage() {
   useEffect(() => {
     // Only access localStorage after mounting to avoid hydration mismatch
     if (!isMounted) return;
-    
+
     // Get user data from localStorage
     const userData = localStorage.getItem('user');
     if (userData) {
@@ -80,7 +80,7 @@ export default function MfaPage() {
       const res = await fetch('/api/mfa/verify', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           userId: currentUser.id?.toString() || 'temp-user-id',
           totp: code,
           trustDevice: trustDevice
@@ -88,7 +88,7 @@ export default function MfaPage() {
       });
 
       const data = await res.json();
-      
+
       if (res.ok && data.ok) {
         // MFA verification successful
         console.log('MFA verification successful, redirecting to:', next);
@@ -201,11 +201,10 @@ export default function MfaPage() {
           <button
             type="submit"
             disabled={loading || code.length !== 6}
-            className={`w-full py-3 px-4 rounded-lg font-medium transition-all ${
-              loading || code.length !== 6
+            className={`w-full py-3 px-4 rounded-lg font-medium transition-all ${loading || code.length !== 6
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
-            }`}
+              }`}
           >
             {loading ? (
               <div className="flex items-center justify-center">
@@ -219,15 +218,15 @@ export default function MfaPage() {
         </form>
 
         <div className="mt-6 text-center">
-                      <p className="text-gray-500 text-sm">
-              Don&apos;t have access to your authenticator?{' '}
-              <button
-                onClick={() => router.push('/staff/login')}
-                className="text-blue-600 hover:underline"
-              >
-                Sign in again
-              </button>
-            </p>
+          <p className="text-gray-500 text-sm">
+            Don&apos;t have access to your authenticator?{' '}
+            <button
+              onClick={() => router.push('/staff/login')}
+              className="text-blue-600 hover:underline"
+            >
+              Sign in again
+            </button>
+          </p>
         </div>
 
         <div className="mt-4 p-3 bg-blue-50 rounded-lg">
@@ -236,7 +235,7 @@ export default function MfaPage() {
             <div className="text-sm text-blue-700">
               <p className="font-medium mb-1">Security Tip</p>
               <p>
-                Only check &quot;Trust this device&quot; on your personal devices. 
+                Only check &quot;Trust this device&quot; on your personal devices.
                 Your session will be secured with additional encryption.
               </p>
             </div>

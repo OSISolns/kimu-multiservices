@@ -66,7 +66,7 @@ export default function TestimonialsCarousel({ testimonials }: TestimonialsCarou
 
             {/* Testimonial Text */}
             <blockquote className="text-xl lg:text-2xl text-gray-700 italic mb-8 leading-relaxed">
-              "{currentTestimonial.text}"
+              &quot;{currentTestimonial.text}&quot;
             </blockquote>
 
             {/* Customer Info */}
@@ -130,7 +130,7 @@ export default function TestimonialsCarousel({ testimonials }: TestimonialsCarou
 
               {/* Testimonial Text */}
               <p className="text-gray-700 mb-4 line-clamp-3">
-                "{testimonial.text}"
+                &quot;{testimonial.text}&quot;
               </p>
 
               {/* Customer Info */}

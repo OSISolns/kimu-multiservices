@@ -30,7 +30,7 @@ export async function checkDatabaseConnection(): Promise<boolean> {
 export async function disconnectDatabase(): Promise<void> {
   try {
     await prisma.$disconnect();
-    console.log('Database disconnected successfully');
+
   } catch (error) {
     console.error('Error disconnecting from database:', error);
   }
@@ -55,20 +55,20 @@ export async function retryDatabaseOperation<T>(
   delay: number = 1000
 ): Promise<T> {
   let lastError: Error;
-  
+
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await operation();
     } catch (error) {
       lastError = error as Error;
       console.warn(`Database operation failed (attempt ${i + 1}/${maxRetries}):`, error);
-      
+
       if (i < maxRetries - 1) {
         await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
       }
     }
   }
-  
+
   throw lastError!;
 }
 

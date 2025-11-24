@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/UserContext';
 import { FaUserPlus, FaSave, FaTimes, FaEye, FaEyeSlash, FaShieldAlt } from 'react-icons/fa';
@@ -67,7 +67,7 @@ export default function AddUserPage() {
   }
 
   if (user.role !== 'admin' && user.role !== 'staff') {
-    router.push('/staff/dashboard');
+    router.push('/staff/admin-dashboard');
     return null;
   }
 
@@ -83,7 +83,7 @@ export default function AddUserPage() {
 
   const validateForm = (): string[] => {
     const errors: string[] = [];
-    
+
     if (!formData.username.trim()) errors.push('Username is required');
     if (!formData.fullName.trim()) errors.push('Full name is required');
     if (!formData.email.trim()) errors.push('Email is required');
@@ -93,13 +93,13 @@ export default function AddUserPage() {
     if (formData.password !== formData.confirmPassword) errors.push('Passwords do not match');
     if (!formData.role) errors.push('Role is required');
     if (!formData.department.trim()) errors.push('Department is required');
-    
+
     return errors;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const errors = validateForm();
     if (errors.length > 0) {
       alert('Please fix the following errors:\n' + errors.join('\n'));
@@ -107,12 +107,13 @@ export default function AddUserPage() {
     }
 
     setLoading(true);
-    
+
     try {
       const response = await fetch('/api/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-username': user.username,
         },
         body: JSON.stringify({
           username: formData.username.trim(),
@@ -178,38 +179,38 @@ export default function AddUserPage() {
                     required
                   />
                 </div>
-                
-        <div>
+
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Full Name *
                   </label>
-          <input
+                  <input
                     type="text"
                     name="fullName"
                     value={formData.fullName}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter full name"
-            required
-          />
-        </div>
-                
-        <div>
+                    required
+                  />
+                </div>
+
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Email *
                   </label>
-          <input
+                  <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter email address"
-            required
-          />
-        </div>
-                
-        <div>
+                    required
+                  />
+                </div>
+
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Phone *
                   </label>
@@ -220,9 +221,9 @@ export default function AddUserPage() {
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter phone number"
-            required
-          />
-        </div>
+                    required
+                  />
+                </div>
               </div>
             </div>
 
@@ -254,7 +255,7 @@ export default function AddUserPage() {
                   </div>
                   <p className="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Confirm Password *
@@ -285,11 +286,11 @@ export default function AddUserPage() {
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-4">Role & Department</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Role *
                   </label>
-          <select
+                  <select
                     name="role"
                     value={formData.role}
                     onChange={handleInputChange}
@@ -297,12 +298,14 @@ export default function AddUserPage() {
                     required
                   >
                     <option value="staff">Staff</option>
-                    <option value="transport_officer">Transport Officer</option>
-            <option value="accountant">Accountant</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-                
+                    <option value="transport-officer">Transport Officer</option>
+                    <option value="accountant">Accountant</option>
+                    <option value="admin">Admin</option>
+                    <option value="manager">Manager</option>
+                    <option value="agent">Agent</option>
+                  </select>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Department *
@@ -334,7 +337,7 @@ export default function AddUserPage() {
                   />
                   <span className="ml-2 text-sm text-gray-700">Email Notifications</span>
                 </label>
-                
+
                 <label className="flex items-center">
                   <input
                     type="checkbox"
@@ -358,10 +361,10 @@ export default function AddUserPage() {
                 <FaTimes className="mr-2" />
                 Cancel
               </button>
-              
-        <button
-          type="submit"
-          disabled={loading}
+
+              <button
+                type="submit"
+                disabled={loading}
                 className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
@@ -375,11 +378,11 @@ export default function AddUserPage() {
                     Create User
                   </>
                 )}
-        </button>
+              </button>
             </div>
-      </form>
+          </form>
         </div>
       </div>
     </div>
   );
-} 
+}

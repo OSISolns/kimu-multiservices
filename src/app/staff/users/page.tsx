@@ -150,11 +150,11 @@ export default function UsersPage() {
     if (!isLoading && !user) {
       console.log('UsersPage: No user, redirecting to login');
       router.push('/staff/login');
-    } else if (!isLoading && user && user.role !== 'admin') {
-      console.log('UsersPage: User is not admin, redirecting to dashboard', { role: user.role });
-      router.push('/staff/dashboard');
-    } else if (!isLoading && user && user.role === 'admin') {
-      console.log('UsersPage: User is admin, fetching users');
+    } else if (!isLoading && user && !['admin', 'manager'].includes(user.role)) {
+      console.log('UsersPage: User is not admin or manager, redirecting to dashboard', { role: user.role });
+      router.push('/staff/sales-dashboard');
+    } else if (!isLoading && user && ['admin', 'manager'].includes(user.role)) {
+      console.log('UsersPage: User is admin or manager, fetching users');
       fetchUsers();
     }
   }, [user, isLoading, router, fetchUsers]);
@@ -163,8 +163,8 @@ export default function UsersPage() {
   const filteredAndSortedUsers = users
     .filter(user => {
       const matchesSearch = user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           (user.fullName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-                           (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+        (user.fullName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase());
       const matchesRole = roleFilter === 'all' || user.role === roleFilter;
       const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
       return matchesSearch && matchesRole && matchesStatus;
@@ -172,11 +172,11 @@ export default function UsersPage() {
     .sort((a, b) => {
       const aRaw = a[sortBy as keyof User];
       const bRaw = b[sortBy as keyof User];
-      
+
       // Handle different data types properly
       let aValue: string | number = '';
       let bValue: string | number = '';
-      
+
       if (aRaw instanceof Date) {
         aValue = aRaw.getTime();
         bValue = (bRaw as Date)?.getTime() || 0;
@@ -190,7 +190,7 @@ export default function UsersPage() {
         aValue = String(aRaw || '');
         bValue = String(bRaw || '');
       }
-      
+
       if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
       if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
       return 0;
@@ -198,8 +198,8 @@ export default function UsersPage() {
 
   // Handle user selection
   const toggleUserSelection = (username: string) => {
-    setSelectedUsers(prev => 
-      prev.includes(username) 
+    setSelectedUsers(prev =>
+      prev.includes(username)
         ? prev.filter(u => u !== username)
         : [...prev, username]
     );
@@ -248,14 +248,14 @@ export default function UsersPage() {
 
   const bulkDelete = async () => {
     // Filter out admin and accountant users from selection
-    const usersToDelete = filteredAndSortedUsers.filter(user => 
-      selectedUsers.includes(user.username) && 
-      user.role !== 'admin' && 
+    const usersToDelete = filteredAndSortedUsers.filter(user =>
+      selectedUsers.includes(user.username) &&
+      user.role !== 'admin' &&
       user.role !== 'accountant'
     );
 
-    const protectedUsers = filteredAndSortedUsers.filter(user => 
-      selectedUsers.includes(user.username) && 
+    const protectedUsers = filteredAndSortedUsers.filter(user =>
+      selectedUsers.includes(user.username) &&
       (user.role === 'admin' || user.role === 'accountant')
     );
 
@@ -274,7 +274,7 @@ export default function UsersPage() {
         await Promise.all(usersToDelete.map(user =>
           fetch(`/api/users`, {
             method: 'DELETE',
-            headers: { 
+            headers: {
               'Content-Type': 'application/json',
               'x-username': user?.username || '',
             },
@@ -538,20 +538,20 @@ export default function UsersPage() {
       { header: 'Last Login', key: 'lastLogin', width: 20 },
       { header: 'Created At', key: 'createdAt', width: 20 },
     ];
-    
-         filteredAndSortedUsers.forEach(u => {
-       sheet.addRow({
-         username: u.username,
-         fullName: u.fullName || '-',
-         email: u.email || '-',
-         phone: u.phone || '-',
-         role: u.role,
-         status: u.status,
-         department: u.department || '-',
-         lastLogin: u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : '-',
-         createdAt: u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '-',
-       });
-     });
+
+    filteredAndSortedUsers.forEach(u => {
+      sheet.addRow({
+        username: u.username,
+        fullName: u.fullName || '-',
+        email: u.email || '-',
+        phone: u.phone || '-',
+        role: u.role,
+        status: u.status,
+        department: u.department || '-',
+        lastLogin: u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : '-',
+        createdAt: u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '-',
+      });
+    });
 
     // Style header
     sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
@@ -559,7 +559,7 @@ export default function UsersPage() {
 
     // Add summary statistics
     const lastRow = sheet.lastRow ? sheet.lastRow.number + 2 : filteredAndSortedUsers.length + 3;
-    
+
     // Role statistics
     const roleStats = filteredAndSortedUsers.reduce((acc, user) => {
       acc[user.role] = (acc[user.role] || 0) + 1;
@@ -570,12 +570,12 @@ export default function UsersPage() {
       sheet.getCell(`A${lastRow + index}`).value = `${role}: ${count}`;
     });
 
-         // Status statistics
-     const statusStats = filteredAndSortedUsers.reduce((acc, user) => {
-       const status = user.status;
-       acc[status] = (acc[status] || 0) + 1;
-       return acc;
-     }, {} as Record<string, number>);
+    // Status statistics
+    const statusStats = filteredAndSortedUsers.reduce((acc, user) => {
+      const status = user.status;
+      acc[status] = (acc[status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
 
     Object.entries(statusStats).forEach(([status, count], index) => {
       sheet.getCell(`D${lastRow + index}`).value = `${status}: ${count}`;
@@ -610,8 +610,8 @@ export default function UsersPage() {
     );
   }
 
-  // Show unauthorized message if user is not admin
-  if (!user || user.role !== 'admin') {
+  // Show unauthorized message if user is not admin or manager
+  if (!user || !['admin', 'manager'].includes(user.role)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -635,12 +635,14 @@ export default function UsersPage() {
               <button onClick={exportUsersToExcel} className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors">
                 Export to Excel
               </button>
-              <button 
-                onClick={() => setShowAddUserModal(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-              >
-                Add New User
-              </button>
+              {user.role === 'admin' && (
+                <button
+                  onClick={() => setShowAddUserModal(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                >
+                  Add New User
+                </button>
+              )}
             </div>
           </div>
 
@@ -664,15 +666,15 @@ export default function UsersPage() {
                   onChange={(e) => setRoleFilter(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                                     <option value="all">All Roles</option>
-                   <option value="admin">Administrator</option>
-                   <option value="manager">Manager</option>
-                   <option value="sales-representative">Sales Representative</option>
-                   <option value="accountant">Accountant</option>
-                   <option value="transport-officer">Transport Officer</option>
-                   <option value="driver">Driver</option>
-                   <option value="customer-service">Customer Service</option>
-                   <option value="operations">Operations</option>
+                  <option value="all">All Roles</option>
+                  <option value="admin">Administrator</option>
+                  <option value="manager">Manager</option>
+                  <option value="sales-representative">Sales Representative</option>
+                  <option value="accountant">Accountant</option>
+                  <option value="transport-officer">Transport Officer</option>
+                  <option value="driver">Driver</option>
+                  <option value="customer-service">Customer Service</option>
+                  <option value="operations">Operations</option>
                 </select>
               </div>
               <div>
@@ -715,7 +717,7 @@ export default function UsersPage() {
           </div>
 
           {/* Bulk Actions */}
-          {selectedUsers.length > 0 && (
+          {user.role === 'admin' && selectedUsers.length > 0 && (
             <div className="mb-4 p-4 bg-blue-50 rounded-lg">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-blue-800">
@@ -750,7 +752,7 @@ export default function UsersPage() {
               </div>
             </div>
           )}
-          
+
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <LoadingSpinner message="Loading users..." size="sm" />
@@ -813,7 +815,7 @@ export default function UsersPage() {
                         </div>
                       </td>
                       <td className="py-4 px-6 font-medium">
-                        <button 
+                        <button
                           onClick={() => viewUserDetails(user)}
                           className="text-blue-600 hover:underline"
                         >
@@ -837,34 +839,37 @@ export default function UsersPage() {
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex gap-2">
-                          <button 
+                          <button
                             onClick={() => viewUserDetails(user)}
                             className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                           >
                             View
                           </button>
-                                                     <button 
-                             onClick={() => handleEditUser(user)}
-                             className="text-green-600 hover:text-green-800 text-sm font-medium"
-                           >
-                             Edit
-                           </button>
-                                                     <button 
-                             onClick={() => handleDeleteUser(user)}
-                             disabled={user.role === 'admin' || user.role === 'accountant'}
-                             className={`text-sm font-medium ${
-                               user.role === 'admin' || user.role === 'accountant'
-                                 ? 'text-gray-400 cursor-not-allowed'
-                                 : 'text-red-600 hover:text-red-800'
-                             }`}
-                             title={
-                               user.role === 'admin' || user.role === 'accountant'
-                                 ? 'Cannot delete admin or accountant users'
-                                 : 'Delete user'
-                             }
-                           >
-                             Delete
-                           </button>
+                          {user.role === 'admin' && (
+                            <>
+                              <button
+                                onClick={() => handleEditUser(user)}
+                                className="text-green-600 hover:text-green-800 text-sm font-medium"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteUser(user)}
+                                disabled={user.role === 'admin' || user.role === 'accountant'}
+                                className={`text-sm font-medium ${user.role === 'admin' || user.role === 'accountant'
+                                  ? 'text-gray-400 cursor-not-allowed'
+                                  : 'text-red-600 hover:text-red-800'
+                                  }`}
+                                title={
+                                  user.role === 'admin' || user.role === 'accountant'
+                                    ? 'Cannot delete admin or accountant users'
+                                    : 'Delete user'
+                                }
+                              >
+                                Delete
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -873,7 +878,7 @@ export default function UsersPage() {
               </table>
             </div>
           )}
-          
+
           {filteredAndSortedUsers.length === 0 && !loading && !error && (
             <div className="text-center py-12">
               <p className="text-gray-500 text-lg">No users found.</p>
@@ -896,7 +901,7 @@ export default function UsersPage() {
                     ✕
                   </button>
                 </div>
-                
+
                 <div className="flex-1 overflow-y-auto space-y-6">
                   {/* Basic Information */}
                   <div className="grid grid-cols-2 gap-4">
@@ -926,9 +931,9 @@ export default function UsersPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-600 mb-1">Role</label>
-                        <div className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${getRoleBadgeStyle(selectedUser.role)}`}>
-                          {getRoleDisplayName(selectedUser.role)}
-                        </div>
+                      <div className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${getRoleBadgeStyle(selectedUser.role)}`}>
+                        {getRoleDisplayName(selectedUser.role)}
+                      </div>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-600 mb-1">Status</label>
@@ -1023,582 +1028,582 @@ export default function UsersPage() {
                     Close
                   </button>
                 </div>
-                             </div>
-             </div>
-           )}
+              </div>
+            </div>
+          )}
 
-           {/* Add User Modal */}
-           {showAddUserModal && (
-             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
-               <div className="bg-white rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
-                 <div className="flex justify-between items-center mb-6">
-                   <h3 className="text-xl font-semibold flex items-center gap-2">
-                     <span className="text-green-600">➕</span>
-                     Add New User
-                   </h3>
-                   <button
-                     onClick={() => setShowAddUserModal(false)}
-                     className="text-gray-500 hover:text-gray-700"
-                   >
-                     ✕
-                   </button>
-                 </div>
-                 
-                 <div className="flex-1 overflow-y-auto space-y-6">
-                   {/* Basic Information */}
-                   <div className="grid grid-cols-2 gap-4">
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">Username *</label>
-                       <input
-                         type="text"
-                         value={newUser.username}
-                         onChange={(e) => handleNewUserChange('username', e.target.value)}
-                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                         placeholder="Enter username"
-                         required
-                       />
-                     </div>
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                       <input
-                         type="text"
-                         value={newUser.fullName}
-                         onChange={(e) => handleNewUserChange('fullName', e.target.value)}
-                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                         placeholder="Enter full name"
-                       />
-                     </div>
-                   </div>
+          {/* Add User Modal */}
+          {showAddUserModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
+              <div className="bg-white rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-semibold flex items-center gap-2">
+                    <span className="text-green-600">➕</span>
+                    Add New User
+                  </h3>
+                  <button
+                    onClick={() => setShowAddUserModal(false)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ✕
+                  </button>
+                </div>
 
-                   {/* Contact Information */}
-                   <div className="grid grid-cols-2 gap-4">
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                       <input
-                         type="email"
-                         value={newUser.email}
-                         onChange={(e) => handleNewUserChange('email', e.target.value)}
-                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                         placeholder="Enter email address"
-                       />
-                     </div>
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                       <input
-                         type="tel"
-                         value={newUser.phone}
-                         onChange={(e) => handleNewUserChange('phone', e.target.value)}
-                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                         placeholder="Enter phone number"
-                       />
-                     </div>
-                   </div>
+                <div className="flex-1 overflow-y-auto space-y-6">
+                  {/* Basic Information */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Username *</label>
+                      <input
+                        type="text"
+                        value={newUser.username}
+                        onChange={(e) => handleNewUserChange('username', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter username"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                      <input
+                        type="text"
+                        value={newUser.fullName}
+                        onChange={(e) => handleNewUserChange('fullName', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter full name"
+                      />
+                    </div>
+                  </div>
 
-                   {/* Role and Department */}
-                   <div className="grid grid-cols-2 gap-4">
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">Role *</label>
-                       <select
-                         value={newUser.role}
-                         onChange={(e) => handleNewUserChange('role', e.target.value)}
-                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                         required
-                       >
-                         <option value="sales-representative">Sales Representative</option>
-                         <option value="admin">Administrator</option>
-                         <option value="manager">Manager</option>
-                         <option value="accountant">Accountant</option>
-                         <option value="transport-officer">Transport Officer</option>
-                         <option value="driver">Driver</option>
-                         <option value="customer-service">Customer Service</option>
-                         <option value="operations">Operations</option>
-                       </select>
-                     </div>
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                       <input
-                         type="text"
-                         value={newUser.department}
-                         onChange={(e) => handleNewUserChange('department', e.target.value)}
-                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                         placeholder="Enter department"
-                       />
-                     </div>
-                   </div>
+                  {/* Contact Information */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                      <input
+                        type="email"
+                        value={newUser.email}
+                        onChange={(e) => handleNewUserChange('email', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter email address"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                      <input
+                        type="tel"
+                        value={newUser.phone}
+                        onChange={(e) => handleNewUserChange('phone', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter phone number"
+                      />
+                    </div>
+                  </div>
 
-                   {/* Password Fields */}
-                   <div className="grid grid-cols-2 gap-4">
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
-                       <PasswordInput
-                         value={newUser.password}
-                         onChange={(value) => handleNewUserChange('password', value)}
-                         placeholder="Enter password"
-                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                         required
-                       />
-                     </div>
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password *</label>
-                       <PasswordInput
-                         value={newUser.confirmPassword}
-                         onChange={(value) => handleNewUserChange('confirmPassword', value)}
-                         placeholder="Confirm password"
-                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                         required
-                       />
-                     </div>
-                   </div>
+                  {/* Role and Department */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Role *</label>
+                      <select
+                        value={newUser.role}
+                        onChange={(e) => handleNewUserChange('role', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      >
+                        <option value="sales-representative">Sales Representative</option>
+                        <option value="admin">Administrator</option>
+                        <option value="manager">Manager</option>
+                        <option value="accountant">Accountant</option>
+                        <option value="transport-officer">Transport Officer</option>
+                        <option value="driver">Driver</option>
+                        <option value="customer-service">Customer Service</option>
+                        <option value="operations">Operations</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                      <input
+                        type="text"
+                        value={newUser.department}
+                        onChange={(e) => handleNewUserChange('department', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter department"
+                      />
+                    </div>
+                  </div>
 
-                   {/* User Permissions Preview */}
-                   <div className="bg-gray-50 p-4 rounded-lg">
-                     <h4 className="font-semibold text-gray-800 mb-3">Default Permissions</h4>
-                     <div className="text-sm text-gray-600">
-                       <p>This user will have access to:</p>
-                       <ul className="list-disc list-inside mt-2 space-y-1">
-                         {newUser.role === 'admin' && (
-                           <>
-                             <li>All system features and user management</li>
-                             <li>Complete administrative control</li>
-                             <li>Access to all reports and analytics</li>
-                           </>
-                         )}
-                         {newUser.role === 'manager' && (
-                           <>
-                             <li>Team management and oversight</li>
-                             <li>Performance monitoring and reporting</li>
-                             <li>Strategic planning and decision making</li>
-                             <li>Access to management dashboards</li>
-                           </>
-                         )}
-                         {(newUser.role === 'sales-representative' || newUser.role === 'agent') && (
-                           <>
-                             <li>Sales dashboard access</li>
-                             <li>View and manage bookings</li>
-                             <li>Access to customer information</li>
-                             <li>Sales reporting and analytics</li>
-                           </>
-                         )}
-                         {newUser.role === 'accountant' && (
-                           <>
-                             <li>Financial dashboard access</li>
-                             <li>View and manage transactions</li>
-                             <li>Access to financial reports</li>
-                           </>
-                         )}
-                         {newUser.role === 'transport-officer' && (
-                           <>
-                             <li>Transport management features</li>
-                             <li>Vehicle and driver management</li>
-                             <li>Route planning and scheduling</li>
-                           </>
-                         )}
-                         {newUser.role === 'driver' && (
-                           <>
-                             <li>Vehicle assignment and routes</li>
-                             <li>Trip logging and reporting</li>
-                             <li>Customer service during transport</li>
-                           </>
-                         )}
-                         {newUser.role === 'customer-service' && (
-                           <>
-                             <li>Customer support and inquiries</li>
-                             <li>Booking assistance and modifications</li>
-                             <li>Customer feedback management</li>
-                           </>
-                         )}
-                         {newUser.role === 'operations' && (
-                           <>
-                             <li>Operational planning and coordination</li>
-                             <li>Resource allocation and scheduling</li>
-                             <li>Process optimization and monitoring</li>
-                           </>
-                         )}
-                       </ul>
-                     </div>
-                   </div>
-                 </div>
+                  {/* Password Fields */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+                      <PasswordInput
+                        value={newUser.password}
+                        onChange={(value) => handleNewUserChange('password', value)}
+                        placeholder="Enter password"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password *</label>
+                      <PasswordInput
+                        value={newUser.confirmPassword}
+                        onChange={(value) => handleNewUserChange('confirmPassword', value)}
+                        placeholder="Confirm password"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      />
+                    </div>
+                  </div>
 
-                 {/* Actions */}
-                 <div className="flex gap-3 pt-4">
-                   <button
-                     onClick={handleAddUser}
-                     className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-                   >
-                     Create User
-                   </button>
-                   <button
-                     onClick={() => {
-                       setNewUser({
-                         username: '',
-                         fullName: '',
-                         email: '',
-                         phone: '',
-                         role: 'sales-representative',
-                         department: '',
-                         password: '',
-                         confirmPassword: ''
-                       });
-                       setShowAddUserModal(false);
-                     }}
-                     className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
-                   >
-                     Cancel
-                   </button>
-                 </div>
-               </div>
-             </div>
-           )}
+                  {/* User Permissions Preview */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-gray-800 mb-3">Default Permissions</h4>
+                    <div className="text-sm text-gray-600">
+                      <p>This user will have access to:</p>
+                      <ul className="list-disc list-inside mt-2 space-y-1">
+                        {newUser.role === 'admin' && (
+                          <>
+                            <li>All system features and user management</li>
+                            <li>Complete administrative control</li>
+                            <li>Access to all reports and analytics</li>
+                          </>
+                        )}
+                        {newUser.role === 'manager' && (
+                          <>
+                            <li>Team management and oversight</li>
+                            <li>Performance monitoring and reporting</li>
+                            <li>Strategic planning and decision making</li>
+                            <li>Access to management dashboards</li>
+                          </>
+                        )}
+                        {(newUser.role === 'sales-representative' || newUser.role === 'agent') && (
+                          <>
+                            <li>Sales dashboard access</li>
+                            <li>View and manage bookings</li>
+                            <li>Access to customer information</li>
+                            <li>Sales reporting and analytics</li>
+                          </>
+                        )}
+                        {newUser.role === 'accountant' && (
+                          <>
+                            <li>Financial dashboard access</li>
+                            <li>View and manage transactions</li>
+                            <li>Access to financial reports</li>
+                          </>
+                        )}
+                        {newUser.role === 'transport-officer' && (
+                          <>
+                            <li>Transport management features</li>
+                            <li>Vehicle and driver management</li>
+                            <li>Route planning and scheduling</li>
+                          </>
+                        )}
+                        {newUser.role === 'driver' && (
+                          <>
+                            <li>Vehicle assignment and routes</li>
+                            <li>Trip logging and reporting</li>
+                            <li>Customer service during transport</li>
+                          </>
+                        )}
+                        {newUser.role === 'customer-service' && (
+                          <>
+                            <li>Customer support and inquiries</li>
+                            <li>Booking assistance and modifications</li>
+                            <li>Customer feedback management</li>
+                          </>
+                        )}
+                        {newUser.role === 'operations' && (
+                          <>
+                            <li>Operational planning and coordination</li>
+                            <li>Resource allocation and scheduling</li>
+                            <li>Process optimization and monitoring</li>
+                          </>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
 
-           {/* Edit User Modal */}
-           {showEditUserModal && (
-             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
-               <div className="bg-white rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
-                 <div className="flex justify-between items-center mb-6">
-                   <h3 className="text-xl font-semibold flex items-center gap-2">
-                     <span className="text-blue-600">✏️</span>
-                     Edit User
-                   </h3>
-                   <button
-                     onClick={() => setShowEditUserModal(false)}
-                     className="text-gray-500 hover:text-gray-700"
-                   >
-                     ✕
-                   </button>
-                 </div>
-                 
-                 <div className="flex-1 overflow-y-auto space-y-6">
-                   {/* Basic Information */}
-                   <div className="grid grid-cols-2 gap-4">
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                       <input
-                         type="text"
-                         value={editingUser.username}
-                         disabled
-                         className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
-                         placeholder="Username cannot be changed"
-                       />
-                     </div>
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                       <input
-                         type="text"
-                         value={editingUser.fullName}
-                         onChange={(e) => handleEditUserChange('fullName', e.target.value)}
-                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                         placeholder="Enter full name"
-                       />
-                     </div>
-                   </div>
+                {/* Actions */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={handleAddUser}
+                    className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Create User
+                  </button>
+                  <button
+                    onClick={() => {
+                      setNewUser({
+                        username: '',
+                        fullName: '',
+                        email: '',
+                        phone: '',
+                        role: 'sales-representative',
+                        department: '',
+                        password: '',
+                        confirmPassword: ''
+                      });
+                      setShowAddUserModal(false);
+                    }}
+                    className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
-                   {/* Contact Information */}
-                   <div className="grid grid-cols-2 gap-4">
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                       <input
-                         type="email"
-                         value={editingUser.email}
-                         onChange={(e) => handleEditUserChange('email', e.target.value)}
-                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                         placeholder="Enter email address"
-                       />
-                     </div>
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                       <input
-                         type="tel"
-                         value={editingUser.phone}
-                         onChange={(e) => handleEditUserChange('phone', e.target.value)}
-                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                         placeholder="Enter phone number"
-                       />
-                     </div>
-                   </div>
+          {/* Edit User Modal */}
+          {showEditUserModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
+              <div className="bg-white rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-semibold flex items-center gap-2">
+                    <span className="text-blue-600">✏️</span>
+                    Edit User
+                  </h3>
+                  <button
+                    onClick={() => setShowEditUserModal(false)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ✕
+                  </button>
+                </div>
 
-                   {/* Role, Department, and Status */}
-                   <div className="grid grid-cols-3 gap-4">
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                       <select
-                         value={editingUser.role}
-                         onChange={(e) => handleEditUserChange('role', e.target.value)}
-                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       >
-                         <option value="sales-representative">Sales Representative</option>
-                         <option value="admin">Administrator</option>
-                         <option value="manager">Manager</option>
-                         <option value="accountant">Accountant</option>
-                         <option value="transport-officer">Transport Officer</option>
-                         <option value="driver">Driver</option>
-                         <option value="customer-service">Customer Service</option>
-                         <option value="operations">Operations</option>
-                       </select>
-                     </div>
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                       <input
-                         type="text"
-                         value={editingUser.department}
-                         onChange={(e) => handleEditUserChange('department', e.target.value)}
-                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                         placeholder="Enter department"
-                       />
-                     </div>
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                       <select
-                         value={editingUser.status}
-                         onChange={(e) => handleEditUserChange('status', e.target.value)}
-                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       >
-                         <option value="active">Active</option>
-                         <option value="inactive">Inactive</option>
-                         <option value="suspended">Suspended</option>
-                       </select>
-                     </div>
-                   </div>
+                <div className="flex-1 overflow-y-auto space-y-6">
+                  {/* Basic Information */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                      <input
+                        type="text"
+                        value={editingUser.username}
+                        disabled
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
+                        placeholder="Username cannot be changed"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                      <input
+                        type="text"
+                        value={editingUser.fullName}
+                        onChange={(e) => handleEditUserChange('fullName', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter full name"
+                      />
+                    </div>
+                  </div>
 
-                   {/* Profile Picture Section */}
-                   <div className="border-t pt-6">
-                     <h4 className="font-semibold text-gray-800 mb-3">Profile Picture</h4>
-                     <ProfilePictureUpload
-                       userId={selectedUser?.id || 0}
-                       currentProfilePicture={selectedUser?.profilePicture}
-                       adminUsername={user?.username || ''}
-                       onUploadSuccess={(profilePicture) => {
-                         // Update the selected user's profile picture
-                         if (selectedUser) {
-                           setSelectedUser({...selectedUser, profilePicture});
-                           // Also update in the users list
-                           setUsers(users.map(u => 
-                             u.id === selectedUser.id 
-                               ? {...u, profilePicture} 
-                               : u
-                           ));
-                         }
-                       }}
-                       onRemoveSuccess={() => {
-                         // Remove profile picture from selected user
-                         if (selectedUser) {
-                           setSelectedUser({...selectedUser, profilePicture: null});
-                           // Also update in the users list
-                           setUsers(users.map(u => 
-                             u.id === selectedUser.id 
-                               ? {...u, profilePicture: null} 
-                               : u
-                           ));
-                         }
-                       }}
-                       className="mb-4"
-                     />
-                   </div>
+                  {/* Contact Information */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                      <input
+                        type="email"
+                        value={editingUser.email}
+                        onChange={(e) => handleEditUserChange('email', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter email address"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                      <input
+                        type="tel"
+                        value={editingUser.phone}
+                        onChange={(e) => handleEditUserChange('phone', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter phone number"
+                      />
+                    </div>
+                  </div>
 
-                   {/* Current User Information */}
-                   <div className="bg-gray-50 p-4 rounded-lg">
-                     <h4 className="font-semibold text-gray-800 mb-3">Current Information</h4>
-                     <div className="grid grid-cols-2 gap-4 text-sm">
-                       <div>
-                         <span className="text-gray-600">Username:</span>
-                         <span className="ml-2 font-medium">{editingUser.username}</span>
-                       </div>
-                       <div>
-                         <span className="text-gray-600">Role:</span>
-                         <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${getRoleBadgeStyle(editingUser.role)}`}>
-                           {getRoleDisplayName(editingUser.role)}
-                         </span>
-                       </div>
-                       <div>
-                         <span className="text-gray-600">Status:</span>
-                         <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${getStatusBadgeStyle(editingUser.status)}`}>
-                           {editingUser.status.charAt(0).toUpperCase() + editingUser.status.slice(1)}
-                         </span>
-                       </div>
-                       <div>
-                         <span className="text-gray-600">Department:</span>
-                         <span className="ml-2 font-medium">{editingUser.department || 'Not assigned'}</span>
-                       </div>
-                     </div>
-                   </div>
+                  {/* Role, Department, and Status */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                      <select
+                        value={editingUser.role}
+                        onChange={(e) => handleEditUserChange('role', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="sales-representative">Sales Representative</option>
+                        <option value="admin">Administrator</option>
+                        <option value="manager">Manager</option>
+                        <option value="accountant">Accountant</option>
+                        <option value="transport-officer">Transport Officer</option>
+                        <option value="driver">Driver</option>
+                        <option value="customer-service">Customer Service</option>
+                        <option value="operations">Operations</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                      <input
+                        type="text"
+                        value={editingUser.department}
+                        onChange={(e) => handleEditUserChange('department', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter department"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                      <select
+                        value={editingUser.status}
+                        onChange={(e) => handleEditUserChange('status', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="suspended">Suspended</option>
+                      </select>
+                    </div>
+                  </div>
 
-                   {/* Role Permissions Preview */}
-                   <div className="bg-blue-50 p-4 rounded-lg">
-                     <h4 className="font-semibold text-gray-800 mb-3">Role Permissions</h4>
-                     <div className="text-sm text-gray-600">
-                       <p>This user will have access to:</p>
-                       <ul className="list-disc list-inside mt-2 space-y-1">
-                         {editingUser.role === 'admin' && (
-                           <>
-                             <li>All system features and user management</li>
-                             <li>Complete administrative control</li>
-                             <li>Access to all reports and analytics</li>
-                           </>
-                         )}
-                         {editingUser.role === 'manager' && (
-                           <>
-                             <li>Team management and oversight</li>
-                             <li>Performance monitoring and reporting</li>
-                             <li>Strategic planning and decision making</li>
-                             <li>Access to management dashboards</li>
-                           </>
-                         )}
-                         {(editingUser.role === 'sales-representative' || editingUser.role === 'agent') && (
-                           <>
-                             <li>Sales dashboard access</li>
-                             <li>View and manage bookings</li>
-                             <li>Access to customer information</li>
-                             <li>Sales reporting and analytics</li>
-                           </>
-                         )}
-                         {editingUser.role === 'accountant' && (
-                           <>
-                             <li>Financial dashboard access</li>
-                             <li>View and manage transactions</li>
-                             <li>Access to financial reports</li>
-                           </>
-                         )}
-                         {editingUser.role === 'transport-officer' && (
-                           <>
-                             <li>Transport management features</li>
-                             <li>Vehicle and driver management</li>
-                             <li>Route planning and scheduling</li>
-                           </>
-                         )}
-                         {editingUser.role === 'driver' && (
-                           <>
-                             <li>Vehicle assignment and routes</li>
-                             <li>Trip logging and reporting</li>
-                             <li>Customer service during transport</li>
-                           </>
-                         )}
-                         {editingUser.role === 'customer-service' && (
-                           <>
-                             <li>Customer support and inquiries</li>
-                             <li>Booking assistance and modifications</li>
-                             <li>Customer feedback management</li>
-                           </>
-                         )}
-                         {editingUser.role === 'operations' && (
-                           <>
-                             <li>Operational planning and coordination</li>
-                             <li>Resource allocation and scheduling</li>
-                             <li>Process optimization and monitoring</li>
-                           </>
-                         )}
-                       </ul>
-                     </div>
-                   </div>
-                 </div>
+                  {/* Profile Picture Section */}
+                  <div className="border-t pt-6">
+                    <h4 className="font-semibold text-gray-800 mb-3">Profile Picture</h4>
+                    <ProfilePictureUpload
+                      userId={selectedUser?.id || 0}
+                      currentProfilePicture={selectedUser?.profilePicture}
+                      adminUsername={user?.username || ''}
+                      onUploadSuccess={(profilePicture) => {
+                        // Update the selected user's profile picture
+                        if (selectedUser) {
+                          setSelectedUser({ ...selectedUser, profilePicture });
+                          // Also update in the users list
+                          setUsers(users.map(u =>
+                            u.id === selectedUser.id
+                              ? { ...u, profilePicture }
+                              : u
+                          ));
+                        }
+                      }}
+                      onRemoveSuccess={() => {
+                        // Remove profile picture from selected user
+                        if (selectedUser) {
+                          setSelectedUser({ ...selectedUser, profilePicture: null });
+                          // Also update in the users list
+                          setUsers(users.map(u =>
+                            u.id === selectedUser.id
+                              ? { ...u, profilePicture: null }
+                              : u
+                          ));
+                        }
+                      }}
+                      className="mb-4"
+                    />
+                  </div>
 
-                 {/* Actions */}
-                 <div className="flex gap-3 pt-4">
-                   <button
-                     onClick={handleUpdateUser}
-                     className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                   >
-                     Update User
-                   </button>
-                   <button
-                     onClick={() => setShowEditUserModal(false)}
-                     className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
-                   >
-                     Cancel
-                   </button>
-                 </div>
-               </div>
-             </div>
-           )}
+                  {/* Current User Information */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-gray-800 mb-3">Current Information</h4>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-600">Username:</span>
+                        <span className="ml-2 font-medium">{editingUser.username}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Role:</span>
+                        <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${getRoleBadgeStyle(editingUser.role)}`}>
+                          {getRoleDisplayName(editingUser.role)}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Status:</span>
+                        <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${getStatusBadgeStyle(editingUser.status)}`}>
+                          {editingUser.status.charAt(0).toUpperCase() + editingUser.status.slice(1)}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Department:</span>
+                        <span className="ml-2 font-medium">{editingUser.department || 'Not assigned'}</span>
+                      </div>
+                    </div>
+                  </div>
 
-           {/* Password Reset Modal */}
-           {showPasswordResetModal && (
-             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
-               <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
-                 <div className="flex justify-between items-center mb-6">
-                   <h3 className="text-xl font-semibold flex items-center gap-2">
-                     <span className="text-yellow-600">🔐</span>
-                     Reset Password
-                   </h3>
-                   <button
-                     onClick={() => {
-                       setShowPasswordResetModal(false);
-                       setNewPassword('');
-                       setConfirmPassword('');
-                       setPasswordResetUser({ username: '', fullName: '' });
-                     }}
-                     className="text-gray-500 hover:text-gray-700"
-                   >
-                     ✕
-                   </button>
-                 </div>
-                 
-                 <div className="space-y-4">
-                   <div className="bg-blue-50 p-4 rounded-lg">
-                     <p className="text-sm text-gray-700">
-                       <strong>User:</strong> {passwordResetUser.fullName || passwordResetUser.username}
-                     </p>
-                     <p className="text-sm text-gray-600 mt-1">
-                       <strong>Username:</strong> {passwordResetUser.username}
-                     </p>
-                   </div>
+                  {/* Role Permissions Preview */}
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-gray-800 mb-3">Role Permissions</h4>
+                    <div className="text-sm text-gray-600">
+                      <p>This user will have access to:</p>
+                      <ul className="list-disc list-inside mt-2 space-y-1">
+                        {editingUser.role === 'admin' && (
+                          <>
+                            <li>All system features and user management</li>
+                            <li>Complete administrative control</li>
+                            <li>Access to all reports and analytics</li>
+                          </>
+                        )}
+                        {editingUser.role === 'manager' && (
+                          <>
+                            <li>Team management and oversight</li>
+                            <li>Performance monitoring and reporting</li>
+                            <li>Strategic planning and decision making</li>
+                            <li>Access to management dashboards</li>
+                          </>
+                        )}
+                        {(editingUser.role === 'sales-representative' || editingUser.role === 'agent') && (
+                          <>
+                            <li>Sales dashboard access</li>
+                            <li>View and manage bookings</li>
+                            <li>Access to customer information</li>
+                            <li>Sales reporting and analytics</li>
+                          </>
+                        )}
+                        {editingUser.role === 'accountant' && (
+                          <>
+                            <li>Financial dashboard access</li>
+                            <li>View and manage transactions</li>
+                            <li>Access to financial reports</li>
+                          </>
+                        )}
+                        {editingUser.role === 'transport-officer' && (
+                          <>
+                            <li>Transport management features</li>
+                            <li>Vehicle and driver management</li>
+                            <li>Route planning and scheduling</li>
+                          </>
+                        )}
+                        {editingUser.role === 'driver' && (
+                          <>
+                            <li>Vehicle assignment and routes</li>
+                            <li>Trip logging and reporting</li>
+                            <li>Customer service during transport</li>
+                          </>
+                        )}
+                        {editingUser.role === 'customer-service' && (
+                          <>
+                            <li>Customer support and inquiries</li>
+                            <li>Booking assistance and modifications</li>
+                            <li>Customer feedback management</li>
+                          </>
+                        )}
+                        {editingUser.role === 'operations' && (
+                          <>
+                            <li>Operational planning and coordination</li>
+                            <li>Resource allocation and scheduling</li>
+                            <li>Process optimization and monitoring</li>
+                          </>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
 
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                     <input
-                       type="password"
-                       value={newPassword}
-                       onChange={(e) => setNewPassword(e.target.value)}
-                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       placeholder="Enter new password"
-                       minLength={6}
-                     />
-                   </div>
+                {/* Actions */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={handleUpdateUser}
+                    className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Update User
+                  </button>
+                  <button
+                    onClick={() => setShowEditUserModal(false)}
+                    className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-                     <input
-                       type="password"
-                       value={confirmPassword}
-                       onChange={(e) => setConfirmPassword(e.target.value)}
-                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       placeholder="Confirm new password"
-                       minLength={6}
-                     />
-                   </div>
+          {/* Password Reset Modal */}
+          {showPasswordResetModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
+              <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-semibold flex items-center gap-2">
+                    <span className="text-yellow-600">🔐</span>
+                    Reset Password
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setShowPasswordResetModal(false);
+                      setNewPassword('');
+                      setConfirmPassword('');
+                      setPasswordResetUser({ username: '', fullName: '' });
+                    }}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ✕
+                  </button>
+                </div>
 
-                   <div className="bg-yellow-50 p-3 rounded-lg">
-                     <p className="text-sm text-yellow-800">
-                       <strong>⚠️ Warning:</strong> This action will immediately change the user&apos;s password. 
-                       The user will need to use this new password to log in.
-                     </p>
-                   </div>
-                 </div>
+                <div className="space-y-4">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <p className="text-sm text-gray-700">
+                      <strong>User:</strong> {passwordResetUser.fullName || passwordResetUser.username}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      <strong>Username:</strong> {passwordResetUser.username}
+                    </p>
+                  </div>
 
-                 {/* Actions */}
-                 <div className="flex gap-3 pt-4">
-                   <button
-                     onClick={handlePasswordReset}
-                     disabled={passwordResetLoading || !newPassword || !confirmPassword}
-                     className="flex-1 bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-                   >
-                     {passwordResetLoading ? 'Resetting...' : 'Reset Password'}
-                   </button>
-                   <button
-                     onClick={() => {
-                       setShowPasswordResetModal(false);
-                       setNewPassword('');
-                       setConfirmPassword('');
-                       setPasswordResetUser({ username: '', fullName: '' });
-                     }}
-                     className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
-                   >
-                     Cancel
-                   </button>
-                 </div>
-               </div>
-             </div>
-           )}
-         </div>
-       </div>
-     </div>
-   );
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter new password"
+                      minLength={6}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Confirm new password"
+                      minLength={6}
+                    />
+                  </div>
+
+                  <div className="bg-yellow-50 p-3 rounded-lg">
+                    <p className="text-sm text-yellow-800">
+                      <strong>⚠️ Warning:</strong> This action will immediately change the user&apos;s password.
+                      The user will need to use this new password to log in.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={handlePasswordReset}
+                    disabled={passwordResetLoading || !newPassword || !confirmPassword}
+                    className="flex-1 bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  >
+                    {passwordResetLoading ? 'Resetting...' : 'Reset Password'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowPasswordResetModal(false);
+                      setNewPassword('');
+                      setConfirmPassword('');
+                      setPasswordResetUser({ username: '', fullName: '' });
+                    }}
+                    className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 } 

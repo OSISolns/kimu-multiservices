@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { 
   FaSearch, 
@@ -18,7 +18,13 @@ import {
   FaImages,
   FaPhone,
   FaShieldAlt,
-  FaCertificate
+  FaCertificate,
+  FaTh,
+  FaList,
+  FaBolt,
+  FaLeaf,
+  FaChartLine,
+  FaCalculator
 } from 'react-icons/fa';
 
 // R2 Storage base URL
@@ -128,19 +134,46 @@ const FALLBACK_VEHICLES: Vehicle[] = [
   }
 ];
 
+const ENABLE_LIVE_INVENTORY = false;
+
+const FALLBACK_PRICE_RANGE = (() => {
+  const prices = FALLBACK_VEHICLES.map(v => v.price);
+  return {
+    min: Math.min(...prices),
+    max: Math.max(...prices),
+  };
+})();
+
 const normaliseVehicle = (vehicle: any): Vehicle => {
-  const basePrice = Number(vehicle.price ?? 0);
+  // Handle price - database stores as String, convert to number
+  const priceStr = vehicle.price?.toString() || '0';
+  const basePrice = Number(priceStr.replace(/[^\d.]/g, '')) || 0;
+  
   const primaryImage = vehicle.image ?? '/vehicles/placeholder.png';
   const galleryImages = Array.isArray(vehicle.images) && vehicle.images.length > 0
     ? vehicle.images
     : [primaryImage];
 
-  const features = Array.isArray(vehicle.features) && vehicle.features.length
-    ? vehicle.features
-    : ['Well Maintained'];
+  // Build features array from available data
+  const features: string[] = [];
+  if (Array.isArray(vehicle.features) && vehicle.features.length > 0) {
+    features.push(...vehicle.features);
+  } else {
+    // Build features from vehicle properties
+    if (vehicle.transmission) features.push(vehicle.transmission);
+    if (vehicle.fuel || vehicle.fuelType) {
+      const fuel = (vehicle.fuel || vehicle.fuelType || '').toLowerCase();
+      if (fuel.includes('electric')) features.push('Electric');
+      else if (fuel.includes('hybrid')) features.push('Hybrid');
+      else features.push('Fuel Efficient');
+    }
+    if (vehicle.mileage && Number(vehicle.mileage) < 50000) features.push('Low Mileage');
+    if (!features.length) features.push('Well Maintained');
+  }
 
   const fallbackId = vehicle.id ?? vehicle.name ?? `vehicle-${Date.now()}`;
 
+  // Map database fields to component interface
   return {
     id: String(fallbackId),
     name: vehicle.name ?? 'Unknown Vehicle',
@@ -152,14 +185,14 @@ const normaliseVehicle = (vehicle: any): Vehicle => {
     features,
     description: vehicle.description ?? 'Contact us for more details.',
     transmission: vehicle.transmission,
-    fuelType: vehicle.fuelType,
+    fuelType: vehicle.fuelType || vehicle.fuel, // Map database 'fuel' to 'fuelType'
     drive: vehicle.drive,
-    seats: vehicle.seats ? Number(vehicle.seats) : undefined,
+    seats: vehicle.seats ? Number(vehicle.seats) : (vehicle.capacity ? Number(vehicle.capacity) : undefined),
     color: vehicle.color,
-    hasWarranty: vehicle.hasWarranty ?? false,
-    inspected: vehicle.inspected ?? false,
-    verifiedDocs: vehicle.verifiedDocs ?? false,
-    fastDelivery: vehicle.fastDelivery ?? false,
+    hasWarranty: vehicle.hasWarranty ?? true, // Default to true for sales vehicles
+    inspected: vehicle.inspected ?? true,
+    verifiedDocs: vehicle.verifiedDocs ?? true,
+    fastDelivery: vehicle.fastDelivery ?? true,
   };
 };
 
@@ -378,21 +411,51 @@ function VehicleDetailModal({
 }
 
 export default function Auto24Integration() {
-  const [vehicleInventory, setVehicleInventory] = useState<Vehicle[]>(FALLBACK_VEHICLES);
+  const [vehicleInventory, setVehicleInventoryState] = useState<Vehicle[]>(FALLBACK_VEHICLES);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  // Wrapper to prevent empty arrays from ever being set
+  const setVehicleInventory = useCallback((value: Vehicle[] | ((prev: Vehicle[]) => Vehicle[])) => {
+    setVehicleInventoryState(prev => {
+      const newValue = typeof value === 'function' ? value(prev) : value;
+      // Never allow empty array - always fallback to FALLBACK_VEHICLES
+      if (newValue.length === 0 && prev.length > 0) {
+        console.warn('Attempted to set empty vehicle inventory! Preserving existing vehicles.');
+        return prev;
+      }
+      if (newValue.length === 0) {
+        console.warn('Setting empty vehicle inventory! Using fallback vehicles.');
+        return FALLBACK_VEHICLES;
+      }
+      return newValue;
+    });
+  }, []);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedYear, setSelectedYear] = useState('');
-  const [priceRange, setPriceRange] = useState({ min: 0, max: 50000000 });
+  const [priceRange, setPriceRange] = useState(FALLBACK_PRICE_RANGE);
   const [sortBy, setSortBy] = useState<'price' | 'year' | 'name'>('price');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [calcPrice, setCalcPrice] = useState(25000000);
   const itemsPerPage = 9;
 
+  const hasLoadedRef = useRef(false);
+  const isMountedRef = useRef(true);
+
   useEffect(() => {
+    if (!ENABLE_LIVE_INVENTORY) {
+      setVehicleInventoryState(FALLBACK_VEHICLES);
+      setIsLoading(false);
+      setLoadError(null);
+      return;
+    }
+
+    isMountedRef.current = true;
     let active = true;
 
     const fetchVehicles = async () => {
@@ -400,20 +463,57 @@ export default function Auto24Integration() {
       setLoadError(null);
       try {
         const response = await fetch('/api/vehicles', { cache: 'no-store' });
-        if (!response.ok) throw new Error('Failed to load vehicles');
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || errorData.details || `HTTP ${response.status}: Failed to load vehicles`);
+        }
         const payload = await response.json();
         if (!Array.isArray(payload)) throw new Error('Unexpected vehicle payload');
         const normalised = payload.map(normaliseVehicle);
-        if (active && normalised.length) {
-          setVehicleInventory(normalised);
-        }
+        
+        if (!active || !isMountedRef.current) return;
+        
+        // Always use functional update to check previous state
+        setVehicleInventory(prev => {
+          // If we got vehicles from API, use them
+          if (normalised.length > 0) {
+            hasLoadedRef.current = true;
+            return normalised;
+          }
+          
+          // If API returned empty:
+          // - If we haven't loaded before, use fallback
+          // - If we already have vehicles, keep them (don't overwrite with empty)
+          if (!hasLoadedRef.current) {
+            setLoadError('No vehicles available in inventory. Showing sample vehicles.');
+            hasLoadedRef.current = true;
+            return FALLBACK_VEHICLES;
+          } else {
+            // Keep existing vehicles, don't overwrite with empty
+            setLoadError('Inventory refresh returned no vehicles. Keeping current list.');
+            return prev.length > 0 ? prev : FALLBACK_VEHICLES;
+          }
+        });
       } catch (error) {
         console.error('Vehicle load failed', error);
-        if (active) {
-          setLoadError('Live inventory is unavailable. Showing sample vehicles.');
-        }
+        if (!active || !isMountedRef.current) return;
+        
+        // Always use functional update to preserve existing vehicles
+        setVehicleInventory(prev => {
+          if (prev.length === 0) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            setLoadError(`Live inventory is unavailable (${errorMessage}). Showing sample vehicles.`);
+            return FALLBACK_VEHICLES;
+          }
+          // Keep existing vehicles, just show error
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          setLoadError(`Failed to refresh inventory (${errorMessage}). Showing cached vehicles.`);
+          return prev;
+        });
       } finally {
-        if (active) setIsLoading(false);
+        if (active && isMountedRef.current) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -421,12 +521,54 @@ export default function Auto24Integration() {
 
     return () => {
       active = false;
+      isMountedRef.current = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Critical safety net: If inventory becomes empty for any reason, restore fallback
+  useEffect(() => {
+    if (vehicleInventory.length === 0) {
+      console.warn('Vehicle inventory became empty! Restoring fallback vehicles.');
+      setVehicleInventoryState(FALLBACK_VEHICLES);
+    }
+  }, [vehicleInventory.length]);
+
+  // Ensure we always have vehicles (safeguard against empty inventory)
+  // This is a critical safety net - never allow empty inventory to be used
+  const safeVehicleInventory = useMemo(() => {
+    if (vehicleInventory.length === 0) {
+      console.warn('Vehicle inventory is empty, using fallback vehicles');
+      return FALLBACK_VEHICLES;
+    }
+    return vehicleInventory;
+  }, [vehicleInventory]);
+
+  const priceBounds = useMemo(() => {
+    const prices = safeVehicleInventory.map(v => v.price);
+    if (!prices.length) {
+      return FALLBACK_PRICE_RANGE;
+    }
+    return {
+      min: Math.min(...prices),
+      max: Math.max(...prices),
+    };
+  }, [safeVehicleInventory]);
+
+  useEffect(() => {
+    setPriceRange(prev => {
+      const nextMin = Math.min(Math.max(prev.min, priceBounds.min), priceBounds.max);
+      const nextMax = Math.max(Math.min(prev.max, priceBounds.max), priceBounds.min);
+      if (nextMin === prev.min && nextMax === prev.max) {
+        return prev;
+      }
+      return { min: nextMin, max: nextMax };
+    });
+  }, [priceBounds.min, priceBounds.max]);
 
   // Filter and sort vehicles
   const filteredVehicles = useMemo(() => {
-    let filtered = [...vehicleInventory];
+    let filtered = [...safeVehicleInventory];
 
     // Search filter
     if (searchTerm) {
@@ -468,7 +610,7 @@ export default function Auto24Integration() {
     });
 
     return filtered;
-  }, [searchTerm, selectedYear, priceRange, sortBy, sortOrder]);
+  }, [safeVehicleInventory, searchTerm, selectedYear, priceRange, sortBy, sortOrder]);
 
   // Pagination
   const totalPages = Math.ceil(filteredVehicles.length / itemsPerPage);
@@ -478,22 +620,50 @@ export default function Auto24Integration() {
 
   // Get unique years for filter
   const availableYears = useMemo(() => {
-    const years = vehicleInventory.map(v => v.year);
+    const years = safeVehicleInventory.map(v => v.year);
     return Array.from(new Set(years)).sort((a, b) => b - a);
-  }, []);
+  }, [safeVehicleInventory]);
 
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedYear, priceRange, sortBy, sortOrder]);
 
+  // Calculate financing values
+  const calcDeposit = useMemo(() => Math.round(calcPrice * 0.2), [calcPrice]);
+  const calcLoan = useMemo(() => Math.round(calcPrice - calcDeposit), [calcPrice, calcDeposit]);
+  const calcMonthly = useMemo(() => Math.round(calcLoan / 36), [calcLoan]); // 36 months estimate
+
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedYear('');
-    setPriceRange({ min: 0, max: 50000000 });
+    setPriceRange({
+      min: priceBounds.min,
+      max: priceBounds.max,
+    });
     setSortBy('price');
     setSortOrder('asc');
   };
+
+  // Calculate statistics
+  const stats = useMemo(() => {
+    const vehicles = safeVehicleInventory;
+    const prices = vehicles.map(v => v.price);
+    const avgPrice = prices.length > 0 ? prices.reduce((a, b) => a + b, 0) / prices.length : 0;
+    const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+    const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
+    const electricCount = vehicles.filter(v => v.fuelType?.toLowerCase().includes('electric')).length;
+    const hybridCount = vehicles.filter(v => v.fuelType?.toLowerCase().includes('hybrid')).length;
+    
+    return {
+      total: vehicles.length,
+      avgPrice,
+      minPrice,
+      maxPrice,
+      electricCount,
+      hybridCount,
+    };
+  }, [safeVehicleInventory]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-RW', {
@@ -525,10 +695,15 @@ export default function Auto24Integration() {
           <h1 className="text-5xl lg:text-6xl font-extrabold text-white mb-6 leading-tight">
             Drive Now, Pay Later
           </h1>
-          <p className="text-xl lg:text-2xl text-blue-100 mb-10 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl lg:text-2xl text-blue-100 mb-6 max-w-3xl mx-auto leading-relaxed">
             Start your car ownership journey with just <span className="font-bold text-white">20% deposit</span>. 
             Quality vehicles from Auto24 Rwanda, delivered by Kimu Transport.
           </p>
+          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 mb-10 max-w-2xl mx-auto">
+            <p className="text-white text-lg font-medium">
+              <span className="font-bold">Important:</span> Vehicles must be used for transport services (taxi, car rental, or other commercial transport activities).
+            </p>
+          </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a 
               href="#vehicles" 
@@ -547,8 +722,38 @@ export default function Auto24Integration() {
         </div>
       </div>
 
+      {/* Statistics Section */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 py-12 -mt-10 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+            <div className="text-center">
+              <div className="text-3xl md:text-4xl font-bold text-white mb-2">{stats.total}</div>
+              <div className="text-blue-100 text-sm md:text-base">Total Vehicles</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl md:text-4xl font-bold text-white mb-2">{formatPrice(stats.avgPrice).split(' ')[0]}</div>
+              <div className="text-blue-100 text-sm md:text-base">Avg Price</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl md:text-4xl font-bold text-white mb-2 flex items-center justify-center gap-1">
+                <FaBolt className="text-2xl" />
+                {stats.electricCount}
+              </div>
+              <div className="text-blue-100 text-sm md:text-base">Electric</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl md:text-4xl font-bold text-white mb-2 flex items-center justify-center gap-1">
+                <FaLeaf className="text-2xl" />
+                {stats.hybridCount}
+              </div>
+              <div className="text-blue-100 text-sm md:text-base">Hybrid</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Search and Filter Section */}
-      <div id="vehicles" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-10">
+      <div id="vehicles" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 relative z-10">
         <div className="bg-white rounded-2xl shadow-2xl p-6 border border-gray-100">
           {/* Search Bar */}
           <div className="relative mb-6">
@@ -570,7 +775,7 @@ export default function Auto24Integration() {
             )}
           </div>
 
-          {/* Filter Toggle */}
+          {/* Filter Toggle and View Mode */}
           <div className="flex items-center justify-between mb-4">
             <button
               onClick={() => setShowFilters(!showFilters)}
@@ -581,6 +786,31 @@ export default function Auto24Integration() {
             </button>
 
             <div className="flex items-center gap-3">
+              {/* View Toggle */}
+              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded transition-colors ${
+                    viewMode === 'grid' 
+                      ? 'bg-white text-blue-600 shadow-sm' 
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                  title="Grid View"
+                >
+                  <FaTh />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded transition-colors ${
+                    viewMode === 'list' 
+                      ? 'bg-white text-blue-600 shadow-sm' 
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                  title="List View"
+                >
+                  <FaList />
+                </button>
+              </div>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as 'price' | 'year' | 'name')}
@@ -625,11 +855,17 @@ export default function Auto24Integration() {
                 </label>
                 <input
                   type="range"
-                  min="0"
-                  max="50000000"
+                  min={priceBounds.min}
+                  max={priceBounds.max}
                   step="1000000"
                   value={priceRange.min}
-                  onChange={(e) => setPriceRange({ ...priceRange, min: parseInt(e.target.value) })}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value, 10);
+                    setPriceRange(prev => ({
+                      ...prev,
+                      min: Math.min(value, prev.max),
+                    }));
+                  }}
                   className="w-full"
                 />
               </div>
@@ -640,11 +876,17 @@ export default function Auto24Integration() {
                 </label>
                 <input
                   type="range"
-                  min="0"
-                  max="50000000"
+                  min={priceBounds.min}
+                  max={priceBounds.max}
                   step="1000000"
                   value={priceRange.max}
-                  onChange={(e) => setPriceRange({ ...priceRange, max: parseInt(e.target.value) })}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value, 10);
+                    setPriceRange(prev => ({
+                      ...prev,
+                      max: Math.max(value, prev.min),
+                    }));
+                  }}
                   className="w-full"
                 />
               </div>
@@ -695,8 +937,12 @@ export default function Auto24Integration() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            <div className={viewMode === 'grid' 
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12"
+              : "space-y-6 mb-12"
+            }>
               {currentVehicles.map((vehicle, index) => (
+                viewMode === 'grid' ? (
                 <div
                   key={vehicle.id}
                   className={`group relative rounded-3xl border border-gray-100 bg-white overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 ${
@@ -803,6 +1049,71 @@ export default function Auto24Integration() {
                     </div>
                   </div>
                 </div>
+                ) : (
+                  // List View
+                  <div
+                    key={vehicle.id}
+                    className="group bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
+                  >
+                    <div className="flex flex-col md:flex-row gap-6 p-6">
+                      <div className="relative w-full md:w-80 h-64 md:h-48 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden flex-shrink-0">
+                        <Image
+                          src={vehicle.image}
+                          alt={vehicle.name}
+                          fill
+                          className={`object-contain p-4 drop-shadow-lg${vehicle.name.includes('BYD') ? ' mix-blend-multiply' : ''}`}
+                        />
+                        <div className="absolute top-3 right-3 flex flex-col gap-2">
+                          <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold">Auto24</span>
+                          <span className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">20% Deposit</span>
+                        </div>
+                      </div>
+                      <div className="flex-1 flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <h3 className="text-2xl font-bold text-gray-900 mb-1">{vehicle.name}</h3>
+                              <p className="text-gray-600 flex items-center gap-2">
+                                <FaCalendarAlt className="text-sm" />
+                                {vehicle.year} • {vehicle.transmission || 'Automatic'} • {vehicle.fuelType || 'Petrol'}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-3xl font-bold text-gray-900">{formatPrice(vehicle.price)}</div>
+                              <div className="text-sm text-green-600 font-semibold">Deposit: {formatPrice(vehicle.deposit)}</div>
+                            </div>
+                          </div>
+                          <p className="text-gray-600 mb-4 line-clamp-2">{vehicle.description}</p>
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {vehicle.features.slice(0, 4).map((feature, idx) => (
+                              <span key={idx} className="bg-blue-50 text-blue-700 px-3 py-1 rounded-lg text-xs font-medium">
+                                {feature}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => setSelectedVehicle(vehicle)}
+                            className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-6 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all font-semibold flex items-center justify-center gap-2"
+                          >
+                            <FaCar />
+                            View Details
+                          </button>
+                          <a
+                            href={buildWhatsAppLink(vehicle)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-6 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all font-semibold text-center inline-flex items-center justify-center gap-2 ring-1 ring-orange-300"
+                          >
+                            <FaHandshake />
+                            Apply Now
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
               ))}
             </div>
 
@@ -867,7 +1178,7 @@ export default function Auto24Integration() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="bg-white rounded-xl p-8 shadow-lg text-center hover:shadow-xl transition-shadow duration-300 border border-gray-100">
               <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <FaTag className="text-3xl text-blue-600" />
@@ -887,17 +1198,91 @@ export default function Auto24Integration() {
             </div>
 
             <div className="bg-white rounded-xl p-8 shadow-lg text-center hover:shadow-xl transition-shadow duration-300 border border-gray-100">
-              <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
+              <div className="w-20 h-20 bg-gradient-to-br from-orange-100 to-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <FaCar className="text-3xl text-orange-600" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Proof of Income</h3>
-              <p className="text-gray-600 leading-relaxed">Employment letter or business registration. Flexible payment plans available.</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">Transport Use</h3>
+              <p className="text-gray-600 leading-relaxed">Vehicle must be used for transport services (taxi, car rental, or commercial transport).</p>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Financing Calculator Section */}
+      <section className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mb-4">
+                <FaCalculator className="text-2xl text-white" />
+              </div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Financing Calculator</h2>
+              <p className="text-gray-600">Calculate your monthly payment and see how affordable car ownership can be</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Vehicle Price (RWF)</label>
+                <input
+                  type="number"
+                  placeholder="Enter vehicle price"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                  value={calcPrice}
+                  onChange={(e) => setCalcPrice(parseFloat(e.target.value) || 0)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Deposit (20%)</label>
+                <input
+                  type="text"
+                  readOnly
+                  className="w-full px-4 py-3 border-2 border-green-200 bg-green-50 rounded-xl text-lg font-semibold text-green-700"
+                  value={formatPrice(calcDeposit)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Loan Amount</label>
+                <input
+                  type="text"
+                  readOnly
+                  className="w-full px-4 py-3 border-2 border-blue-200 bg-blue-50 rounded-xl text-lg font-semibold text-blue-700"
+                  value={formatPrice(calcLoan)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Monthly Payment (Est.)</label>
+                <input
+                  type="text"
+                  readOnly
+                  className="w-full px-4 py-3 border-2 border-orange-200 bg-orange-50 rounded-xl text-lg font-bold text-orange-700"
+                  value={formatPrice(calcMonthly)}
+                />
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-6 text-white">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-blue-100">Total Amount</span>
+                <span className="text-2xl font-bold">{formatPrice(calcPrice)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm text-blue-100">
+                <span>Payment Period: 36-60 months</span>
+                <span>Interest Rate: Competitive rates available</span>
+              </div>
+            </div>
+
+            <div className="mt-6 text-center">
+              <a
+                href="#vehicles"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl font-bold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl"
+              >
+                <FaCar />
+                Browse Available Vehicles
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* How It Works - replaces customer experiences */}
       <section className="bg-white py-16">
@@ -929,7 +1314,7 @@ export default function Auto24Integration() {
                 <FaCar />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Drive Away</h3>
-              <p className="text-gray-600 text-sm">Complete simple paperwork and collect your car.</p>
+              <p className="text-gray-600 text-sm">Complete simple paperwork and collect your car for transport services.</p>
             </div>
           </div>
         </div>

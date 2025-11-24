@@ -16,11 +16,11 @@ export default function AdminSidebar() {
   if (!user || user.role !== "admin") return null;
 
   const links = [
-    { href: "/admin", label: "Dashboard", icon: <FaTachometerAlt /> },
-    { href: "/admin/system-logs", label: "System Logs", icon: <FaDatabase /> },
+    { href: "/staff/admin-dashboard", label: "Dashboard", icon: <FaTachometerAlt /> },
+    { href: "/staff/system-logs", label: "System Logs", icon: <FaDatabase /> },
     // Admin-specific pages to avoid layout conflicts
-    { href: "/admin/users", label: "Users", icon: <FaUsersCog /> },
-    { href: "/admin/reports", label: "Reports", icon: <FaFileAlt /> },
+    { href: "/staff/users", label: "Users", icon: <FaUsersCog /> },
+    { href: "/staff/reports", label: "Reports", icon: <FaFileAlt /> },
   ];
 
   return (
@@ -45,7 +45,7 @@ export default function AdminSidebar() {
         </ul>
         <div className="mt-auto pt-8 flex flex-col gap-2">
           <Link
-            href="/admin/logout"
+            href="/staff/logout"
             className="flex items-center gap-3 text-red-500 font-semibold hover:underline transition-all duration-300 hover:scale-105"
           >
             <FaSignOutAlt /> Logout

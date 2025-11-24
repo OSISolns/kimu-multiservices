@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   FinancialReport, 
   OperationalReport, 
@@ -26,14 +26,7 @@ export default function ReportsDashboard({ user }: ReportsDashboardProps) {
     to: new Date().toISOString().split('T')[0],
   });
 
-  useEffect(() => {
-    if (user && user.role === 'admin') {
-      fetchDashboardData();
-      fetchReports();
-    }
-  }, [user, selectedPeriod, dateRange]);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setIsLoading(true);
       const params = new URLSearchParams({
@@ -57,9 +50,9 @@ export default function ReportsDashboard({ user }: ReportsDashboardProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, selectedPeriod, dateRange]);
 
-  const fetchReports = async () => {
+  const fetchReports = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/reports', {
         headers: {
@@ -74,7 +67,14 @@ export default function ReportsDashboard({ user }: ReportsDashboardProps) {
     } catch (error) {
       console.error('Error fetching reports:', error);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user && user.role === 'admin') {
+      fetchDashboardData();
+      fetchReports();
+    }
+  }, [user, fetchDashboardData, fetchReports]);
 
   const generateReport = async (reportType: string, format: string = 'json') => {
     try {

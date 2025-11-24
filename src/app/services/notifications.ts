@@ -1,4 +1,5 @@
 import { sendEmail } from './email';
+import { prisma } from '@/lib/prisma';
 
 // Agent phone numbers - these should be stored in environment variables in production
 const AGENT_PHONE_NUMBERS = [
@@ -64,7 +65,7 @@ interface EmployeeData {
   employeeId: string;
   salary: number;
   status: string;
-  joinDate: string;
+  joinDate: string | Date;
   createdBy?: string;
 }
 
@@ -115,11 +116,36 @@ export async function sendBookingNotification(booking: BookingData) {
       text += `Guests: ${booking.guests}\n`;
     }
 
-    text += `\nPlease check the agent dashboard for full details.\n`;
-    text += `http://localhost:3001/agent/dashboard`;
+    text += `\nPlease check the dashboard for full details.\n`;
+    text += `http://localhost:3001/staff/login`;
 
-    // Send email to all agents
-    const emailPromises = AGENT_EMAILS.map(email =>
+    // Fetch all relevant staff members
+    const staffMembers = await prisma.user.findMany({
+      where: {
+        role: {
+          in: ['agent', 'manager', 'accountant', 'transport-officer', 'admin']
+        },
+        status: 'active',
+        email: {
+          not: null
+        }
+      },
+      select: {
+        email: true
+      }
+    });
+
+    const recipientEmails = staffMembers
+      .map(user => user.email)
+      .filter((email): email is string => !!email);
+
+    if (recipientEmails.length === 0) {
+      console.log('No staff members found to receive booking notification');
+      return false;
+    }
+
+    // Send email to all relevant staff
+    const emailPromises = recipientEmails.map(email =>
       sendEmail({
         to: email,
         subject,
@@ -127,7 +153,7 @@ export async function sendBookingNotification(booking: BookingData) {
       })
     );
     await Promise.allSettled(emailPromises);
-    console.log(`Booking email notification sent to ${AGENT_EMAILS.length} agents for booking ${bookingId}`);
+    console.log(`Booking email notification sent to ${recipientEmails.length} staff members for booking ${bookingId}`);
     return true;
   } catch (error) {
     console.error('Error sending booking email notification:', error);
@@ -291,10 +317,10 @@ export async function sendExpenseNotification(expense: ExpenseData) {
 
 export async function sendEmployeeNotification(employee: EmployeeData, action: 'added' | 'updated' | 'deleted') {
   try {
-    const actionText = action === 'added' ? 'NEW EMPLOYEE ADDED' : 
-                      action === 'updated' ? 'EMPLOYEE UPDATED' : 'EMPLOYEE DELETED';
-    const subjectText = action === 'added' ? 'New Employee Added' : 
-                       action === 'updated' ? 'Employee Updated' : 'Employee Deleted';
+    const actionText = action === 'added' ? 'NEW EMPLOYEE ADDED' :
+      action === 'updated' ? 'EMPLOYEE UPDATED' : 'EMPLOYEE DELETED';
+    const subjectText = action === 'added' ? 'New Employee Added' :
+      action === 'updated' ? 'Employee Updated' : 'Employee Deleted';
 
     let subject = `${subjectText}: ${employee.name}`;
     let text = `${actionText}\n\n`;
@@ -400,4 +426,4 @@ export async function sendFinancialSummaryNotification(summary: {
     console.error('Error sending financial summary notification:', error);
     return false;
   }
-} 
+}

@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
+import { sendEmail } from '@/app/services/email';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 const sendEmailSchema = z.object({
   invoiceId: z.number(),
@@ -26,59 +24,54 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
     }
 
-    // Check if Resend is configured
-    if (!resend) {
-      console.warn('Resend API key not configured. Email sending disabled.');
-      return NextResponse.json({ 
-        error: 'Email service not configured. Please contact administrator to set up email service.',
-        code: 'EMAIL_NOT_CONFIGURED'
-      }, { status: 503 });
-    }
-
     // Create email subject
     const emailSubject = subject || `Invoice ${invoice.invoiceNumber} - KIMU Transport & Multiservices`;
 
     // Create email HTML template
     const emailHtml = createInvoiceEmailTemplate(invoice, message);
 
-    // Send email using Resend
-    const { data, error } = await resend.emails.send({
-      from: 'KIMU Transport <onboarding@resend.dev>',
-      to: [recipientEmail],
-      subject: emailSubject,
-      html: emailHtml,
-    });
+    // Send email using the shared email service
+    try {
+      const result = await sendEmail({
+        to: recipientEmail,
+        subject: emailSubject,
+        text: `Invoice ${invoice.invoiceNumber} - KIMU Transport & Multiservices`,
+        html: emailHtml,
+      });
 
-    if (error) {
-      console.error('Resend API error:', error);
-      return NextResponse.json({ 
-        error: 'Failed to send email via Resend service',
-        details: error.message || 'Unknown Resend error',
-        code: 'RESEND_ERROR'
+      if (!result.success) {
+        throw new Error('Email service returned failure');
+      }
+
+      // Update invoice status and email tracking
+      await prisma.invoice.update({
+        where: { id: invoiceId },
+        data: {
+          status: invoice.status === 'pending' ? 'outstanding' : invoice.status,
+          emailSent: true,
+          emailSentAt: new Date(),
+          emailSubject: subject,
+          emailMessage: message
+        }
+      });
+
+      return NextResponse.json({
+        success: true,
+        messageId: result.id,
+        message: 'Invoice sent successfully'
+      });
+    } catch (emailError) {
+      console.error('Email sending error:', emailError);
+      return NextResponse.json({
+        error: 'Failed to send invoice email',
+        details: emailError instanceof Error ? emailError.message : 'Unknown error',
+        code: 'EMAIL_ERROR'
       }, { status: 500 });
     }
 
-    // Update invoice status and email tracking
-    await prisma.invoice.update({
-      where: { id: invoiceId },
-      data: { 
-        status: invoice.status === 'pending' ? 'outstanding' : invoice.status,
-        emailSent: true,
-        emailSentAt: new Date(),
-        emailSubject: subject,
-        emailMessage: message
-      }
-    });
-
-    return NextResponse.json({ 
-      success: true, 
-      messageId: data?.id,
-      message: 'Invoice sent successfully' 
-    });
-
   } catch (error) {
     console.error('Error sending invoice email:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Failed to send invoice email',
       details: error instanceof Error ? error.message : 'Unknown error',
       code: 'UNKNOWN_ERROR'
@@ -243,7 +236,7 @@ function createInvoiceEmailTemplate(invoice: any, customMessage?: string) {
           <div class="company-info">
             <h3>From:</h3>
             <p><strong>KIMU Transport & Multiservices</strong></p>
-            <p>KG 24 Avenue, Kigali, Rwanda</p>
+            <p>Gisozi, KG 780 St, Kigali, Rwanda</p>
             <p>Email: kimutransport6@gmail.com</p>
             <p>Phone: +250 798 284 312</p>
             <p>Phone: +250 788 447 574</p>

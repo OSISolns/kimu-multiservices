@@ -14,25 +14,25 @@ export async function GET(req: NextRequest) {
     console.log('API /users: Received username:', username);
     const user = username ? await prisma.user.findUnique({ where: { username } }) : null;
     console.log('API /users: Found user:', user ? { username: user.username, role: user.role } : null);
-    if (!user || !hasRole(user, ['admin'])) {
+    if (!user || !hasRole(user, ['admin', 'manager'])) {
       console.log('API /users: Not authorized', { hasUser: !!user, role: user?.role });
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
     const users = await prisma.user.findMany({
-      select: { 
-        id: true, 
-        username: true, 
-        fullName: true, 
+      select: {
+        id: true,
+        username: true,
+        fullName: true,
         email: true,
         phone: true,
-        role: true, 
+        role: true,
         department: true,
         status: true,
-        createdAt: true, 
+        createdAt: true,
         lastLogin: true,
-        totpSecret: true, 
-        emailNotifications: true, 
-        whatsappNotifications: true 
+        totpSecret: true,
+        emailNotifications: true,
+        whatsappNotifications: true
       },
       orderBy: { username: 'asc' },
     });
@@ -55,9 +55,9 @@ export async function POST(req: NextRequest) {
     }
     const passwordHash = await bcrypt.hash(password, 10);
     const newUser = await prisma.user.create({
-      data: { 
-        username: newUsername, 
-        passwordHash, 
+      data: {
+        username: newUsername,
+        passwordHash,
         role,
         fullName,
         email,
@@ -118,15 +118,15 @@ export async function DELETE(req: NextRequest) {
 
     // Prevent deletion of admin and accountant users
     if (userToDelete.role === 'admin' || userToDelete.role === 'accountant') {
-      return NextResponse.json({ 
-        error: 'Cannot delete admin or accountant users' 
+      return NextResponse.json({
+        error: 'Cannot delete admin or accountant users'
       }, { status: 403 });
     }
 
     // Prevent self-deletion
     if (userToDelete.username === adminUsername) {
-      return NextResponse.json({ 
-        error: 'Cannot delete your own account' 
+      return NextResponse.json({
+        error: 'Cannot delete your own account'
       }, { status: 403 });
     }
 
@@ -153,7 +153,7 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json();
     console.log('Request body:', body);
     const { username, fullName, email, phone, role, department, status } = body;
-    
+
     if (!username) {
       console.log('Missing username');
       return NextResponse.json({ error: 'Missing username' }, { status: 400 });
@@ -168,7 +168,7 @@ export async function PATCH(req: NextRequest) {
 
     // Prepare update data
     const dataToUpdate: any = {};
-    
+
     if (fullName !== undefined) dataToUpdate.fullName = fullName;
     if (email !== undefined) dataToUpdate.email = email;
     if (phone !== undefined) dataToUpdate.phone = phone;
@@ -183,18 +183,18 @@ export async function PATCH(req: NextRequest) {
     });
 
     console.log('User updated successfully');
-    return NextResponse.json({ 
-      success: true, 
-      user: { 
-        id: updated.id, 
-        username: updated.username, 
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: updated.id,
+        username: updated.username,
         fullName: updated.fullName,
         email: updated.email,
         phone: updated.phone,
         role: updated.role,
         department: updated.department,
         status: updated.status
-      } 
+      }
     });
   } catch (e) {
     console.error('Error updating user:', e);

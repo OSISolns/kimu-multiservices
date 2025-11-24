@@ -22,26 +22,31 @@ export function hasAnyRole(user: AuthUser | null, requiredRoles: UserRole[]): bo
  * Check if user has a specific permission
  */
 export function hasPermission(
-  user: AuthUser | null, 
-  resource: string, 
+  user: AuthUser | null,
+  resource: string,
   action: string
 ): boolean {
   if (!user) return false;
-  
+
   // Admin has all permissions
   if (user.role === 'admin') return true;
-  
+
+  // Manager has all permissions except user write operations
+  if (user.role === 'manager') {
+    if (resource === 'users' && action !== 'read') {
+      return false; // Only allow read access to users
+    }
+    return true; // All other permissions granted
+  }
+
   // Define role-based permissions
   const rolePermissions: Record<UserRole, Permission[]> = {
     admin: [
       { resource: '*', action: '*' }
     ],
     manager: [
-      { resource: 'vehicles', action: '*' },
-      { resource: 'bookings', action: '*' },
-      { resource: 'users', action: 'read' },
-      { resource: 'reports', action: '*' },
-      { resource: 'financial', action: 'read' }
+      { resource: '*', action: '*' },
+      { resource: 'users', action: 'read' }
     ],
     accountant: [
       { resource: 'financial', action: '*' },
@@ -60,12 +65,22 @@ export function hasPermission(
       { resource: 'vehicles', action: 'read' },
       { resource: 'bookings', action: 'create' },
       { resource: 'bookings', action: 'read' }
+    ],
+    sales: [
+      { resource: 'leads', action: '*' },
+      { resource: 'quotes', action: '*' },
+      { resource: 'bookings', action: 'read' }
+    ],
+    'transport-officer': [
+      { resource: 'vehicles', action: '*' },
+      { resource: 'bookings', action: '*' },
+      { resource: 'drivers', action: '*' }
     ]
   };
-  
+
   const permissions = rolePermissions[user.role] || [];
-  
-  return permissions.some(permission => 
+
+  return permissions.some(permission =>
     (permission.resource === '*' || permission.resource === resource) &&
     (permission.action === '*' || permission.action === action)
   );
@@ -99,76 +114,61 @@ export function getUserInitials(user: AuthUser | null): string {
  * Check if user can access a specific route
  */
 export function canAccessRoute(
-  user: AuthUser | null, 
+  user: AuthUser | null,
   route: string
 ): boolean {
   if (!user) return false;
-  
+
   // Public routes
   const publicRoutes = ['/login', '/forgot-password', '/reset-password'];
   if (publicRoutes.includes(route)) return true;
-  
-  // Admin can access everything
-  if (user.role === 'admin') return true;
-  
-  // Route-based access control
+
+  // Admin can only access specific admin pages and profile settings
+  if (user.role === 'admin') {
+    const allowedAdminRoutes = [
+      '/staff/admin-dashboard',
+      '/staff/system-logs',
+      '/staff/users',
+      '/staff/reports',
+      '/profile',
+      '/profile/password',
+      '/profile/picture',
+    ];
+    return allowedAdminRoutes.some((allowed) => route.startsWith(allowed));
+  }
+
+  // Manager has access to all routes
+  if (user.role === 'manager') {
+    return true;
+  }
+
+  // Route-based access control for other roles
   const routePermissions: Record<string, UserRole[]> = {
-    '/staff/users': ['admin', 'manager'],
-    '/staff/vehicles': ['admin', 'manager', 'staff'],
-    '/staff/bookings': ['admin', 'manager', 'staff', 'agent'],
-    '/staff/reports': ['admin', 'manager', 'staff'],
-    '/staff/financial-reports': ['admin', 'manager', 'accountant'],
-    '/staff/accountant-dashboard': ['admin', 'accountant'],
-    '/admin': ['admin']
+    '/staff/users': [],
+    '/staff/vehicles': ['manager', 'staff'],
+    '/staff/bookings': ['manager', 'staff', 'agent'],
+    '/staff/reports': ['manager', 'staff'],
+    '/staff/financial-reports': ['manager', 'accountant'],
+    '/staff/accountant-dashboard': ['accountant'],
+    '/staff/manager-dashboard': ['manager'],
+    '/staff/admin-dashboard': ['admin'],
+    '/staff/sales-dashboard': ['staff', 'sales', 'agent'],
+    '/staff/transport_officer-dashboard': ['staff', 'transport-officer'],
+    '/staff/system-logs': ['admin'],
   };
-  
+
   for (const [routePattern, allowedRoles] of Object.entries(routePermissions)) {
     if (route.startsWith(routePattern)) {
       return allowedRoles.includes(user.role);
     }
   }
-  
-  // Default: staff and above can access staff routes
-  if (route.startsWith('/staff/')) {
-    return ['admin', 'manager', 'staff', 'accountant'].includes(user.role);
-  }
-  
-  return true;
-}
 
-/**
- * Validate password strength
- */
-export function validatePassword(password: string): {
-  isValid: boolean;
-  errors: string[];
-} {
-  const errors: string[] = [];
-  
-  if (password.length < 8) {
-    errors.push('Password must be at least 8 characters long');
+  // Default: staff and above can access staff routes (excluding admin which is already handled)
+  if (route.startsWith('/staff/')) {
+    return ['manager', 'staff', 'accountant', 'sales', 'transport-officer', 'agent'].includes(user.role);
   }
-  
-  if (!/[A-Z]/.test(password)) {
-    errors.push('Password must contain at least one uppercase letter');
-  }
-  
-  if (!/[a-z]/.test(password)) {
-    errors.push('Password must contain at least one lowercase letter');
-  }
-  
-  if (!/\d/.test(password)) {
-    errors.push('Password must contain at least one number');
-  }
-  
-  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-    errors.push('Password must contain at least one special character');
-  }
-  
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
+
+  return true;
 }
 
 /**
@@ -177,18 +177,18 @@ export function validatePassword(password: string): {
 export function generateRandomPassword(length: number = 12): string {
   const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
   let password = '';
-  
+
   // Ensure at least one character from each required category
   password += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.floor(Math.random() * 26)];
   password += 'abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random() * 26)];
   password += '0123456789'[Math.floor(Math.random() * 10)];
   password += '!@#$%^&*'[Math.floor(Math.random() * 8)];
-  
+
   // Fill the rest randomly
   for (let i = 4; i < length; i++) {
     password += charset[Math.floor(Math.random() * charset.length)];
   }
-  
+
   // Shuffle the password
   return password.split('').sort(() => Math.random() - 0.5).join('');
 }

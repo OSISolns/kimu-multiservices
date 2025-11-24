@@ -56,7 +56,7 @@ export default function NewVehiclePage() {
     if (!isLoading && !user) {
       router.push('/staff/login')
     } else if (!isLoading && user && !['admin', 'tofficer'].includes(user.role)) {
-      router.push('/staff/dashboard')
+      router.push('/staff/sales-dashboard')
     }
   }, [user, isLoading, router])
 

@@ -101,7 +101,7 @@ export default function CustomerDeliveryMoments({ stories }: CustomerDeliveryMom
 
               {/* Testimonial */}
               <blockquote className="text-lg text-gray-700 italic mb-6">
-                "{currentStory.testimonial}"
+                &quot;{currentStory.testimonial}&quot;
               </blockquote>
 
               {/* Partnership Note */}
@@ -158,7 +158,7 @@ export default function CustomerDeliveryMoments({ stories }: CustomerDeliveryMom
                   {story.vehicle} {story.year}
                 </p>
                 <p className="text-xs text-gray-500 line-clamp-2">
-                  "{story.testimonial}"
+                  &quot;{story.testimonial}&quot;
                 </p>
                 <div className="flex items-center mt-2">
                   <div className="flex space-x-1">

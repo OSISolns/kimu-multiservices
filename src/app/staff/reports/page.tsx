@@ -102,15 +102,15 @@ export default function ReportsPage() {
 
   // Data State
   const [summary, setSummary] = useState<BookingSummary>({
-  totalBookings: 0,
-  totalRevenue: 0,
-  rentals: 0,
-  taxis: 0,
-  transfers: 0,
-  hotels: 0,
-  sales: 0,
+    totalBookings: 0,
+    totalRevenue: 0,
+    rentals: 0,
+    taxis: 0,
+    transfers: 0,
+    hotels: 0,
+    sales: 0,
   });
-  
+
   const [trendsLabels, setTrendsLabels] = useState<string[]>([]);
   const [bookingsTrend, setBookingsTrend] = useState<number[]>([]);
   const [revenueTrend, setRevenueTrend] = useState<number[]>([]);
@@ -119,7 +119,7 @@ export default function ReportsPage() {
   const [staffPerformance, setStaffPerformance] = useState<StaffPerformance[]>([]);
   const [months, setMonths] = useState<string[]>([]);
   const [staffTrends, setStaffTrends] = useState<{ [key: string]: number[] }>({});
-  
+
   const [financialSummary, setFinancialSummary] = useState<FinancialSummary>({
     totalRevenue: 0,
     totalIncome: 0,
@@ -144,66 +144,66 @@ export default function ReportsPage() {
   });
 
   // Chart Data Configuration
-const trendsData = {
-  labels: trendsLabels,
-  datasets: [
-    {
-      label: 'Bookings',
-      data: bookingsTrend,
-      backgroundColor: CHART_COLORS.bookings.background,
-      borderColor: CHART_COLORS.bookings.border,
-      type: 'line' as const,
-      yAxisID: 'y',
-      fill: false,
-      tension: 0.4,
-    },
-    {
-      label: 'Revenue (RWF)',
-      data: revenueTrend,
-      backgroundColor: CHART_COLORS.revenue.background,
-      borderColor: CHART_COLORS.revenue.border,
-      type: 'line' as const,
-      yAxisID: 'y1',
-      fill: false,
-      tension: 0.4,
-    },
-  ],
-};
+  const trendsData = {
+    labels: trendsLabels,
+    datasets: [
+      {
+        label: 'Bookings',
+        data: bookingsTrend,
+        backgroundColor: CHART_COLORS.bookings.background,
+        borderColor: CHART_COLORS.bookings.border,
+        type: 'line' as const,
+        yAxisID: 'y',
+        fill: false,
+        tension: 0.4,
+      },
+      {
+        label: 'Revenue (RWF)',
+        data: revenueTrend,
+        backgroundColor: CHART_COLORS.revenue.background,
+        borderColor: CHART_COLORS.revenue.border,
+        type: 'line' as const,
+        yAxisID: 'y1',
+        fill: false,
+        tension: 0.4,
+      },
+    ],
+  };
 
-const statusPieData = {
-  labels: Object.keys(statusBreakdown),
-  datasets: [
-    {
-      label: 'Status',
-      data: Object.values(statusBreakdown),
-      backgroundColor: [
+  const statusPieData = {
+    labels: Object.keys(statusBreakdown),
+    datasets: [
+      {
+        label: 'Status',
+        data: Object.values(statusBreakdown),
+        backgroundColor: [
           CHART_COLORS.success,
           CHART_COLORS.secondary,
           CHART_COLORS.danger,
-      ],
-      borderWidth: 1,
-    },
-  ],
-};
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
 
-const serviceBookings = [summary.rentals, summary.taxis, summary.transfers, summary.hotels, summary.sales];
-const serviceBarData = {
+  const serviceBookings = [summary.rentals, summary.taxis, summary.transfers, summary.hotels, summary.sales];
+  const serviceBarData = {
     labels: [...SERVICE_LABELS],
-  datasets: [
-    {
-      label: 'Bookings',
-      data: serviceBookings,
-      backgroundColor: [
+    datasets: [
+      {
+        label: 'Bookings',
+        data: serviceBookings,
+        backgroundColor: [
           CHART_COLORS.primary,
           CHART_COLORS.secondary,
           CHART_COLORS.success,
           CHART_COLORS.warning,
           CHART_COLORS.info,
-      ],
-      borderRadius: 8,
-    },
-  ],
-};
+        ],
+        borderRadius: 8,
+      },
+    ],
+  };
 
   // Optimized API Functions with caching
   const fetchReportData = useCallback(async (): Promise<void> => {
@@ -268,7 +268,7 @@ const serviceBarData = {
           'Cache-Control': 'max-age=180', // 3 minutes cache for financial data
         }
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch financial summary');
       }
@@ -291,7 +291,7 @@ const serviceBarData = {
     if (!isLoading && !user) {
       router.push('/staff/login');
     } else if (!isLoading && user && !['admin', 'accountant'].includes(user.role)) {
-      router.push('/staff/dashboard');
+      router.push('/staff/sales-dashboard');
     }
   }, [isLoading, user, router]);
 
@@ -317,9 +317,9 @@ const serviceBarData = {
     const config = STATUS_ICONS[status as keyof typeof STATUS_ICONS];
     if (!config) return null;
 
-    const IconComponent = status === 'Completed' ? FaCheck : 
-                         status === 'Pending' ? FaHourglassHalf : FaTimes;
-    
+    const IconComponent = status === 'Completed' ? FaCheck :
+      status === 'Pending' ? FaHourglassHalf : FaTimes;
+
     return <IconComponent className={config.color} />;
   };
 
@@ -328,14 +328,14 @@ const serviceBarData = {
       <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-lg p-4">
         {/* Header Navigation */}
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <Link 
-            href="/staff/dashboard" 
+          <Link
+            href="/staff/sales-dashboard"
             className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
           >
             &larr; Back to Dashboard
           </Link>
-          <button 
-            onClick={() => exportRecentBookingsToExcel(recentBookings)} 
+          <button
+            onClick={() => exportRecentBookingsToExcel(recentBookings)}
             className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold"
           >
             <FaDownload /> Export to Excel
@@ -404,12 +404,11 @@ const serviceBarData = {
         {/* Tabs */}
         <div className="mb-8 border-b flex gap-2">
           {TAB_CONFIG.map(({ id, label }) => (
-            <button 
+            <button
               key={id}
-              onClick={() => setTab(id as TabType)} 
-              className={`px-4 py-2 font-semibold border-b-2 ${
-                tab === id ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500'
-              } focus:outline-none`}
+              onClick={() => setTab(id as TabType)}
+              className={`px-4 py-2 font-semibold border-b-2 ${tab === id ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500'
+                } focus:outline-none`}
             >
               {label}
             </button>
@@ -419,9 +418,9 @@ const serviceBarData = {
         {/* Main Content */}
         {dataLoading ? (
           <div className="text-center py-12">
-            <LoadingSpinner 
-              message="Loading Reports Data" 
-              size="lg" 
+            <LoadingSpinner
+              message="Loading Reports Data"
+              size="lg"
               variant="company"
               showProgress={true}
               duration={5}
@@ -485,7 +484,7 @@ const serviceBarData = {
                         const total = Object.values(statusBreakdown).reduce((a, b) => a + b, 0);
                         const percent = total ? Math.round((count / total) * 100) : 0;
                         const config = STATUS_ICONS[status as keyof typeof STATUS_ICONS];
-                        
+
                         return (
                           <tr key={status} className="border-b last:border-0 hover:bg-gray-50">
                             <td className={`py-2 px-4 font-semibold flex items-center gap-2 ${config?.textColor || ''}`}>
@@ -625,7 +624,7 @@ const serviceBarData = {
                     <FaMoneyBillWave className="text-green-600" />
                     Financial Ledger Summary
                   </h2>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Period</label>
@@ -639,7 +638,7 @@ const serviceBarData = {
                         ))}
                       </select>
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
                       <input
@@ -649,7 +648,7 @@ const serviceBarData = {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
                       <input
@@ -659,7 +658,7 @@ const serviceBarData = {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
-                    
+
                     <div className="flex items-end gap-2">
                       <button
                         onClick={pullFinancialSummary}
@@ -672,7 +671,7 @@ const serviceBarData = {
                           <span>Pull Summary</span>
                         )}
                       </button>
-                      
+
                       {financialSummary.totalIncome > 0 && (
                         <button
                           onClick={() => exportFinancialSummaryToExcel(financialSummary, user?.username)}
@@ -745,7 +744,7 @@ const serviceBarData = {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="bg-white rounded-xl p-6 shadow border">
                         <h3 className="text-xl font-semibold mb-4 text-gray-700">Closing Balances</h3>
                         <div className="space-y-2">
@@ -800,42 +799,42 @@ const serviceBarData = {
                             <div className="flex justify-between text-sm text-gray-600 mt-1">
                               <span>{item.date}</span>
                               <span className="font-semibold text-red-700">{formatRWF(item.mtnMomoRWF || 0)}</span>
-                        </div>
-                      </div>
-                    ))}
+                            </div>
+                          </div>
+                        ))}
                         {financialSummary.expenses.length === 0 && (
-                      <p className="text-gray-500 text-center py-4">No expense transactions available</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className="bg-gray-50 rounded-xl p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                          <p><span className="font-semibold text-blue-700">Period:</span> {financialSummary.period || 'N/A'}</p>
+                          <p className="text-gray-500 text-center py-4">No expense transactions available</p>
+                        )}
+                      </div>
                     </div>
-                    <div>
+
+                    {/* Footer */}
+                    <div className="bg-gray-50 rounded-xl p-6">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <p><span className="font-semibold text-blue-700">Period:</span> {financialSummary.period || 'N/A'}</p>
+                        </div>
+                        <div>
                           <p><span className="font-semibold text-blue-700">Generated by:</span> {financialSummary.generatedBy || 'System'}</p>
                           <p><span className="font-semibold text-blue-700">Generated at:</span> {financialSummary.generatedAt ? new Date(financialSummary.generatedAt).toLocaleString() : 'N/A'}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            )}
+                )}
 
                 {financialSummary.totalIncome === 0 && !financialLoading && (
-              <div className="text-center py-12">
-                <FaFileAlt className="text-6xl text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">No Financial Data Available</h3>
+                  <div className="text-center py-12">
+                    <FaFileAlt className="text-6xl text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-600 mb-2">No Financial Data Available</h3>
                     <p className="text-gray-500 mb-4">Click &quot;Pull Summary&quot; to fetch financial data for the selected period.</p>
+                  </div>
+                )}
               </div>
             )}
-          </div>
-        )}
           </>
         )}
+      </div>
     </div>
-  </div>
   );
 } 

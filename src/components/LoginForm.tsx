@@ -3,12 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { FaEye, FaEyeSlash, FaUser, FaLock, FaShieldAlt, FaQrcode, FaCheckCircle, FaExclamationTriangle, FaSpinner } from 'react-icons/fa';
-import { QRCodeCanvas } from 'qrcode.react';
+import { FaEye, FaEyeSlash, FaUser, FaLock, FaShieldAlt, FaEnvelope, FaCheckCircle, FaExclamationTriangle, FaSpinner } from 'react-icons/fa';
 import { useUser } from '@/app/UserContext';
 import { generateDeviceFingerprint, generateDeviceName, isDeviceFingerprintingAvailable } from '@/lib/deviceFingerprint';
-
-const ISSUER = 'KIMU Transport';
 
 interface Staff {
   id: number;
@@ -33,7 +30,6 @@ export default function LoginForm() {
   const [error, setError] = useState('');
   const [step, setStep] = useState<'credentials' | 'totp'>('credentials');
   const [staff, setStaff] = useState<Staff | null>(null);
-  const [showQR, setShowQR] = useState(false);
   const [showTrustPrompt, setShowTrustPrompt] = useState(false);
   const [trustDevice, setTrustDevice] = useState(false);
   const [isFirstTimeDevice, setIsFirstTimeDevice] = useState(false);
@@ -70,11 +66,12 @@ export default function LoginForm() {
       }
 
       const data = await res.json();
-      
-      if (data.requiresTotp) {
+
+      // Check for either requiresTotp OR requiresEmailAuth
+      if (data.requiresTotp || data.requiresEmailAuth) {
         setStaff(data.staff);
         setStep('totp');
-        
+
         // Check if device is trusted (skip TOTP if trusted)
         if (isDeviceFingerprintingAvailable()) {
           const deviceId = generateDeviceFingerprint();
@@ -83,12 +80,12 @@ export default function LoginForm() {
               const trustCheckRes = await fetch('/api/check-trusted-device', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                  username: data.staff.username, 
-                  deviceId 
+                body: JSON.stringify({
+                  username: data.staff.username,
+                  deviceId
                 })
               });
-              
+
               if (trustCheckRes.ok) {
                 const trustData = await trustCheckRes.json();
                 if (trustData.trusted) {
@@ -121,7 +118,7 @@ export default function LoginForm() {
   // Step 2: Handle TOTP verification
   const handleTotp = async () => {
     if (!staff) return;
-    
+
     setLoading(true);
     setError('');
 
@@ -129,8 +126,8 @@ export default function LoginForm() {
       const res = await fetch('/api/verify-totp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          username: staff.username, 
+        body: JSON.stringify({
+          username: staff.username,
           code: totpCode.trim(),
           trustDevice: trustDevice
         })
@@ -138,11 +135,11 @@ export default function LoginForm() {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Invalid TOTP code');
+        throw new Error(data.error || 'Invalid verification code');
       }
 
       const data = await res.json();
-      
+
       // Add trusted device if requested
       if (trustDevice && isDeviceFingerprintingAvailable()) {
         const deviceId = generateDeviceFingerprint();
@@ -152,10 +149,10 @@ export default function LoginForm() {
             await fetch('/api/trusted-devices', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
-                username: staff.username, 
-                deviceId, 
-                deviceName 
+              body: JSON.stringify({
+                username: staff.username,
+                deviceId,
+                deviceName
               })
             });
           } catch (error) {
@@ -167,7 +164,7 @@ export default function LoginForm() {
 
       await handleDirectLogin(staff, true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'TOTP verification failed');
+      setError(err instanceof Error ? err.message : 'Verification failed');
     } finally {
       setLoading(false);
     }
@@ -179,8 +176,8 @@ export default function LoginForm() {
       const res = await fetch('/api/staff/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          username: staffData.username, 
+        body: JSON.stringify({
+          username: staffData.username,
           password: password,
           skipTotp: !usedTotp // Skip TOTP if device is trusted
         })
@@ -192,28 +189,6 @@ export default function LoginForm() {
       }
 
       const data = await res.json();
-      
-      // Add trusted device if requested
-      if (trustDevice && isDeviceFingerprintingAvailable()) {
-        const deviceId = generateDeviceFingerprint();
-        const deviceName = generateDeviceName();
-        if (deviceId && deviceName) {
-          try {
-            await fetch('/api/trusted-devices', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
-                username: staffData.username, 
-                deviceId, 
-                deviceName 
-              })
-            });
-          } catch (error) {
-            console.error('Error adding trusted device:', error);
-            // Continue with login even if trusted device fails
-          }
-        }
-      }
 
       // Login successful
       const userData = {
@@ -233,23 +208,36 @@ export default function LoginForm() {
         emailNotifications: staffData.emailNotifications,
         whatsappNotifications: staffData.whatsappNotifications
       };
-      
+
       loginUser(userData);
-      
-      // Redirect based on role (you might want to get this from the API response)
-      router.push('/staff/dashboard');
+
+      // Redirect based on role
+      switch (staffData.role) {
+        case 'accountant':
+          router.push('/staff/accountant-dashboard');
+          break;
+        case 'admin':
+          router.push('/staff/admin-dashboard');
+          break;
+        case 'sales':
+          router.push('/staff/sales-dashboard');
+          break;
+        case 'transport-officer':
+          router.push('/staff/transport_officer-dashboard');
+          break;
+        case 'manager':
+          router.push('/staff/manager-dashboard');
+          break;
+        default:
+          router.push('/staff/sales-dashboard');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     }
   };
 
-  // Generate OTP Auth URL for QR code
-  const otpauthUrl = staff?.totpSecret 
-    ? `otpauth://totp/${ISSUER}:${staff.username}?secret=${staff.totpSecret}&issuer=${ISSUER}`
-    : '';
-
   return (
-    <div 
+    <div
       className="min-h-screen relative flex items-center justify-center overflow-hidden py-12 px-4 bg-gradient-to-br from-blue-50 to-orange-50"
       style={{
         backgroundImage: 'url(/BG.jpg)',
@@ -260,16 +248,16 @@ export default function LoginForm() {
     >
       {/* Background overlay */}
       <div className="absolute inset-0 bg-black/20"></div>
-      
+
       {/* Login form */}
       <div className="relative z-10 w-full max-w-md">
         <div className="bg-white/90 backdrop-blur-xl border border-white/30 rounded-3xl shadow-2xl shadow-blue-500/20 p-8">
           {/* Logo and header */}
           <div className="text-center mb-8">
             <div className="w-20 h-20 bg-white rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg border-2 border-gray-100">
-              <Image 
-                src="/logo.png" 
-                alt="KIMU Transport Logo" 
+              <Image
+                src="/logo.png"
+                alt="KIMU Transport Logo"
                 width={64}
                 height={64}
                 className="w-16 h-16 object-contain"
@@ -368,15 +356,18 @@ export default function LoginForm() {
             <div className="space-y-6">
               <div className="text-center">
                 <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-blue-500 rounded-full mx-auto mb-4 flex items-center justify-center">
-                  <FaShieldAlt className="text-white text-xl" />
+                  <FaEnvelope className="text-white text-xl" />
                 </div>
-                <h2 className="text-xl font-semibold text-gray-800 mb-2">Two-Factor Authentication</h2>
-                <p className="text-gray-600 text-sm">Enter the 6-digit code from your authenticator app</p>
+                <h2 className="text-xl font-semibold text-gray-800 mb-2">Email Verification</h2>
+                <p className="text-gray-600 text-sm">
+                  We sent a 6-digit code to <strong>{staff.email || 'your email'}</strong>.
+                  <br />Please enter it below.
+                </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Authentication Code
+                  Verification Code
                 </label>
                 <input
                   type="text"
@@ -403,7 +394,7 @@ export default function LoginForm() {
                     />
                     <label htmlFor="trustDevice" className="text-sm text-blue-800">
                       <strong>Trust this device</strong><br />
-                      Skip 2FA for 30 days on this device
+                      Skip verification for 30 days on this device
                     </label>
                   </div>
                 </div>
@@ -440,54 +431,6 @@ export default function LoginForm() {
                 ← Back to login
               </button>
             </div>
-          )}
-
-          {/* QR Code for TOTP setup */}
-          {step === 'totp' && staff && (
-            <>
-              {staff.totpSecret ? (
-                <div className="mt-6 p-4 bg-gray-50 rounded-xl">
-                  <div className="flex items-center gap-2 mb-3">
-                    <FaQrcode className="text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">TOTP Setup</span>
-                  </div>
-                  <p className="text-xs text-gray-600 mb-3">Your TOTP is already configured. Use your authenticator app to generate codes.</p>
-                </div>
-              ) : (
-                <p className="mb-6 text-gray-500 text-sm text-center">Enter the 6-digit code from your Google Authenticator app.</p>
-              )}
-              {(!staff.totpSecret || showQR) && (
-                <div className="mb-6 flex flex-col items-center">
-                  {typeof window !== 'undefined' && (
-                    <QRCodeCanvas value={otpauthUrl} size={180} />
-                  )}
-                  <p className="mt-2 text-xs text-gray-600 text-center">Scan this QR code with Google Authenticator or any TOTP app.<br/>Account: <span className="font-mono">{staff.username}</span></p>
-                  <p className="mt-1 text-xs text-gray-500">If you need the secret: <span className="font-mono">{staff.totpSecret || 'PLACEHOLDER'}</span></p>
-                  {staff.totpSecret && (
-                    <button
-                      className="text-blue-600 underline text-[10px] hover:text-orange-600 mt-2"
-                      type="button"
-                      onClick={() => setShowQR(v => !v)}
-                    >
-                      {showQR ? 'Hide Setup QR Code' : 'Show QR code for setup'}
-                    </button>
-                  )}
-                </div>
-              )}
-              
-              {/* Show QR Code Button for First-Time Devices */}
-              {isFirstTimeDevice && !showQR && (
-                <div className="mb-6 text-center">
-                  <button
-                    className="text-blue-600 underline text-sm hover:text-orange-600"
-                    type="button"
-                    onClick={() => setShowQR(true)}
-                  >
-                    Show QR code for TOTP setup
-                  </button>
-                </div>
-              )}
-            </>
           )}
         </div>
       </div>

@@ -60,13 +60,12 @@ export const POST = withValidation(processPayrollSchema, async (req: NextRequest
     for (const employee of employees) {
       try {
         // Check if payroll already exists for this period
-        const existingPayroll = await prisma.payroll.findUnique({
+        const existingPayroll = await prisma.payroll.findFirst({
           where: {
-            employeeId_period: {
-              employeeId: employee.id,
-              period: data.period,
-            },
+            employeeId: employee.id,
+            period: data.period,
           },
+          select: { id: true },
         });
 
         if (existingPayroll) {
@@ -100,10 +99,15 @@ export const POST = withValidation(processPayrollSchema, async (req: NextRequest
         const grossSalary = baseSalary + totalAllowances;
         const netSalary = grossSalary - totalDeductions;
 
-        // Create payroll items
-        const payrollItems = [
+        // Create base payroll items (we'll attach employee relation when creating the payroll)
+        const payrollItems: Array<{
+          type: string;
+          name: string;
+          amount: number;
+          description?: string;
+        }> = [
           {
-            type: 'salary' as const,
+            type: 'salary',
             name: 'Basic Salary',
             amount: baseSalary,
             description: 'Base salary',
@@ -112,12 +116,12 @@ export const POST = withValidation(processPayrollSchema, async (req: NextRequest
 
         // Add allowance items
         if (allowances) {
-          Object.entries(allowances).forEach(([key, amount]) => {
-            if (amount && amount > 0) {
+          Object.entries(allowances as Record<string, number>).forEach(([key, amount]) => {
+            if (amount > 0) {
               payrollItems.push({
-                type: 'allowance' as const,
+                type: 'allowance',
                 name: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'),
-                amount: amount as number,
+                amount,
                 description: `${key} allowance`,
               });
             }
@@ -126,12 +130,12 @@ export const POST = withValidation(processPayrollSchema, async (req: NextRequest
 
         // Add deduction items
         if (deductions) {
-          Object.entries(deductions).forEach(([key, amount]) => {
-            if (amount && amount > 0) {
+          Object.entries(deductions as Record<string, number>).forEach(([key, amount]) => {
+            if (amount > 0) {
               payrollItems.push({
-                type: 'deduction' as const,
+                type: 'deduction',
                 name: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'),
-                amount: amount as number,
+                amount,
                 description: `${key} deduction`,
               });
             }
@@ -145,6 +149,7 @@ export const POST = withValidation(processPayrollSchema, async (req: NextRequest
             period: data.period,
             year: data.year,
             month: data.month,
+            actualDays: data.workingDays,
             grossSalary,
             netSalary,
             totalAllowances,
@@ -154,7 +159,13 @@ export const POST = withValidation(processPayrollSchema, async (req: NextRequest
             processedAt: new Date(),
             notes: data.notes,
             payrollItems: {
-              create: payrollItems,
+              // Each payroll item must also be linked to the employee per Prisma schema
+              create: payrollItems.map((item) => ({
+                ...item,
+                employee: {
+                  connect: { id: employee.id },
+                },
+              })),
             },
           },
           include: {

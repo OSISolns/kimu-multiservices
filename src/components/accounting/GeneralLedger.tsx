@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FaDownload, FaFilter, FaSearch, FaBalanceScale, FaChartLine } from 'react-icons/fa';
 
 interface LedgerEntry {
@@ -44,11 +44,7 @@ export default function GeneralLedger({ onDataExport }: GeneralLedgerProps) {
   });
   const [showFilters, setShowFilters] = useState(false);
 
-  useEffect(() => {
-    fetchLedgerData();
-  }, [filters.startDate, filters.endDate, filters.account, filters.type]);
-
-  const fetchLedgerData = async () => {
+  const fetchLedgerData = useCallback(async () => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
@@ -67,7 +63,11 @@ export default function GeneralLedger({ onDataExport }: GeneralLedgerProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [filters.startDate, filters.endDate, filters.account]);
+
+  useEffect(() => {
+    fetchLedgerData();
+  }, [fetchLedgerData]);
 
   const filteredEntries = entries.filter(entry => {
     if (filters.search) {

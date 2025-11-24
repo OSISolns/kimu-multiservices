@@ -50,13 +50,13 @@ const barOptions = {
     title: { display: true, text: 'Daily Turnover', font: { size: 18 } },
   },
   scales: {
-    y: { 
-      beginAtZero: true, 
-      ticks: { 
+    y: {
+      beginAtZero: true,
+      ticks: {
         callback(this: Scale, tickValue: number | string): string {
           return 'RWF ' + tickValue;
-        } 
-      } 
+        }
+      }
     },
   },
 };
@@ -75,7 +75,7 @@ export default function TransactionsPage() {
     <div className="min-h-screen bg-blue-50 py-10 px-4">
       <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-4">
         <div className="mb-4">
-          <Link href="/staff/dashboard" className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">&larr; Back to Dashboard</Link>
+          <Link href="/staff/sales-dashboard" className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">&larr; Back to Dashboard</Link>
         </div>
         <h1 className="text-2xl font-bold mb-6 flex items-center gap-2"><FaMoneyBillWave className="text-green-500" /> Transactions</h1>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

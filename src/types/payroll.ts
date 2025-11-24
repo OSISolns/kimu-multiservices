@@ -204,12 +204,13 @@ export interface PayrollFilters {
 }
 
 export interface PayrollStats {
-  totalPayroll: number;
-  averageSalary: number;
-  totalEmployees: number;
-  activeEmployees: number;
-  processedPayrolls: number;
-  pendingPayrolls: number;
+  totalStats: {
+    totalPayrolls: number;
+    totalGrossSalary: number;
+    totalNetSalary: number;
+    averageGrossSalary: number;
+    averageNetSalary: number;
+  };
   monthlyTrend: Array<{
     month: string;
     amount: number;
@@ -219,6 +220,10 @@ export interface PayrollStats {
     department: string;
     count: number;
     totalSalary: number;
+  }>;
+  statusBreakdown: Array<{
+    status: string;
+    count: number;
   }>;
 }
 

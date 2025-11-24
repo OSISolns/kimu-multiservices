@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FaPlus, FaEdit, FaTrash, FaReceipt, FaFilter, FaDownload } from 'react-icons/fa';
 
 interface Expense {
@@ -42,11 +42,7 @@ export default function ExpenseTracker({ onExpenseAdded }: ExpenseTrackerProps) 
     notes: ''
   });
 
-  useEffect(() => {
-    fetchExpenses();
-  }, [filterCategory]);
-
-  const fetchExpenses = async () => {
+  const fetchExpenses = useCallback(async () => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
@@ -62,7 +58,11 @@ export default function ExpenseTracker({ onExpenseAdded }: ExpenseTrackerProps) 
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [filterCategory]);
+
+  useEffect(() => {
+    fetchExpenses();
+  }, [fetchExpenses]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

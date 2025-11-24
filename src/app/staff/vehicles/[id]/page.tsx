@@ -74,7 +74,7 @@ export default function EditVehiclePage() {
         body: JSON.stringify(vehicle)
       })
       if (!res.ok) throw new Error('Failed to save vehicle')
-      router.push('/staff/transport-officer')
+      router.push('/staff/transport_officer-dashboard')
     } catch (e: any) {
       setError(e.message || 'Failed to save')
     } finally {

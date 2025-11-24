@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -24,6 +24,18 @@ model User {
   totpSecret            String?
   emailNotifications    Boolean  @default(false)
   whatsappNotifications Boolean  @default(false)
+  email2faCode          String?
+  email2faExpires       DateTime?
+  
+  // Preferences
+  theme                 String?  @default("system")
+  language              String?  @default("en")
+  timezone              String?  @default("Africa/Kigali")
+  
+  // Privacy Settings
+  profileVisibility     String?  @default("team")
+  showEmail             Boolean  @default(false)
+  showPhone             Boolean  @default(false)
   
   trustedDevices        TrustedDevice[]
   employee              Employee?
@@ -128,6 +140,10 @@ model TrustedDevice {
   deviceName  String?  // Optional human-readable device name
   userAgent   String?  // Store user agent for reference
   ipAddress   String?  // Store IP for additional security
+  deviceType  String?  // mobile, desktop, tablet
+  browserName String?  // Chrome, Firefox, Safari, etc.
+  osName      String?  // Windows, macOS, Linux, Android, iOS
+  location    String?  // City, Country from IP
   createdAt   DateTime @default(now())
   expiresAt   DateTime // Trust expires after 30 days
   lastUsed    DateTime @default(now())

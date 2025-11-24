@@ -34,7 +34,7 @@ export default function TransportReportsPage() {
   const fetchTransportReport = useCallback(async () => {
     setLoading(true)
     setError('')
-    
+
     try {
       const response = await fetch(`/api/reports/transport?days=${dateRange}&type=${reportType}`)
       if (!response.ok) {
@@ -53,7 +53,7 @@ export default function TransportReportsPage() {
     if (!isLoading && !user) {
       router.push('/staff/login')
     } else if (!isLoading && user && !['admin', 'transport-officer'].includes(user.role)) {
-      router.push('/staff/dashboard')
+      router.push('/staff/sales-dashboard')
     } else if (user && ['admin', 'transport-officer'].includes(user.role)) {
       fetchTransportReport()
     }
@@ -113,7 +113,7 @@ export default function TransportReportsPage() {
               <FaFilter className="text-gray-500" />
               <span className="font-medium text-gray-700">Filters:</span>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Time Period</label>
               <select

@@ -1,9 +1,14 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useUser } from '@/app/UserContext';
-import { FaUser, FaShieldAlt, FaBell, FaMobile, FaDesktop, FaTrash, FaEdit, FaSave, FaTimes } from 'react-icons/fa';
+import {
+  FaUser, FaShieldAlt, FaBell, FaMobile, FaDesktop, FaTrash, FaEdit, FaSave, FaTimes,
+  FaPalette, FaLock, FaKey
+} from 'react-icons/fa';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { ToastContainer, useToast } from '@/components/Toast';
 
 interface UserProfile {
   id: number;
@@ -30,6 +35,8 @@ interface TrustedDevice {
 export default function SettingsPage() {
   const { user, isLoading: userLoading, resetInactivityTimer } = useUser();
   const router = useRouter();
+  const toast = useToast();
+  const [activeTab, setActiveTab] = useState<'profile' | 'security'>('profile');
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [trustedDevices, setTrustedDevices] = useState<TrustedDevice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,7 +51,7 @@ export default function SettingsPage() {
 
   const fetchUserProfile = useCallback(async () => {
     if (!currentUser?.id) return;
-    
+
     try {
       const response = await fetch(`/api/users/${currentUser.id}`);
       if (response.ok) {
@@ -65,7 +72,7 @@ export default function SettingsPage() {
 
   const fetchTrustedDevices = useCallback(async () => {
     if (!currentUser?.id) return;
-    
+
     try {
       const response = await fetch(`/api/trusted-devices?userId=${currentUser.id}`);
       if (response.ok) {
@@ -113,16 +120,16 @@ export default function SettingsPage() {
 
   const handleProfileUpdate = async () => {
     if (!currentUser?.id) return;
-    
+
     try {
       const response = await fetch(`/api/users/${currentUser.id}`, {
         method: 'PUT',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(profileForm),
       });
-      
+
       if (response.ok) {
         const updatedUser = await response.json();
         setCurrentUser(updatedUser);
@@ -178,80 +185,96 @@ export default function SettingsPage() {
           </p>
         </div>
 
-    <div className="space-y-6">
+        <div className="space-y-6">
           {/* Profile Settings */}
           <div className="bg-white rounded-lg shadow">
             <div className="px-6 py-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <FaUser className="text-blue-600 text-xl" />
-                  <h2 className="text-lg font-semibold text-gray-900">Profile Information</h2>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="relative w-16 h-16 rounded-full overflow-hidden bg-gray-100 border-2 border-white shadow-md">
+                    {currentUser?.profilePicture ? (
+                      <Image
+                        src={currentUser.profilePicture}
+                        alt="Profile"
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600">
+                        <FaUser className="text-2xl" />
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900">Profile Information</h2>
+                    <p className="text-sm text-gray-500">Update your personal details</p>
+                  </div>
                 </div>
                 {!editingProfile && (
-              <button
+                  <button
                     onClick={() => setEditingProfile(true)}
                     className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
                     <FaEdit className="mr-2" />
                     Edit
-                </button>
-              )}
-        </div>
-      </div>
+                  </button>
+                )}
+              </div>
+            </div>
 
             <div className="p-6">
               {editingProfile ? (
                 <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Full Name
                       </label>
-            <input
-              type="text"
+                      <input
+                        type="text"
                         value={profileForm.fullName}
                         onChange={(e) => setProfileForm(prev => ({ ...prev, fullName: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <div>
+                      />
+                    </div>
+                    <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Email
                       </label>
-            <input
-              type="email"
+                      <input
+                        type="email"
                         value={profileForm.email}
                         onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <div>
+                      />
+                    </div>
+                    <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Phone
                       </label>
-            <input
-              type="tel"
+                      <input
+                        type="tel"
                         value={profileForm.phone}
                         onChange={(e) => setProfileForm(prev => ({ ...prev, phone: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <div>
+                      />
+                    </div>
+                    <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Role
                       </label>
-            <input
-              type="text"
+                      <input
+                        type="text"
                         value={currentUser?.role || ''}
                         disabled
                         className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
-            />
-          </div>
-          </div>
-                  
+                      />
+                    </div>
+                  </div>
+
                   <div className="flex items-center space-x-6">
                     <label className="flex items-center">
-            <input
+                      <input
                         type="checkbox"
                         checked={profileForm.emailNotifications}
                         onChange={(e) => setProfileForm(prev => ({ ...prev, emailNotifications: e.target.checked }))}
@@ -260,7 +283,7 @@ export default function SettingsPage() {
                       <span className="ml-2 text-sm text-gray-700">Email Notifications</span>
                     </label>
                     <label className="flex items-center">
-            <input
+                      <input
                         type="checkbox"
                         checked={profileForm.whatsappNotifications}
                         onChange={(e) => setProfileForm(prev => ({ ...prev, whatsappNotifications: e.target.checked }))}
@@ -268,8 +291,8 @@ export default function SettingsPage() {
                       />
                       <span className="ml-2 text-sm text-gray-700">WhatsApp Notifications</span>
                     </label>
-    </div>
-                  
+                  </div>
+
                   <div className="flex space-x-3">
                     <button
                       onClick={handleProfileUpdate}
@@ -278,7 +301,7 @@ export default function SettingsPage() {
                       <FaSave className="mr-2" />
                       Save Changes
                     </button>
-            <button 
+                    <button
                       onClick={() => {
                         setEditingProfile(false);
                         setProfileForm({
@@ -293,9 +316,9 @@ export default function SettingsPage() {
                     >
                       <FaTimes className="mr-2" />
                       Cancel
-            </button>
-          </div>
-        </div>
+                    </button>
+                  </div>
+                </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -320,17 +343,17 @@ export default function SettingsPage() {
                       {currentUser?.emailNotifications ? 'Enabled' : 'Disabled'}
                     </p>
                   </div>
-          <div>
+                  <div>
                     <h3 className="text-sm font-medium text-gray-500">WhatsApp Notifications</h3>
                     <p className="mt-1 text-sm text-gray-900">
                       {currentUser?.whatsappNotifications ? 'Enabled' : 'Disabled'}
                     </p>
-            </div>
-          </div>
+                  </div>
+                </div>
               )}
             </div>
           </div>
-          
+
           {/* Trusted Devices */}
           <div className="bg-white rounded-lg shadow">
             <div className="px-6 py-4 border-b border-gray-200">
@@ -339,7 +362,7 @@ export default function SettingsPage() {
                 <h2 className="text-lg font-semibold text-gray-900">Trusted Devices</h2>
               </div>
             </div>
-            
+
             <div className="p-6">
               {trustedDevices.length > 0 ? (
                 <div className="space-y-4">
@@ -349,27 +372,27 @@ export default function SettingsPage() {
                         <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
                           {getDeviceIcon(device.deviceType)}
                         </div>
-          <div>
+                        <div>
                           <h3 className="font-medium text-gray-900">{device.deviceName}</h3>
                           <p className="text-sm text-gray-500">{device.deviceType}</p>
                           <p className="text-xs text-gray-400">
                             Last used: {new Date(device.lastUsed).toLocaleString()}
                           </p>
                           <p className="text-xs text-gray-400">IP: {device.ipAddress}</p>
-            </div>
-          </div>
-          
-          <button
+                        </div>
+                      </div>
+
+                      <button
                         onClick={() => removeTrustedDevice(device.id)}
                         className="inline-flex items-center px-3 py-2 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                         title="Remove trusted device"
                       >
                         <FaTrash className="mr-2" />
                         Remove
-          </button>
-        </div>
+                      </button>
+                    </div>
                   ))}
-            </div>
+                </div>
               ) : (
                 <div className="text-center py-8">
                   <FaShieldAlt className="text-gray-400 text-4xl mx-auto mb-4" />
@@ -388,36 +411,36 @@ export default function SettingsPage() {
               <div className="flex items-center space-x-3">
                 <FaShieldAlt className="text-red-600 text-xl" />
                 <h2 className="text-lg font-semibold text-gray-900">Security</h2>
-      </div>
-    </div>
-            
+              </div>
+            </div>
+
             <div className="p-6">
               <div className="space-y-4">
-          <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-sm font-medium text-gray-900">Two-Factor Authentication</h3>
                     <p className="text-sm text-gray-500">Secure your account with TOTP</p>
-        </div>
-          <button
+                  </div>
+                  <button
                     onClick={() => router.push('/staff/settings/2fa')}
                     className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
                   >
                     Configure
-          </button>
-        </div>
-        
+                  </button>
+                </div>
+
                 <div className="flex items-center justify-between">
-              <div>
+                  <div>
                     <h3 className="text-sm font-medium text-gray-900">Password Change</h3>
                     <p className="text-sm text-gray-500">Update your account password</p>
-              </div>
+                  </div>
                   <button
                     onClick={() => router.push('/staff/settings/password')}
                     className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
                   >
                     Change
                   </button>
-          </div>
+                </div>
               </div>
             </div>
           </div>

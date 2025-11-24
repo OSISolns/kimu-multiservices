@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FaPlus, FaEdit, FaTrash, FaMoneyBillWave, FaFilter, FaDownload } from 'react-icons/fa';
 
 interface Income {
@@ -46,11 +46,7 @@ export default function IncomeTracker({ onIncomeAdded }: IncomeTrackerProps) {
     clientPhone: ''
   });
 
-  useEffect(() => {
-    fetchIncome();
-  }, [filterCategory]);
-
-  const fetchIncome = async () => {
+  const fetchIncome = useCallback(async () => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
@@ -66,7 +62,11 @@ export default function IncomeTracker({ onIncomeAdded }: IncomeTrackerProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [filterCategory]);
+
+  useEffect(() => {
+    fetchIncome();
+  }, [fetchIncome]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

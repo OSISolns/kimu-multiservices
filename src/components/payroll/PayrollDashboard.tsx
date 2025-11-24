@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Employee, Payroll, PayrollSummary, PayrollStats } from '@/types/payroll';
 
 interface PayrollDashboardProps {
@@ -17,11 +17,7 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
     new Date().toISOString().slice(0, 7)
   );
 
-  useEffect(() => {
-    fetchPayrollData();
-  }, [selectedPeriod]);
-
-  const fetchPayrollData = async () => {
+  const fetchPayrollData = useCallback(async () => {
     try {
       setIsLoading(true);
       const [statsRes, employeesRes, payrollsRes] = await Promise.all([
@@ -44,7 +40,11 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedPeriod]);
+
+  useEffect(() => {
+    fetchPayrollData();
+  }, [fetchPayrollData]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-RW', {
@@ -69,7 +69,7 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
   };
 
   const handleGenerateReport = (reportType: 'monthly' | 'department' | 'employee') => {
-    console.log(`Generate ${reportType} payroll report for`, selectedPeriod);
+
     alert(`Generate ${reportType} payroll report for ${selectedPeriod}`);
   };
 
@@ -184,11 +184,10 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === tab.id
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                  }`}
               >
                 <span className="mr-2">{tab.icon}</span>
                 {tab.name}
@@ -282,13 +281,12 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
                           {formatCurrency(employee.salary)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            employee.status === 'active'
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${employee.status === 'active'
                               ? 'bg-green-100 text-green-800'
                               : employee.status === 'inactive'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}>
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}>
                             {employee.status}
                           </span>
                         </td>
@@ -347,15 +345,14 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
                           {formatCurrency(payroll.netSalary)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            payroll.status === 'paid'
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${payroll.status === 'paid'
                               ? 'bg-green-100 text-green-800'
                               : payroll.status === 'processed'
-                              ? 'bg-blue-100 text-blue-800'
-                              : payroll.status === 'draft'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}>
+                                ? 'bg-blue-100 text-blue-800'
+                                : payroll.status === 'draft'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-red-100 text-red-800'
+                            }`}>
                             {payroll.status}
                           </span>
                         </td>

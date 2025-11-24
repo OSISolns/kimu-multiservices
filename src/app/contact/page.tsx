@@ -78,10 +78,10 @@ export default function Contact() {
     e.preventDefault()
     if (validateForm()) {
       setIsSubmitting(true)
-      
+
       // Simulate processing delay for better UX
       await new Promise(resolve => setTimeout(resolve, 1000))
-      
+
       // WhatsApp integration with better formatting
       const phone = '250798284312'
       const urgencyText = formData.urgency === 'urgent' ? 'URGENT: ' : ''
@@ -94,7 +94,7 @@ export default function Contact() {
         `⏰ *Urgency:* ${formData.urgency === 'urgent' ? 'High Priority' : 'Standard'}%0A%0A` +
         `💬 *Message:* ${formData.message}%0A%0A` +
         `🌐 *Source:* Website Contact Form`
-      
+
       window.open(`https://wa.me/${phone}?text=${msg}`, '_blank')
       setIsSubmitting(false)
     }
@@ -177,8 +177,8 @@ export default function Contact() {
                     <FaLocationDot className="text-blue-600 mt-1 flex-shrink-0" />
                     <div>
                       <h3 className="text-lg font-semibold mb-1">Office Location</h3>
-                      <p className="text-gray-600">KG 24 Avenue, Kigali, Rwanda</p>
-                      <p className="text-sm text-gray-500">Near Kigali Convention Centre</p>
+                      <p className="text-gray-600">KG 780 St Gisozi, Kigali-City, Rwanda</p>
+                      <p className="text-sm text-gray-500">Near Gisozi Sector</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
@@ -332,11 +332,10 @@ export default function Contact() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className={`w-full py-3 px-6 rounded-lg shadow-lg transition-all font-semibold flex items-center justify-center space-x-2 ${
-                      isSubmitting 
-                        ? 'bg-gray-400 cursor-not-allowed' 
-                        : 'bg-gradient-to-r from-orange-500 to-blue-600 hover:from-orange-600 hover:to-blue-700 hover:scale-105'
-                    } text-white`}
+                    className={`w-full py-3 px-6 rounded-lg shadow-lg transition-all font-semibold flex items-center justify-center space-x-2 ${isSubmitting
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-orange-500 to-blue-600 hover:from-orange-600 hover:to-blue-700 hover:scale-105'
+                      } text-white`}
                   >
                     {isSubmitting ? (
                       <>

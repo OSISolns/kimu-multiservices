@@ -15,7 +15,7 @@ export interface AuthUser {
   lastLogin?: Date;
 }
 
-export type UserRole = 'admin' | 'staff' | 'agent' | 'manager' | 'accountant';
+export type UserRole = 'admin' | 'staff' | 'agent' | 'manager' | 'accountant' | 'sales' | 'transport-officer';
 export type UserStatus = 'active' | 'inactive' | 'suspended';
 
 export interface LoginCredentials {

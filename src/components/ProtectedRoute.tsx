@@ -48,7 +48,7 @@ export default function ProtectedRoute({
         const hasAllPermissions = requiredPermissions.every(permission =>
           hasPermission(user as any, permission.resource, permission.action)
         );
-        
+
         if (!hasAllPermissions) {
           setIsAuthorized(false);
           setIsChecking(false);
@@ -130,7 +130,7 @@ export default function ProtectedRoute({
               Go Back
             </button>
             <button
-              onClick={() => router.push('/staff/dashboard')}
+              onClick={() => router.push(user?.role === 'admin' ? '/staff/admin-dashboard' : '/staff/dashboard')}
               className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors duration-200"
             >
               Go to Dashboard
@@ -205,24 +205,26 @@ export function useAccessControl() {
 
   const canAccessRoute = (route: string): boolean => {
     if (!user) return false;
-    
-         // Define route-based access control
-     const routePermissions: Record<string, UserRole[]> = {
-       '/staff/users': ['admin', 'manager'],
-       '/staff/vehicles': ['admin', 'manager', 'staff'],
-       '/staff/bookings': ['admin', 'manager', 'staff', 'agent'],
-       '/staff/reports': ['admin', 'manager', 'staff'],
-       '/staff/financial-reports': ['admin', 'manager', 'accountant'],
-       '/staff/accountant-dashboard': ['admin', 'accountant'],
-       '/admin': ['admin']
-     };
-    
-         for (const [routePattern, allowedRoles] of Object.entries(routePermissions)) {
-       if (route.startsWith(routePattern)) {
-         return allowedRoles.includes(user.role as UserRole);
-       }
-     }
-    
+
+    // Define route-based access control
+    const routePermissions: Record<string, UserRole[]> = {
+      '/staff/users': ['admin', 'manager'],
+      '/staff/vehicles': ['admin', 'manager', 'staff'],
+      '/staff/bookings': ['admin', 'manager', 'staff', 'agent'],
+      '/staff/reports': ['admin', 'manager', 'staff'],
+      '/staff/financial-reports': ['admin', 'manager', 'accountant'],
+      '/staff/accountant-dashboard': ['admin', 'accountant'],
+      '/staff/admin-dashboard': ['admin'],
+      '/staff/sales-dashboard': ['admin', 'staff', 'sales'],
+      '/staff/transport_officer-dashboard': ['admin', 'staff', 'transport-officer']
+    };
+
+    for (const [routePattern, allowedRoles] of Object.entries(routePermissions)) {
+      if (route.startsWith(routePattern)) {
+        return allowedRoles.includes(user.role as UserRole);
+      }
+    }
+
     return true;
   };
 

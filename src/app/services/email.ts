@@ -1,3 +1,5 @@
+import nodemailer from 'nodemailer';
+
 export async function sendEmail({
   to,
   subject,
@@ -9,27 +11,35 @@ export async function sendEmail({
   text: string;
   html?: string;
 }) {
-  // Check if Resend API key is available
-  if (!process.env.RESEND_API_KEY) {
-    console.warn('Resend API key not configured. Email not sent:', { to, subject });
-    return { id: 'no-resend-key', success: false };
-  }
-
   try {
-    // Dynamic import to avoid build-time issues
-    const { Resend } = await import('resend');
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    
-    const info = await resend.emails.send({
-      from: process.env.SMTP_FROM || 'valery.osisolns@gmail.com',
+    // Configure SMTP transporter using Brevo (formerly Sendinblue)
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: process.env.SMTP_USER || '9c4ca5001@smtp-brevo.com',
+        pass: process.env.SMTP_PASSWORD || 'xsmtpsib-fea4c8ccc4e301e73030a9c6874c140e27e57337a1fa936b0748e869243e04c0-Cf7gtDZCP2moDrDG',
+      },
+    });
+
+    const from = process.env.SMTP_FROM || 'KIMU Transport <valery.osisolns@gmail.com>';
+
+    console.log(`[Email Service] Sending email to ${to} from ${from}`);
+
+    // Send email
+    const info = await transporter.sendMail({
+      from,
       to,
       subject,
       text,
-      html,
+      html: html || text,
     });
-    return info;
+
+    console.log(`[Email Service] Email sent successfully: ${info.messageId}`);
+    return { id: info.messageId, success: true };
   } catch (error) {
-    console.error('Failed to send email:', error);
+    console.error('[Email Service] Failed to send email:', error);
     throw error;
   }
-} 
+}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FaPlus, FaEdit, FaTrash, FaChartPie, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
 
 interface Budget {
@@ -49,11 +49,7 @@ export default function BudgetTracker({ onBudgetUpdated }: BudgetTrackerProps) {
     description: ''
   });
 
-  useEffect(() => {
-    fetchBudgets();
-  }, [selectedYear, selectedPeriod, selectedMonth, selectedQuarter]);
-
-  const fetchBudgets = async () => {
+  const fetchBudgets = useCallback(async () => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
@@ -76,7 +72,11 @@ export default function BudgetTracker({ onBudgetUpdated }: BudgetTrackerProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedYear, selectedPeriod, selectedMonth, selectedQuarter]);
+
+  useEffect(() => {
+    fetchBudgets();
+  }, [fetchBudgets]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

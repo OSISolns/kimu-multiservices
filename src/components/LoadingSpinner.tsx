@@ -206,7 +206,7 @@ const LoadingSpinner = function LoadingSpinner({
           </div>
         );
     }
-  }, [variant, config, colors, color]);
+  }, [variant, config, colors]);
 
   // Progress bar component
   const renderProgressBar = () => {

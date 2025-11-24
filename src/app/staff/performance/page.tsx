@@ -59,7 +59,7 @@ export default function StaffPerformancePage() {
     if (!isLoading && !user) {
       router.push('/staff/login');
     } else if (!isLoading && user && user.role !== 'admin') {
-      router.push('/staff/dashboard');
+      router.push('/staff/sales-dashboard');
     }
   }, [isLoading, user, router]);
 
@@ -123,15 +123,15 @@ export default function StaffPerformancePage() {
     // Add totals/averages row with formulas
     const lastRow = sheet.lastRow ? sheet.lastRow.number + 1 : filteredStaff.length + 2;
     sheet.getCell(`A${lastRow}`).value = 'Totals/Averages';
-    sheet.getCell(`C${lastRow}`).value = { formula: `SUM(C2:C${lastRow-1})` };
-    sheet.getCell(`D${lastRow}`).value = { formula: `SUM(D2:D${lastRow-1})` };
-    sheet.getCell(`E${lastRow}`).value = { formula: `SUM(E2:E${lastRow-1})` };
-    sheet.getCell(`F${lastRow}`).value = { formula: `SUM(F2:F${lastRow-1})` };
-    sheet.getCell(`G${lastRow}`).value = { formula: `SUM(G2:G${lastRow-1})` };
-    sheet.getCell(`H${lastRow}`).value = { formula: `SUM(H2:H${lastRow-1})` };
-    sheet.getCell(`I${lastRow}`).value = { formula: `AVERAGE(I2:I${lastRow-1})` };
-    sheet.getCell(`J${lastRow}`).value = { formula: `AVERAGE(J2:J${lastRow-1})` };
-    sheet.getCell(`K${lastRow}`).value = { formula: `AVERAGE(K2:K${lastRow-1})` };
+    sheet.getCell(`C${lastRow}`).value = { formula: `SUM(C2:C${lastRow - 1})` };
+    sheet.getCell(`D${lastRow}`).value = { formula: `SUM(D2:D${lastRow - 1})` };
+    sheet.getCell(`E${lastRow}`).value = { formula: `SUM(E2:E${lastRow - 1})` };
+    sheet.getCell(`F${lastRow}`).value = { formula: `SUM(F2:F${lastRow - 1})` };
+    sheet.getCell(`G${lastRow}`).value = { formula: `SUM(G2:G${lastRow - 1})` };
+    sheet.getCell(`H${lastRow}`).value = { formula: `SUM(H2:H${lastRow - 1})` };
+    sheet.getCell(`I${lastRow}`).value = { formula: `AVERAGE(I2:I${lastRow - 1})` };
+    sheet.getCell(`J${lastRow}`).value = { formula: `AVERAGE(J2:J${lastRow - 1})` };
+    sheet.getCell(`K${lastRow}`).value = { formula: `AVERAGE(K2:K${lastRow - 1})` };
     sheet.getRow(lastRow).font = { bold: true };
     // Download
     workbook.xlsx.writeBuffer().then(buffer => {
@@ -149,7 +149,7 @@ export default function StaffPerformancePage() {
     <div className="min-h-screen bg-blue-50 py-10 px-4">
       <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-lg p-4">
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <Link href="/staff/dashboard" className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">&larr; Back to Dashboard</Link>
+          <Link href="/staff/sales-dashboard" className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">&larr; Back to Dashboard</Link>
           <button onClick={exportStaffToExcel} className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors">Export to Excel</button>
         </div>
         <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">Staff Performance Dashboard</h1>
@@ -225,21 +225,21 @@ export default function StaffPerformancePage() {
             value={dateRange.from}
             onChange={e => setDateRange(r => ({ ...r, from: e.target.value }))}
             className="border rounded px-2 py-1 text-sm"
-                              title="From date"
+            title="From date"
           />
           <input
             type="date"
             value={dateRange.to}
             onChange={e => setDateRange(r => ({ ...r, to: e.target.value }))}
             className="border rounded px-2 py-1 text-sm"
-                              title="To date"
+            title="To date"
           />
         </div>
         {/* Role-Specific Tables/Logs */}
         {tab === 'sales' && (
           <div className="mb-8">
             <div className="mb-2">
-              <Link href="/staff/sales-management" className="text-blue-600 hover:underline font-semibold">Open Sales Management &rarr;</Link>
+              <Link href="/staff/sales-dashboard" className="text-blue-600 hover:underline font-semibold">Open Sales Management &rarr;</Link>
             </div>
             <h2 className="text-lg font-bold mb-2">Sales & Marketing Officer Tasks & KPIs</h2>
             <ul className="list-disc ml-6 mb-2 text-sm">
@@ -389,7 +389,7 @@ export default function StaffPerformancePage() {
               <li>Dashboards & Logs: Sales, Transport, Finance, Feedback, Vehicle Utilization, Issue Tracking</li>
               <li>KPI Scorecards (monthly rating)</li>
             </ul>
-                            <div className="mb-2 text-sm font-semibold">Reports Archive:</div>
+            <div className="mb-2 text-sm font-semibold">Reports Archive:</div>
             <ul className="list-disc ml-6 mb-2 text-sm">
               <li>Weekly Report - 2024-07-01</li>
               <li>Weekly Report - 2024-06-24</li>

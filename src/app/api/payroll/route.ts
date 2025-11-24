@@ -136,13 +136,12 @@ export const POST = withValidation(createPayrollSchema, async (req: NextRequest,
     const data = body as z.infer<typeof createPayrollSchema>;
 
     // Check if payroll already exists for this employee and period
-    const existingPayroll = await prisma.payroll.findUnique({
+    const existingPayroll = await prisma.payroll.findFirst({
       where: {
-        employeeId_period: {
-          employeeId: data.employeeId,
-          period: data.period,
-        },
+        employeeId: data.employeeId,
+        period: data.period,
       },
+      select: { id: true },
     });
 
     if (existingPayroll) {
@@ -152,8 +151,14 @@ export const POST = withValidation(createPayrollSchema, async (req: NextRequest,
     const payroll = await prisma.payroll.create({
       data: {
         ...data,
+        actualDays: data.actualDays ?? data.workingDays,
         payrollItems: {
-          create: data.payrollItems,
+          create: data.payrollItems.map(item => ({
+            ...item,
+            employee: {
+              connect: { id: data.employeeId },
+            },
+          })),
         },
       },
       include: {

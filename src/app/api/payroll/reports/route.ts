@@ -82,17 +82,28 @@ async function getPayrollSummary(where: any) {
     }),
   ]);
 
-  const departmentBreakdown = await prisma.payroll.groupBy({
-    by: ['employee'],
-    where,
-    _sum: {
-      grossSalary: true,
-      netSalary: true,
-    },
-    _count: {
-      id: true,
-    },
-  });
+  const departmentMap = payrolls.reduce((acc, payroll) => {
+    const department = payroll.employee?.department || 'Unknown';
+    if (!acc.has(department)) {
+      acc.set(department, {
+        count: 0,
+        totalGrossSalary: 0,
+        totalNetSalary: 0,
+      });
+    }
+    const current = acc.get(department)!;
+    current.count += 1;
+    current.totalGrossSalary += payroll.grossSalary;
+    current.totalNetSalary += payroll.netSalary;
+    return acc;
+  }, new Map<string, { count: number; totalGrossSalary: number; totalNetSalary: number }>());
+
+  const departmentBreakdown = Array.from(departmentMap.entries()).map(([department, data]) => ({
+    department,
+    count: data.count,
+    totalGrossSalary: data.totalGrossSalary,
+    totalNetSalary: data.totalNetSalary,
+  }));
 
   return jsonOk({
     summary: {
@@ -107,12 +118,7 @@ async function getPayrollSummary(where: any) {
       averageNetSalary: summary._avg.netSalary || 0,
     },
     payrolls,
-    departmentBreakdown: departmentBreakdown.map(item => ({
-      department: item.employee.department,
-      count: item._count.id,
-      totalGrossSalary: item._sum.grossSalary || 0,
-      totalNetSalary: item._sum.netSalary || 0,
-    })),
+    departmentBreakdown,
   });
 }
 
@@ -150,34 +156,43 @@ async function getMonthlyReport(where: any) {
 }
 
 async function getDepartmentReport(where: any) {
-  const departmentData = await prisma.payroll.groupBy({
-    by: ['employee'],
+  const payrolls = await prisma.payroll.findMany({
     where,
-    _sum: {
-      grossSalary: true,
-      netSalary: true,
-      totalAllowances: true,
-      totalDeductions: true,
-    },
-    _count: {
-      id: true,
-    },
-    _avg: {
-      grossSalary: true,
-      netSalary: true,
+    include: {
+      employee: true,
     },
   });
 
+  const departmentAggregates = payrolls.reduce((acc, payroll) => {
+    const department = payroll.employee?.department || 'Unknown';
+    if (!acc.has(department)) {
+      acc.set(department, {
+        totalPayrolls: 0,
+        totalGrossSalary: 0,
+        totalNetSalary: 0,
+        totalAllowances: 0,
+        totalDeductions: 0,
+      });
+    }
+    const current = acc.get(department)!;
+    current.totalPayrolls += 1;
+    current.totalGrossSalary += payroll.grossSalary;
+    current.totalNetSalary += payroll.netSalary;
+    current.totalAllowances += payroll.totalAllowances;
+    current.totalDeductions += payroll.totalDeductions;
+    return acc;
+  }, new Map<string, { totalPayrolls: number; totalGrossSalary: number; totalNetSalary: number; totalAllowances: number; totalDeductions: number }>());
+
   return jsonOk({
-    departmentData: departmentData.map(item => ({
-      department: item.employee.department,
-      totalPayrolls: item._count.id,
-      totalGrossSalary: item._sum.grossSalary || 0,
-      totalNetSalary: item._sum.netSalary || 0,
-      totalAllowances: item._sum.totalAllowances || 0,
-      totalDeductions: item._sum.totalDeductions || 0,
-      averageGrossSalary: item._avg.grossSalary || 0,
-      averageNetSalary: item._avg.netSalary || 0,
+    departmentData: Array.from(departmentAggregates.entries()).map(([department, data]) => ({
+      department,
+      totalPayrolls: data.totalPayrolls,
+      totalGrossSalary: data.totalGrossSalary,
+      totalNetSalary: data.totalNetSalary,
+      totalAllowances: data.totalAllowances,
+      totalDeductions: data.totalDeductions,
+      averageGrossSalary: data.totalPayrolls ? data.totalGrossSalary / data.totalPayrolls : 0,
+      averageNetSalary: data.totalPayrolls ? data.totalNetSalary / data.totalPayrolls : 0,
     })),
   });
 }
@@ -211,7 +226,7 @@ async function getEmployeeReport(where: any) {
 }
 
 async function getPayrollStats(where: any) {
-  const [totalStats, monthlyTrend, departmentBreakdown, statusBreakdown] = await Promise.all([
+  const [totalStats, monthlyTrend, departmentPayrolls, statusBreakdown] = await Promise.all([
     prisma.payroll.aggregate({
       where,
       _sum: {
@@ -244,15 +259,17 @@ async function getPayrollStats(where: any) {
         { month: 'asc' },
       ],
     }),
-    prisma.payroll.groupBy({
-      by: ['employee'],
+    prisma.payroll.findMany({
       where,
-      _sum: {
-        grossSalary: true,
-        netSalary: true,
-      },
-      _count: {
+      select: {
         id: true,
+        netSalary: true,
+        grossSalary: true,
+        employee: {
+          select: {
+            department: true,
+          },
+        },
       },
     }),
     prisma.payroll.groupBy({
@@ -277,10 +294,21 @@ async function getPayrollStats(where: any) {
       amount: item._sum.netSalary || 0,
       employees: item._count.id,
     })),
-    departmentBreakdown: departmentBreakdown.map(item => ({
-      department: item.employee.department,
-      count: item._count.id,
-      totalSalary: item._sum.netSalary || 0,
+    departmentBreakdown: Array.from(
+      departmentPayrolls.reduce((acc, payroll) => {
+        const department = payroll.employee?.department || 'Unknown';
+        if (!acc.has(department)) {
+          acc.set(department, { count: 0, totalSalary: 0 });
+        }
+        const current = acc.get(department)!;
+        current.count += 1;
+        current.totalSalary += payroll.netSalary;
+        return acc;
+      }, new Map<string, { count: number; totalSalary: number }>()),
+    ).map(([department, data]) => ({
+      department,
+      count: data.count,
+      totalSalary: data.totalSalary,
     })),
     statusBreakdown: statusBreakdown.map(item => ({
       status: item.status,
