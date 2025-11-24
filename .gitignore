@@ -34,10 +34,12 @@ yarn-error.log*
 next-env.d.ts
 
 # database
-/prisma/dev.db
-/prisma/dev.db-journal
-*.db
-*.db-journal
+# Note: Uncommenting these to allow dev.db for Vercel deployment
+# For production, consider using a cloud database instead
+# /prisma/dev.db
+# /prisma/dev.db-journal
+# *.db
+# *.db-journal
 
 # logs
 *.log
