@@ -133,13 +133,15 @@ export default function ReportsPage() {
       mtnMomoRWF: 0,
       equityBankRWF: 0,
       bkBankRWF: 0,
-      cashRWF: 0
+      cashRWF: 0,
+      pettyCashRWF: 0
     },
     closingBalances: {
       mtnMomoRWF: 0,
       equityBankRWF: 0,
       bkBankRWF: 0,
-      cashRWF: 0
+      cashRWF: 0,
+      pettyCashRWF: 0
     },
     income: [],
     expenses: []
