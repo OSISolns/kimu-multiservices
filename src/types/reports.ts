@@ -53,6 +53,7 @@ export interface FinancialTransaction {
   equityBankRWF?: number;
   bkBankRWF?: number;
   cashRWF?: number;
+  pettyCashRWF?: number;
 }
 
 export interface AccountBalances {
@@ -60,6 +61,7 @@ export interface AccountBalances {
   equityBankRWF: number;
   bkBankRWF: number;
   cashRWF: number;
+  pettyCashRWF: number;
 }
 
 export interface FinancialSummary {
