@@ -2,7 +2,7 @@
 
 // This page uses useUser hook and should not be prerendered
 
-import { FaFileAlt, FaCar, FaTaxi, FaPlane, FaHotel, FaHandshake, FaDownload, FaCheck, FaHourglassHalf, FaTimes, FaExclamationTriangle, FaMoneyBillWave, FaChartLine, FaCalculator, FaCalendarAlt, FaPiggyBank, FaChartPie } from 'react-icons/fa';
+import { FaFileAlt, FaCar, FaTaxi, FaPlane, FaHotel, FaHandshake, FaDownload, FaCheck, FaHourglassHalf, FaTimes, FaMoneyBillWave, FaChartLine, FaCalculator, FaPiggyBank, FaChartPie } from 'react-icons/fa';
 import dynamicImport from 'next/dynamic';
 
 // Dynamically import charts to reduce initial bundle size
@@ -132,12 +132,14 @@ export default function ReportsPage() {
     openingBalances: {
       mtnMomoRWF: 0,
       equityBankRWF: 0,
-      bkBankRWF: 0
+      bkBankRWF: 0,
+      cashRWF: 0
     },
     closingBalances: {
       mtnMomoRWF: 0,
       equityBankRWF: 0,
-      bkBankRWF: 0
+      bkBankRWF: 0,
+      cashRWF: 0
     },
     income: [],
     expenses: []
@@ -281,6 +283,41 @@ export default function ReportsPage() {
       setFinancialLoading(false);
     }
   }, [financialPeriod, financialStartDate, financialEndDate, user?.username]);
+
+  // Financial Analysis Computed Values
+  const expenseAnalysis = useMemo(() => {
+    const grouped: { [key: string]: number } = {};
+    financialSummary.expenses.forEach(t => {
+      const cat = t.category || 'Uncategorized';
+      const amount = (t.mtnMomoRWF || 0) + (t.equityBankRWF || 0) + (t.bkBankRWF || 0) + (t.cashRWF || 0);
+      grouped[cat] = (grouped[cat] || 0) + amount;
+    });
+    return Object.entries(grouped).sort(([, a], [, b]) => b - a);
+  }, [financialSummary.expenses]);
+
+  const incomeAnalysis = useMemo(() => {
+    const grouped: { [key: string]: number } = {};
+    financialSummary.income.forEach(t => {
+      const cat = t.category || 'Sales';
+      const amount = (t.mtnMomoRWF || 0) + (t.equityBankRWF || 0) + (t.bkBankRWF || 0) + (t.cashRWF || 0);
+      grouped[cat] = (grouped[cat] || 0) + amount;
+    });
+    return Object.entries(grouped).sort(([, a], [, b]) => b - a);
+  }, [financialSummary.income]);
+
+  const totalOpeningBalance = useMemo(() =>
+    (financialSummary.openingBalances.mtnMomoRWF || 0) +
+    (financialSummary.openingBalances.equityBankRWF || 0) +
+    (financialSummary.openingBalances.bkBankRWF || 0) +
+    (financialSummary.openingBalances.cashRWF || 0),
+    [financialSummary.openingBalances]);
+
+  const totalClosingBalance = useMemo(() =>
+    (financialSummary.closingBalances.mtnMomoRWF || 0) +
+    (financialSummary.closingBalances.equityBankRWF || 0) +
+    (financialSummary.closingBalances.bkBankRWF || 0) +
+    (financialSummary.closingBalances.cashRWF || 0),
+    [financialSummary.closingBalances]);
 
   // Effects
   useEffect(() => {
@@ -725,41 +762,172 @@ export default function ReportsPage() {
                       </div>
                     </div>
 
-                    {/* Balance Sheets */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="bg-white rounded-xl p-6 shadow border">
-                        <h3 className="text-xl font-semibold mb-4 text-gray-700">Opening Balances</h3>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">MTN Momo:</span>
-                            <span className="font-semibold">{formatRWF(financialSummary.openingBalances.mtnMomoRWF)}</span>
+                    {/* Cash Flow Statement */}
+                    <div className="bg-white rounded-xl p-6 shadow border">
+                      <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                        <FaMoneyBillWave className="text-blue-600" />
+                        Cash Flow Statement
+                      </h3>
+                      <div className="space-y-4">
+                        <div className="border-b pb-4">
+                          <h4 className="font-semibold text-gray-700 mb-2">Operating Activities</h4>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span className="text-gray-600">Cash Receipts from Customers</span>
+                            <span className="font-medium text-green-600">+{formatRWF(financialSummary.totalIncome)}</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Equity Bank:</span>
-                            <span className="font-semibold">{formatRWF(financialSummary.openingBalances.equityBankRWF)}</span>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span className="text-gray-600">Cash Paid for Expenses</span>
+                            <span className="font-medium text-red-600">-{formatRWF(financialSummary.totalExpenses)}</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">BK Bank:</span>
-                            <span className="font-semibold">{formatRWF(financialSummary.openingBalances.bkBankRWF)}</span>
+                          <div className="flex justify-between font-bold mt-2 pt-2 border-t border-dashed">
+                            <span>Net Cash Flow from Operations</span>
+                            <span className={financialSummary.netProfit >= 0 ? 'text-green-700' : 'text-red-700'}>
+                              {formatRWF(financialSummary.netProfit)}
+                            </span>
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-gray-700 mb-2">Reconciliation</h4>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span className="text-gray-600">Cash at Beginning of Period</span>
+                            <span className="font-medium">{formatRWF(totalOpeningBalance)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span className="text-gray-600">Net Increase/Decrease in Cash</span>
+                            <span className={`font-medium ${financialSummary.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {financialSummary.netProfit >= 0 ? '+' : ''}{formatRWF(financialSummary.netProfit)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between font-bold mt-2 pt-2 border-t border-gray-200 bg-gray-50 p-2 rounded">
+                            <span>Cash at End of Period</span>
+                            <span className="text-blue-700">{formatRWF(totalClosingBalance)}</span>
                           </div>
                         </div>
                       </div>
+                    </div>
 
+                    {/* Balance Sheet */}
+                    <div className="bg-white rounded-xl p-6 shadow border">
+                      <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                        <FaPiggyBank className="text-purple-600" />
+                        Balance Sheet
+                      </h3>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Assets */}
+                        <div>
+                          <h4 className="font-bold text-gray-700 border-b-2 border-green-500 pb-2 mb-3">ASSETS</h4>
+                          <div className="space-y-4">
+                            <div>
+                              <h5 className="font-semibold text-gray-600 text-sm uppercase mb-2">Current Assets</h5>
+                              <div className="pl-3 border-l-2 border-gray-200 space-y-2">
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-gray-600">Cash on Hand</span>
+                                  <span className="font-medium">{formatRWF(financialSummary.closingBalances.cashRWF)}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-gray-600">Mobile Money (MTN)</span>
+                                  <span className="font-medium">{formatRWF(financialSummary.closingBalances.mtnMomoRWF)}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-gray-600">Equity Bank</span>
+                                  <span className="font-medium">{formatRWF(financialSummary.closingBalances.equityBankRWF)}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-gray-600">BK Bank</span>
+                                  <span className="font-medium">{formatRWF(financialSummary.closingBalances.bkBankRWF)}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex justify-between font-bold pt-2 border-t">
+                              <span>Total Assets</span>
+                              <span className="text-green-700">{formatRWF(totalClosingBalance)}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Liabilities & Equity */}
+                        <div>
+                          <h4 className="font-bold text-gray-700 border-b-2 border-red-500 pb-2 mb-3">LIABILITIES & EQUITY</h4>
+                          <div className="space-y-6">
+                            <div>
+                              <h5 className="font-semibold text-gray-600 text-sm uppercase mb-2">Liabilities</h5>
+                              <div className="pl-3 border-l-2 border-gray-200">
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-gray-600">Total Liabilities</span>
+                                  <span className="font-medium">0 RWF</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div>
+                              <h5 className="font-semibold text-gray-600 text-sm uppercase mb-2">Equity</h5>
+                              <div className="pl-3 border-l-2 border-gray-200 space-y-2">
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-gray-600">Owner&apos;s Equity</span>
+                                  <span className="font-medium">{formatRWF(totalClosingBalance)}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex justify-between font-bold pt-2 border-t">
+                              <span>Total Liabilities & Equity</span>
+                              <span className="text-blue-700">{formatRWF(totalClosingBalance)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Revenue & Expense Analysis */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Revenue Analysis */}
                       <div className="bg-white rounded-xl p-6 shadow border">
-                        <h3 className="text-xl font-semibold mb-4 text-gray-700">Closing Balances</h3>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">MTN Momo:</span>
-                            <span className="font-semibold">{formatRWF(financialSummary.closingBalances.mtnMomoRWF)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Equity Bank:</span>
-                            <span className="font-semibold">{formatRWF(financialSummary.closingBalances.equityBankRWF)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">BK Bank:</span>
-                            <span className="font-semibold">{formatRWF(financialSummary.closingBalances.bkBankRWF)}</span>
-                          </div>
+                        <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                          <FaChartPie className="text-green-600" />
+                          Revenue Analysis
+                        </h3>
+                        <div className="space-y-3">
+                          {incomeAnalysis.map(([category, amount]) => (
+                            <div key={category}>
+                              <div className="flex justify-between text-sm mb-1">
+                                <span className="font-medium text-gray-700 capitalize">{category.replace('_', ' ')}</span>
+                                <span className="font-semibold text-gray-900">{formatRWF(amount)}</span>
+                              </div>
+                              <div className="w-full bg-gray-100 rounded-full h-2">
+                                <div
+                                  className="bg-green-500 h-2 rounded-full"
+                                  style={{ width: `${(amount / financialSummary.totalIncome) * 100}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          ))}
+                          {incomeAnalysis.length === 0 && <p className="text-gray-500 text-sm">No revenue data available.</p>}
+                        </div>
+                      </div>
+
+                      {/* Expense Analysis */}
+                      <div className="bg-white rounded-xl p-6 shadow border">
+                        <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                          <FaChartPie className="text-red-600" />
+                          Expense Analysis
+                        </h3>
+                        <div className="space-y-3">
+                          {expenseAnalysis.map(([category, amount]) => (
+                            <div key={category}>
+                              <div className="flex justify-between text-sm mb-1">
+                                <span className="font-medium text-gray-700 capitalize">{category.replace('_', ' ')}</span>
+                                <span className="font-semibold text-gray-900">{formatRWF(amount)}</span>
+                              </div>
+                              <div className="w-full bg-gray-100 rounded-full h-2">
+                                <div
+                                  className="bg-red-500 h-2 rounded-full"
+                                  style={{ width: `${(amount / financialSummary.totalExpenses) * 100}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          ))}
+                          {expenseAnalysis.length === 0 && <p className="text-gray-500 text-sm">No expense data available.</p>}
                         </div>
                       </div>
                     </div>
@@ -837,4 +1005,4 @@ export default function ReportsPage() {
       </div>
     </div>
   );
-} 
+}

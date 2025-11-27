@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser } from "../../../UserContext";
 import {
     FaFileInvoiceDollar,
@@ -24,60 +24,96 @@ interface FinancialDoc {
     dueDate?: string;
 }
 
-const MOCK_DOCS: FinancialDoc[] = [
-    {
-        id: '1',
-        type: 'Invoice',
-        number: 'INV-2025-001',
-        client: 'John Doe',
-        amount: 1500,
-        status: 'Paid',
-        date: '2025-05-01',
-        dueDate: '2025-05-15'
-    },
-    {
-        id: '2',
-        type: 'Quote',
-        number: 'QT-2025-042',
-        client: 'ABC Corp',
-        amount: 45000,
-        status: 'Sent',
-        date: '2025-05-10',
-        dueDate: '2025-06-10'
-    },
-    {
-        id: '3',
-        type: 'Invoice',
-        number: 'INV-2025-002',
-        client: 'XYZ Ltd',
-        amount: 2800,
-        status: 'Overdue',
-        date: '2025-04-20',
-        dueDate: '2025-05-04'
-    },
-    {
-        id: '4',
-        type: 'Quote',
-        number: 'QT-2025-043',
-        client: 'Jane Smith',
-        amount: 1200,
-        status: 'Draft',
-        date: '2025-05-12',
-        dueDate: '2025-05-26'
-    }
-];
+interface Lead {
+    id: number;
+    name: string;
+    email: string;
+}
 
 export default function FinancialsPage() {
     const { user, isLoading } = useUser();
-    const [docs, setDocs] = useState<FinancialDoc[]>(MOCK_DOCS);
+    const [docs, setDocs] = useState<FinancialDoc[]>([]);
+    const [leads, setLeads] = useState<Lead[]>([]);
+    const [isLoadingData, setIsLoadingData] = useState(true);
     const [filterType, setFilterType] = useState<'All' | 'Invoice' | 'Quote'>('All');
     const [searchTerm, setSearchTerm] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalType, setModalType] = useState<'Invoice' | 'Quote'>('Invoice');
-    const [newDoc, setNewDoc] = useState<Partial<FinancialDoc>>({
-        client: '',
-        amount: 0
+    const [newDoc, setNewDoc] = useState<{
+        clientId: string;
+        clientName: string; // For Invoice manual entry if needed
+        clientEmail: string;
+        amount: number;
+        description: string;
+    }>({
+        clientId: '',
+        clientName: '',
+        clientEmail: '',
+        amount: 0,
+        description: ''
     });
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setIsLoadingData(true);
+
+                // Fetch Leads for dropdown
+                const leadsRes = await fetch('/api/leads?limit=100');
+                if (leadsRes.ok) {
+                    const data = await leadsRes.json();
+                    setLeads(data.data || data);
+                }
+
+                // Fetch Quotes
+                const quotesRes = await fetch('/api/quotes?limit=50');
+                let fetchedQuotes: FinancialDoc[] = [];
+                if (quotesRes.ok) {
+                    const data = await quotesRes.json();
+                    fetchedQuotes = data.quotes.map((q: any) => ({
+                        id: `q-${q.id}`,
+                        type: 'Quote',
+                        number: `QT-${q.id}`,
+                        client: q.customer?.name || 'Unknown',
+                        amount: q.amount,
+                        status: q.status.charAt(0).toUpperCase() + q.status.slice(1),
+                        date: new Date(q.createdAt).toISOString().split('T')[0],
+                        dueDate: new Date(q.validUntil).toISOString().split('T')[0]
+                    }));
+                }
+
+                // Fetch Invoices
+                const invoicesRes = await fetch('/api/accounting/invoices');
+                let fetchedInvoices: FinancialDoc[] = [];
+                if (invoicesRes.ok) {
+                    const data = await invoicesRes.json();
+                    fetchedInvoices = data.map((inv: any) => ({
+                        id: `i-${inv.id}`,
+                        type: 'Invoice',
+                        number: inv.invoiceNumber,
+                        client: inv.clientName,
+                        amount: inv.grandTotal,
+                        status: inv.status.charAt(0).toUpperCase() + inv.status.slice(1),
+                        date: new Date(inv.createdAt).toISOString().split('T')[0],
+                        dueDate: new Date(inv.dueDate).toISOString().split('T')[0]
+                    }));
+                }
+
+                setDocs([...fetchedQuotes, ...fetchedInvoices].sort((a, b) =>
+                    new Date(b.date).getTime() - new Date(a.date).getTime()
+                ));
+
+            } catch (error) {
+                console.error('Error fetching financials:', error);
+            } finally {
+                setIsLoadingData(false);
+            }
+        };
+
+        if (user && !isLoading) {
+            fetchData();
+        }
+    }, [user, isLoading]);
 
     const filteredDocs = docs.filter(doc => {
         const matchesType = filterType === 'All' || doc.type === filterType;
@@ -86,23 +122,121 @@ export default function FinancialsPage() {
         return matchesType && matchesSearch;
     });
 
-    const handleCreateDoc = () => {
-        if (!newDoc.client) return;
+    const handleCreateDoc = async () => {
+        if (!newDoc.amount) {
+            alert("Please enter an amount.");
+            return;
+        }
 
-        const doc: FinancialDoc = {
-            id: Math.random().toString(36).substr(2, 9),
-            type: modalType,
-            number: `${modalType === 'Invoice' ? 'INV' : 'QT'}-2025-${Math.floor(Math.random() * 1000)}`,
-            client: newDoc.client!,
-            amount: newDoc.amount || 0,
-            status: 'Draft',
-            date: new Date().toISOString().split('T')[0],
-            dueDate: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0]
-        };
+        try {
+            if (modalType === 'Quote') {
+                if (!newDoc.clientId) {
+                    alert("Please select a client.");
+                    return;
+                }
 
-        setDocs([doc, ...docs]);
-        setIsModalOpen(false);
-        setNewDoc({ client: '', amount: 0 });
+                const payload = {
+                    customerId: parseInt(newDoc.clientId),
+                    serviceType: newDoc.description || 'General Service',
+                    amount: newDoc.amount,
+                    currency: 'RWF',
+                    validUntil: new Date(Date.now() + 14 * 86400000).toISOString(), // 14 days validity
+                    notes: newDoc.description,
+                    createdBy: user?.id
+                };
+
+                const response = await fetch('/api/quotes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const q = data.quote;
+                    const newQuote: FinancialDoc = {
+                        id: `q-${q.id}`,
+                        type: 'Quote',
+                        number: `QT-${q.id}`,
+                        client: q.customer?.name || 'Unknown',
+                        amount: q.amount,
+                        status: 'Draft',
+                        date: new Date().toISOString().split('T')[0],
+                        dueDate: new Date(q.validUntil).toISOString().split('T')[0]
+                    };
+                    setDocs([newQuote, ...docs]);
+                    setIsModalOpen(false);
+                } else {
+                    const err = await response.json();
+                    alert(`Failed to create quote: ${err.error}`);
+                }
+
+            } else {
+                // Invoice
+                const clientName = newDoc.clientId
+                    ? leads.find(l => l.id.toString() === newDoc.clientId)?.name
+                    : newDoc.clientName;
+
+                const clientEmail = newDoc.clientId
+                    ? leads.find(l => l.id.toString() === newDoc.clientId)?.email
+                    : newDoc.clientEmail;
+
+                if (!clientName || !clientEmail) {
+                    alert("Client Name and Email are required.");
+                    return;
+                }
+
+                const payload = {
+                    invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+                    clientName: clientName,
+                    clientEmail: clientEmail,
+                    amount: newDoc.amount,
+                    description: newDoc.description || 'Service Charge',
+                    dueDate: new Date(Date.now() + 30 * 86400000).toISOString(),
+                    items: [
+                        {
+                            description: newDoc.description || 'Service Charge',
+                            quantity: 1,
+                            unitPrice: newDoc.amount,
+                            total: newDoc.amount
+                        }
+                    ],
+                    status: 'pending'
+                };
+
+                const response = await fetch('/api/accounting/invoices', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    const inv = await response.json();
+                    const newInvoice: FinancialDoc = {
+                        id: `i-${inv.id}`,
+                        type: 'Invoice',
+                        number: inv.invoiceNumber,
+                        client: inv.clientName,
+                        amount: inv.grandTotal,
+                        status: 'Pending',
+                        date: new Date().toISOString().split('T')[0],
+                        dueDate: new Date(inv.dueDate).toISOString().split('T')[0]
+                    };
+                    setDocs([newInvoice, ...docs]);
+                    setIsModalOpen(false);
+                } else {
+                    const err = await response.json();
+                    alert(`Failed to create invoice: ${err.error}`);
+                }
+            }
+
+            // Reset form
+            setNewDoc({ clientId: '', clientName: '', clientEmail: '', amount: 0, description: '' });
+
+        } catch (error) {
+            console.error('Error creating document:', error);
+            alert('An error occurred.');
+        }
     };
 
     const openModal = (type: 'Invoice' | 'Quote') => {
@@ -110,7 +244,7 @@ export default function FinancialsPage() {
         setIsModalOpen(true);
     };
 
-    if (isLoading) {
+    if (isLoading || isLoadingData) {
         return <LoadingSpinner size="lg" message="Loading Financials..." />;
     }
 
@@ -182,45 +316,63 @@ export default function FinancialsPage() {
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredDocs.map((doc) => (
-                            <tr key={doc.id} className="hover:bg-gray-50 transition-colors">
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="flex items-center">
-                                        <div className={`p-2 rounded-lg mr-3 
-                                            ${doc.type === 'Invoice' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
-                                            {doc.type === 'Invoice' ? <FaFileInvoiceDollar /> : <FaFileAlt />}
-                                        </div>
-                                        <div>
-                                            <div className="text-sm font-medium text-gray-900">{doc.number}</div>
-                                            <div className="text-xs text-gray-500">{doc.type}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {doc.client}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    RWF {doc.amount.toLocaleString()}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                        ${doc.status === 'Paid' || doc.status === 'Accepted' ? 'bg-green-100 text-green-800' :
-                                            doc.status === 'Overdue' || doc.status === 'Rejected' ? 'bg-red-100 text-red-800' :
-                                                doc.status === 'Sent' ? 'bg-blue-100 text-blue-800' :
-                                                    'bg-gray-100 text-gray-800'}`}>
-                                        {doc.status}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {doc.date}
-                                    <div className="text-xs text-gray-400">Due: {doc.dueDate}</div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <button className="text-gray-400 hover:text-gray-600 mx-2"><FaDownload /></button>
-                                    <button className="text-gray-400 hover:text-gray-600"><FaEllipsisV /></button>
+                        {filteredDocs.length === 0 ? (
+                            <tr>
+                                <td colSpan={6} className="px-6 py-10 text-center text-gray-500">
+                                    No documents found.
                                 </td>
                             </tr>
-                        ))}
+                        ) : (
+                            filteredDocs.map((doc) => (
+                                <tr key={doc.id} className="hover:bg-gray-50 transition-colors">
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="flex items-center">
+                                            <div className={`p-2 rounded-lg mr-3 
+                                                ${doc.type === 'Invoice' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
+                                                {doc.type === 'Invoice' ? <FaFileInvoiceDollar /> : <FaFileAlt />}
+                                            </div>
+                                            <div>
+                                                <div className="text-sm font-medium text-gray-900">{doc.number}</div>
+                                                <div className="text-xs text-gray-500">{doc.type}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {doc.client}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        RWF {doc.amount.toLocaleString()}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                            ${doc.status === 'Paid' || doc.status === 'Accepted' ? 'bg-green-100 text-green-800' :
+                                                doc.status === 'Overdue' || doc.status === 'Rejected' ? 'bg-red-100 text-red-800' :
+                                                    doc.status === 'Sent' ? 'bg-blue-100 text-blue-800' :
+                                                        'bg-gray-100 text-gray-800'}`}>
+                                            {doc.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {doc.date}
+                                        <div className="text-xs text-gray-400">Due: {doc.dueDate}</div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button
+                                            onClick={() => alert(`Download ${doc.type}\n\n${doc.number}\nClient: ${doc.client}\nAmount: RWF ${doc.amount.toLocaleString()}\n\nDocument download feature coming soon!`)}
+                                            className="text-gray-400 hover:text-gray-600 mx-2"
+                                        >
+                                            <FaDownload />
+                                        </button>
+                                        <button
+                                            onClick={() => alert(`${doc.type} Actions\n\n${doc.number}\n\nOptions:\n• Edit ${doc.type}\n• Send to Client\n• Mark as Paid\n• Delete\n\nFull management features coming soon!`)}
+                                            className="text-gray-400 hover:text-gray-600"
+                                        >
+                                            <FaEllipsisV />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>
@@ -238,13 +390,50 @@ export default function FinancialsPage() {
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Client Name</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Client</label>
+                                <select
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    value={newDoc.clientId}
+                                    onChange={e => setNewDoc({ ...newDoc, clientId: e.target.value })}
+                                >
+                                    <option value="">Select a client...</option>
+                                    {leads.map(lead => (
+                                        <option key={lead.id} value={lead.id}>{lead.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {modalType === 'Invoice' && !newDoc.clientId && (
+                                <>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Client Name (Manual)</label>
+                                        <input
+                                            type="text"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            value={newDoc.clientName}
+                                            onChange={e => setNewDoc({ ...newDoc, clientName: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Client Email</label>
+                                        <input
+                                            type="email"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            value={newDoc.clientEmail}
+                                            onChange={e => setNewDoc({ ...newDoc, clientEmail: e.target.value })}
+                                        />
+                                    </div>
+                                </>
+                            )}
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                                 <input
                                     type="text"
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="e.g., John Doe"
-                                    value={newDoc.client || ''}
-                                    onChange={e => setNewDoc({ ...newDoc, client: e.target.value })}
+                                    placeholder="e.g., Service Fee"
+                                    value={newDoc.description}
+                                    onChange={e => setNewDoc({ ...newDoc, description: e.target.value })}
                                 />
                             </div>
 

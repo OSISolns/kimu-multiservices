@@ -785,28 +785,28 @@ export default function UsersPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredAndSortedUsers.map((user) => (
-                    <tr key={user.username} className="border-b hover:bg-gray-50 transition-colors">
+                  {filteredAndSortedUsers.map((tableUser) => (
+                    <tr key={tableUser.username} className="border-b hover:bg-gray-50 transition-colors">
                       <td className="py-4 px-6">
                         <input
                           type="checkbox"
-                          checked={selectedUsers.includes(user.username)}
-                          onChange={() => toggleUserSelection(user.username)}
+                          checked={selectedUsers.includes(tableUser.username)}
+                          onChange={() => toggleUserSelection(tableUser.username)}
                           className="rounded border-gray-300"
                         />
                       </td>
                       <td className="py-4 px-6">
                         <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 border-2 border-gray-300 flex items-center justify-center">
-                          {user.profilePicture ? (
+                          {tableUser.profilePicture ? (
                             <Image
-                              src={user.profilePicture}
-                              alt={`${user.fullName || user.username}'s profile`}
+                              src={tableUser.profilePicture}
+                              alt={`${tableUser.fullName || tableUser.username}'s profile`}
                               width={40}
                               height={40}
                               className="w-full h-full object-cover"
                               onError={() => {
                                 // Fallback to default icon if image fails to load
-                                console.warn('Failed to load profile picture for user:', user.username);
+                                console.warn('Failed to load profile picture for user:', tableUser.username);
                               }}
                             />
                           ) : (
@@ -816,52 +816,53 @@ export default function UsersPage() {
                       </td>
                       <td className="py-4 px-6 font-medium">
                         <button
-                          onClick={() => viewUserDetails(user)}
+                          onClick={() => viewUserDetails(tableUser)}
                           className="text-blue-600 hover:underline"
                         >
-                          {user.username}
+                          {tableUser.username}
                         </button>
                       </td>
-                      <td className="py-4 px-6 font-medium">{user.fullName || '-'}</td>
-                      <td className="py-4 px-6 text-sm">{user.email || '-'}</td>
+                      <td className="py-4 px-6 font-medium">{tableUser.fullName || '-'}</td>
+                      <td className="py-4 px-6 text-sm">{tableUser.email || '-'}</td>
                       <td className="py-4 px-6">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getRoleBadgeStyle(user.role)}`}>
-                          {getRoleDisplayName(user.role)}
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getRoleBadgeStyle(tableUser.role)}`}>
+                          {getRoleDisplayName(tableUser.role)}
                         </span>
                       </td>
                       <td className="py-4 px-6">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeStyle(user.status)}`}>
-                          {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeStyle(tableUser.status)}`}>
+                          {tableUser.status.charAt(0).toUpperCase() + tableUser.status.slice(1)}
                         </span>
                       </td>
                       <td className="py-4 px-6 text-sm">
-                        {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never'}
+                        {tableUser.lastLogin ? new Date(tableUser.lastLogin).toLocaleString() : 'Never'}
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex gap-2">
                           <button
-                            onClick={() => viewUserDetails(user)}
+                            onClick={() => viewUserDetails(tableUser)}
                             className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                           >
                             View
                           </button>
-                          {user.role === 'admin' && (
+                          {/* Show Edit/Delete buttons only if the current logged-in user is an admin */}
+                          {user?.role === 'admin' && (
                             <>
                               <button
-                                onClick={() => handleEditUser(user)}
+                                onClick={() => handleEditUser(tableUser)}
                                 className="text-green-600 hover:text-green-800 text-sm font-medium"
                               >
                                 Edit
                               </button>
                               <button
-                                onClick={() => handleDeleteUser(user)}
-                                disabled={user.role === 'admin' || user.role === 'accountant'}
-                                className={`text-sm font-medium ${user.role === 'admin' || user.role === 'accountant'
+                                onClick={() => handleDeleteUser(tableUser)}
+                                disabled={tableUser.role === 'admin' || tableUser.role === 'accountant'}
+                                className={`text-sm font-medium ${tableUser.role === 'admin' || tableUser.role === 'accountant'
                                   ? 'text-gray-400 cursor-not-allowed'
                                   : 'text-red-600 hover:text-red-800'
                                   }`}
                                 title={
-                                  user.role === 'admin' || user.role === 'accountant'
+                                  tableUser.role === 'admin' || tableUser.role === 'accountant'
                                     ? 'Cannot delete admin or accountant users'
                                     : 'Delete user'
                                 }

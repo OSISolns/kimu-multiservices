@@ -115,7 +115,18 @@ export const POST = withValidation(createEmployeeSchema, async (req: NextRequest
     }
 
     const employee = await prisma.employee.create({
-      data,
+      data: {
+        ...data,
+        salaryStructures: {
+          create: {
+            baseSalary: data.salary,
+            allowances: {},
+            deductions: {},
+            effectiveDate: new Date(),
+            isActive: true,
+          }
+        }
+      },
       include: {
         user: {
           select: {
@@ -147,7 +158,7 @@ export async function PUT(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const employeeId = searchParams.get('id');
-    
+
     if (!employeeId) {
       return jsonError('Employee ID is required', 400);
     }
@@ -189,7 +200,7 @@ export async function DELETE(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const employeeId = searchParams.get('id');
-    
+
     if (!employeeId) {
       return jsonError('Employee ID is required', 400);
     }

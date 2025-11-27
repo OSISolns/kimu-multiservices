@@ -13,6 +13,7 @@ const nextConfig = {
       },
     ],
   },
+  serverExternalPackages: ['@libsql/client', '@prisma/adapter-libsql', 'libsql'],
   experimental: {
     optimizeCss: true,
   },

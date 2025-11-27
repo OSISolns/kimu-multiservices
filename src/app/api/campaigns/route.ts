@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { validateInput, sanitizeString } from '@/lib/validation';
 import { handleApiError, createSuccessResponse, createValidationErrorResponse } from '@/lib/errors';
 import { logActivity, logError, logInfo } from '@/lib/logger';
 import { z } from 'zod';
-
-// Create a new Prisma client instance
-const prisma = new PrismaClient();
 
 const createCampaignSchema = z.object({
   name: z.string().min(1, 'Campaign name is required'),
@@ -23,7 +20,7 @@ const createCampaignSchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    
+
     // Validate input
     const validation = validateInput(createCampaignSchema, body);
     if (!validation.success) {
@@ -31,10 +28,10 @@ export async function POST(req: NextRequest) {
     }
 
     const { name, reach, engagement, leads, conversions, budget, startDate, endDate, createdBy } = validation.data!;
-    
+
     // Sanitize string inputs
     const sanitizedName = sanitizeString(name);
-    
+
     // Create the campaign
     const campaign = await prisma.campaign.create({
       data: {

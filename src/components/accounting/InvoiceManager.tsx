@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from 'react';
-import { FaPlus, FaEdit, FaTrash, FaFileInvoiceDollar, FaEye, FaDownload, FaPaperPlane, FaEnvelope } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaFileInvoiceDollar, FaEye, FaDownload, FaPaperPlane, FaEnvelope, FaReceipt } from 'react-icons/fa';
 import jsPDF from 'jspdf';
 import Image from 'next/image';
 
@@ -494,6 +494,217 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
     doc.save(`invoice-${invoice.invoiceNumber}.pdf`);
   };
 
+  const generateReceipt = (invoice: Invoice) => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 20;
+    let yPosition = 20;
+
+    // Helper function to add text with word wrapping
+    const addText = (text: string, x: number, y: number, options: any = {}) => {
+      const maxWidth = pageWidth - x - margin;
+      const lines = doc.splitTextToSize(text, maxWidth);
+      doc.text(lines, x, y);
+      return y + (lines.length * (options.lineHeight || 5)) + (options.spacing || 5);
+    };
+
+    // Helper function to draw a line
+    const drawLine = (x1: number, y1: number, x2: number, y2: number, color: string = '#16a34a') => { // Green color
+      doc.setDrawColor(22, 163, 74);
+      doc.line(x1, y1, x2, y2);
+    };
+
+    // Helper function to add a colored rectangle
+    const addColoredRect = (x: number, y: number, width: number, height: number, color: string = '#16a34a') => {
+      doc.setFillColor(22, 163, 74);
+      doc.rect(x, y, width, height, 'F');
+    };
+
+    // Helper function to add a light background rectangle
+    const addLightRect = (x: number, y: number, width: number, height: number) => {
+      doc.setFillColor(240, 253, 244); // Light green
+      doc.rect(x, y, width, height, 'F');
+    };
+
+    // Header with branding - White background
+    doc.setFillColor(255, 255, 255);
+    doc.rect(0, 0, pageWidth, 30, 'F');
+
+    // KIMU Logo
+    try {
+      doc.addImage('/logo.png', 'PNG', margin + 2, 8, 8, 8);
+    } catch (error) {
+      doc.setTextColor(22, 163, 74); // Green
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text('KIMU', margin + 2, 12);
+    }
+
+    // KIMU text
+    doc.setTextColor(22, 163, 74); // Green
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('KIMU', margin + 10, 9);
+
+    doc.setFontSize(6);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Transport & Multiservices', margin + 10, 14);
+    doc.text('Your Trusted Travel Partner', margin + 10, 18);
+
+    // Receipt details on the right
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PAYMENT RECEIPT', pageWidth - margin - 35, 9);
+
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Receipt #: REC-${invoice.invoiceNumber.replace('INV-', '')}`, pageWidth - margin - 35, 15);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, pageWidth - margin - 35, 20);
+    doc.text(`Invoice Ref: ${invoice.invoiceNumber}`, pageWidth - margin - 35, 25);
+
+    // Green separator line
+    drawLine(margin, 26, pageWidth - margin, 26);
+    yPosition = 32;
+
+    // Company and client information section
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text('From:', margin, yPosition);
+
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'normal');
+    doc.text('KIMU Transport & Multiservices', margin, yPosition + 6);
+    doc.text('Gisozi, KG 780 St, Kigali, Rwanda', margin, yPosition + 10);
+    doc.text('Email: kimutransport6@gmail.com', margin, yPosition + 14);
+    doc.text('Phone: +250 798 284 312', margin, yPosition + 18);
+
+    // Client Information
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Received From:', pageWidth / 2, yPosition);
+
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'normal');
+    doc.text(invoice.clientName, pageWidth / 2, yPosition + 6);
+    doc.text(invoice.clientEmail, pageWidth / 2, yPosition + 10);
+    if (invoice.clientPhone) {
+      doc.text(invoice.clientPhone, pageWidth / 2, yPosition + 14);
+    }
+
+    yPosition += 30;
+
+    // Payment Details
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Payment Details:', margin, yPosition);
+
+    addLightRect(margin, yPosition + 2, pageWidth - 2 * margin, 15);
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Payment for: ${invoice.description}`, margin + 2, yPosition + 6);
+    doc.text(`Payment Method: Bank Transfer / Mobile Money`, margin + 2, yPosition + 10);
+
+    yPosition += 20;
+
+    // Items table header
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Items Paid:', margin, yPosition);
+    yPosition += 5;
+
+    // Table header with light green background
+    doc.setFillColor(220, 252, 231); // Light green
+    doc.rect(margin, yPosition - 2, pageWidth - 2 * margin, 8, 'F');
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Description', margin + 2, yPosition + 1);
+    doc.text('Qty', margin + 60, yPosition + 1);
+    doc.text('Unit Price', margin + 80, yPosition + 1);
+    doc.text('Total', margin + 120, yPosition + 1);
+    yPosition += 8;
+
+    // Table rows
+    invoice.items.forEach((item: any, index: number) => {
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(5);
+      doc.setFont('helvetica', 'normal');
+
+      doc.text(item.description, margin + 2, yPosition + 1);
+      doc.text(item.quantity.toString(), margin + 60, yPosition + 1);
+      doc.text(`${item.unitPrice.toLocaleString()} RWF`, margin + 80, yPosition + 1);
+      doc.text(`${item.total.toLocaleString()} RWF`, margin + 120, yPosition + 1);
+      yPosition += 5;
+    });
+
+    yPosition += 5;
+
+    // Totals section - right aligned
+    const totalsX = pageWidth - 70;
+    const totalsWidth = 50;
+
+    // Subtotal
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Subtotal:', totalsX, yPosition);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${invoice.totalAmount.toLocaleString()} RWF`, totalsX + 20, yPosition);
+    yPosition += 4;
+
+    // Tax
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Tax (${invoice.taxRate}%):`, totalsX, yPosition);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${invoice.taxAmount.toLocaleString()} RWF`, totalsX + 20, yPosition);
+    yPosition += 4;
+
+    // Amount Paid with light green background
+    doc.setFillColor(220, 252, 231); // Light green
+    doc.rect(totalsX - 2, yPosition - 2, totalsWidth + 4, 8, 'F');
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Amount Paid:', totalsX, yPosition + 1);
+    doc.text(`${invoice.grandTotal.toLocaleString()} RWF`, totalsX + 20, yPosition + 1);
+    yPosition += 10;
+
+    // Balance Due
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Balance Due:', totalsX, yPosition);
+    doc.text('0 RWF', totalsX + 20, yPosition);
+
+    yPosition += 10;
+
+    // Status and footer section
+    drawLine(margin, yPosition, pageWidth - margin, yPosition);
+    yPosition += 10;
+
+    // PAID Stamp
+    doc.setTextColor(22, 163, 74); // Green
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PAID', margin, yPosition + 2);
+
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Payment Date: ${new Date().toLocaleDateString()}`, margin + 20, yPosition + 2);
+
+    // Thank you message on the right
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Thank you for your business!', pageWidth - margin - 50, yPosition);
+    doc.text('This is a computer generated receipt.', pageWidth - margin - 50, yPosition + 4);
+
+    // Save the PDF
+    doc.save(`receipt-${invoice.invoiceNumber}.pdf`);
+  };
+
   const sendInvoiceEmail = async () => {
     if (!selectedInvoice) return;
 
@@ -969,6 +1180,14 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
                     >
                       <FaFileInvoiceDollar /> PDF
                     </button>
+                    {selectedInvoice.status === 'paid' && (
+                      <button
+                        onClick={() => generateReceipt(selectedInvoice)}
+                        className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 flex items-center gap-2"
+                      >
+                        <FaReceipt /> Receipt
+                      </button>
+                    )}
                     <button
                       onClick={handleEmailClick}
                       className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 flex items-center gap-2"

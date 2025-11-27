@@ -1,20 +1,18 @@
-import { PrismaClient } from '@/generated/prisma'
+import { prisma } from '@/lib/prisma'
 import { logActivity, ActivityActions, getIpAddress, getUserAgent } from './activityLog'
-import { 
-  sendIncomeNotification, 
-  sendExpenseNotification, 
-  sendEmployeeNotification, 
+import {
+  sendIncomeNotification,
+  sendExpenseNotification,
+  sendEmployeeNotification,
   sendPayrollNotification,
-  sendFinancialSummaryNotification 
+  sendFinancialSummaryNotification
 } from './notifications'
-
-const prisma = new PrismaClient()
 
 // Financial notification functions
 export async function createIncomeNotification(incomeData: any, createdBy: string) {
   try {
     const message = `New income recorded: ${incomeData.description} - ${(incomeData.mtnMomoRWF + incomeData.equityBankRWF + incomeData.bkBankRWF).toLocaleString('en-US')} RWF`
-    
+
     const notification = await prisma.notification.create({
       data: {
         message,
@@ -52,7 +50,7 @@ export async function createIncomeNotification(incomeData: any, createdBy: strin
 export async function createExpenseNotification(expenseData: any, createdBy: string) {
   try {
     const message = `New expense recorded: ${expenseData.description} - ${(expenseData.mtnMomoRWF + expenseData.equityBankRWF + expenseData.bkBankRWF).toLocaleString('en-US')} RWF`
-    
+
     const notification = await prisma.notification.create({
       data: {
         message,
@@ -90,7 +88,7 @@ export async function createExpenseNotification(expenseData: any, createdBy: str
 export async function createEmployeeNotification(employeeData: any, action: 'added' | 'updated' | 'deleted', createdBy: string) {
   try {
     const message = `Employee ${action}: ${employeeData.name} - ${employeeData.position}`
-    
+
     const notification = await prisma.notification.create({
       data: {
         message,
@@ -129,7 +127,7 @@ export async function createEmployeeNotification(employeeData: any, action: 'add
 export async function createPayrollNotification(payrollData: any, processedBy: string) {
   try {
     const message = `Payroll processed for ${payrollData.employeeName} - ${payrollData.amount.toLocaleString('en-US')} RWF`
-    
+
     const notification = await prisma.notification.create({
       data: {
         message,
@@ -167,7 +165,7 @@ export async function createPayrollNotification(payrollData: any, processedBy: s
 export async function createFinancialSummaryNotification(summaryData: any, generatedBy: string) {
   try {
     const message = `Financial summary generated for ${summaryData.period} - Total Income: ${summaryData.totalIncome.toLocaleString('en-US')} RWF, Net Profit: ${summaryData.netProfit.toLocaleString('en-US')} RWF`
-    
+
     const notification = await prisma.notification.create({
       data: {
         message,
@@ -200,4 +198,4 @@ export async function createFinancialSummaryNotification(summaryData: any, gener
     console.error('Error creating financial summary notification:', error)
     throw error
   }
-} 
+}

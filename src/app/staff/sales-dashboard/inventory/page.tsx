@@ -122,7 +122,10 @@ export default function InventoryPage() {
                                 </div>
                             </div>
 
-                            <button className="w-full bg-gray-50 text-gray-700 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors font-medium text-sm">
+                            <button
+                                onClick={() => alert(`Vehicle Details\n\n${vehicle.name}\nYear: ${vehicle.year}\nPrice: ${vehicle.price}/day\nTransmission: ${vehicle.transmission}\nFuel: ${vehicle.fuel}\nStatus: ${vehicle.status}\n\nFull vehicle details page coming soon!`)}
+                                className="w-full bg-gray-50 text-gray-700 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors font-medium text-sm"
+                            >
                                 View Details
                             </button>
                         </div>

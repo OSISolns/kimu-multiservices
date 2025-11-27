@@ -408,14 +408,204 @@ export default function FinancialReportsPage() {
                     </div>
                   )}
 
-                  {/* Placeholder for other report types */}
-                  {!['summary', 'income-statement'].includes(activeReport) && (
-                    <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                      <FaChartBar className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900">Detailed Report View</h3>
-                      <p className="text-gray-500 mt-1">
-                        The detailed view for {reportTypes.find(r => r.id === activeReport)?.name} is being generated...
-                      </p>
+
+                  {/* Balance Sheet */}
+                  {activeReport === 'balance-sheet' && (
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Assets */}
+                        <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100">
+                          <h3 className="font-bold text-blue-800 mb-4 flex items-center gap-2">
+                            <FaChartBar className="text-blue-600" /> Assets
+                          </h3>
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-600">Cash & Equivalents</span>
+                              <span className="font-semibold text-gray-900">
+                                {((reportData.openingBalances?.mtnMomoRWF || 0) + (reportData.openingBalances?.equityBankRWF || 0) + (reportData.openingBalances?.bkBankRWF || 0)).toLocaleString()} RWF
+                              </span>
+                            </div>
+                            <div className="pt-3 border-t border-blue-200">
+                              <div className="flex justify-between items-center">
+                                <span className="font-bold text-blue-800">Total Assets</span>
+                                <span className="text-xl font-bold text-blue-700">
+                                  {((reportData.openingBalances?.mtnMomoRWF || 0) + (reportData.openingBalances?.equityBankRWF || 0) + (reportData.openingBalances?.bkBankRWF || 0)).toLocaleString()} RWF
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Liabilities & Equity */}
+                        <div className="bg-purple-50 p-6 rounded-2xl border border-purple-100">
+                          <h3 className="font-bold text-purple-800 mb-4 flex items-center gap-2">
+                             <FaBalanceScale className="text-purple-600" /> Liabilities & Equity
+                          </h3>
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-600">Total Liabilities</span>
+                              <span className="font-semibold text-gray-900">0 RWF</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-600">Owner&apos;s Equity (Net Profit)</span>
+                              <span className="font-semibold text-gray-900">
+                                {reportData.summary?.netProfit?.toLocaleString() || 0} RWF
+                              </span>
+                            </div>
+                            <div className="pt-3 border-t border-purple-200">
+                              <div className="flex justify-between items-center">
+                                <span className="font-bold text-purple-800">Total Liabilities & Equity</span>
+                                <span className="text-xl font-bold text-purple-700">
+                                  {reportData.summary?.netProfit?.toLocaleString() || 0} RWF
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Cash Flow Statement */}
+                  {activeReport === 'cash-flow' && (
+                    <div className="space-y-6">
+                      <div className="bg-green-50 p-6 rounded-2xl border border-green-100">
+                        <h3 className="font-bold text-green-800 mb-4 flex items-center gap-2">
+                          <FaDollarSign className="text-green-600" /> Cash from Operating Activities
+                        </h3>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">Total Income</span>
+                            <span className="font-semibold text-green-700">
+                              +{reportData.summary?.totalIncome?.toLocaleString() || 0} RWF
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">Total Expenses</span>
+                            <span className="font-semibold text-red-700">
+                              -{reportData.summary?.totalExpenses?.toLocaleString() || 0} RWF
+                            </span>
+                          </div>
+                          <div className="pt-3 border-t border-green-200">
+                            <div className="flex justify-between items-center">
+                              <span className="font-bold text-green-800">Net Cash from Operations</span>
+                              <span className="text-xl font-bold text-green-700">
+                                {reportData.summary?.netProfit?.toLocaleString() || 0} RWF
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Expense Analysis */}
+                  {activeReport === 'expense-breakdown' && (
+                    <div className="space-y-6">
+                      <div className="bg-red-50 p-6 rounded-2xl border border-red-100">
+                        <h3 className="font-bold text-red-800 mb-4 flex items-center gap-2">
+                          <FaReceipt className="text-red-600" /> Expense Analysis
+                        </h3>
+                        <div className="mb-6">
+                           <div className="text-sm text-red-600 font-medium uppercase tracking-wider mb-1">Total Expenses</div>
+                           <div className="text-4xl font-bold text-red-700">
+                             {reportData.summary?.totalExpenses?.toLocaleString() || 0} RWF
+                           </div>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <h4 className="font-semibold text-gray-800 border-b border-red-200 pb-2">Top Expense Categories</h4>
+                          {(() => {
+                            const grouped = reportData.expenses?.reduce((acc: any, curr: any) => {
+                                const desc = curr.description || 'Other';
+                                const amount = (curr.mtnMomoRWF || 0) + (curr.equityBankRWF || 0) + (curr.bkBankRWF || 0);
+                                acc[desc] = (acc[desc] || 0) + amount;
+                                return acc;
+                            }, {});
+                            
+                            const sortedCategories = Object.entries(grouped || {})
+                                .sort(([, a]: any, [, b]: any) => b - a)
+                                .slice(0, 10);
+                                
+                            const total = reportData.summary?.totalExpenses || 1;
+
+                            if (sortedCategories.length === 0) {
+                                return <div className="text-gray-500 italic">No expenses recorded for this period.</div>;
+                            }
+
+                            return sortedCategories.map(([category, amount]: any, idx: number) => (
+                              <div key={idx} className="space-y-1">
+                                <div className="flex justify-between items-center text-sm">
+                                  <span className="text-gray-700 font-medium">{category}</span>
+                                  <span className="font-bold text-gray-900">{amount.toLocaleString()} RWF</span>
+                                </div>
+                                <div className="w-full bg-white rounded-full h-2 border border-red-100">
+                                  <div 
+                                    className="bg-red-500 h-2 rounded-full" 
+                                    style={{ width: `${(amount / total * 100).toFixed(1)}%` }}
+                                  ></div>
+                                </div>
+                                <div className="text-xs text-gray-500 text-right">{(amount / total * 100).toFixed(1)}%</div>
+                              </div>
+                            ));
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Revenue Analysis */}
+                  {activeReport === 'revenue-analysis' && (
+                    <div className="space-y-6">
+                      <div className="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
+                        <h3 className="font-bold text-emerald-800 mb-4 flex items-center gap-2">
+                          <FaChartBar className="text-emerald-600" /> Revenue Analysis
+                        </h3>
+                        <div className="mb-6">
+                           <div className="text-sm text-emerald-600 font-medium uppercase tracking-wider mb-1">Total Revenue</div>
+                           <div className="text-4xl font-bold text-emerald-700">
+                             {reportData.summary?.totalIncome?.toLocaleString() || 0} RWF
+                           </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <h4 className="font-semibold text-gray-800 border-b border-emerald-200 pb-2">Top Revenue Sources</h4>
+                          {(() => {
+                            const grouped = reportData.income?.reduce((acc: any, curr: any) => {
+                                const desc = curr.description || 'Other';
+                                const amount = (curr.mtnMomoRWF || 0) + (curr.equityBankRWF || 0) + (curr.bkBankRWF || 0);
+                                acc[desc] = (acc[desc] || 0) + amount;
+                                return acc;
+                            }, {});
+                            
+                            const sortedCategories = Object.entries(grouped || {})
+                                .sort(([, a]: any, [, b]: any) => b - a)
+                                .slice(0, 10);
+                                
+                            const total = reportData.summary?.totalIncome || 1;
+
+                            if (sortedCategories.length === 0) {
+                                return <div className="text-gray-500 italic">No income recorded for this period.</div>;
+                            }
+
+                            return sortedCategories.map(([category, amount]: any, idx: number) => (
+                              <div key={idx} className="space-y-1">
+                                <div className="flex justify-between items-center text-sm">
+                                  <span className="text-gray-700 font-medium">{category}</span>
+                                  <span className="font-bold text-gray-900">{amount.toLocaleString()} RWF</span>
+                                </div>
+                                <div className="w-full bg-white rounded-full h-2 border border-emerald-100">
+                                  <div 
+                                    className="bg-emerald-500 h-2 rounded-full" 
+                                    style={{ width: `${(amount / total * 100).toFixed(1)}%` }}
+                                  ></div>
+                                </div>
+                                <div className="text-xs text-gray-500 text-right">{(amount / total * 100).toFixed(1)}%</div>
+                              </div>
+                            ));
+                          })()}
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

@@ -9,20 +9,20 @@ export async function GET(req: NextRequest) {
     const account = searchParams.get('account');
 
     let whereClause: any = {};
-    
+
     if (startDate && endDate) {
       whereClause.date = {
         gte: new Date(startDate),
         lte: new Date(endDate)
       };
     }
-    
+
     if (account) {
       whereClause.account = account;
     }
 
     // Get all financial transactions
-    const [payments, expenses, invoices] = await Promise.all([
+    const [payments, expenses, invoices, incomeRecords] = await Promise.all([
       prisma.payment.findMany({
         where: whereClause,
         select: {
@@ -59,6 +59,19 @@ export async function GET(req: NextRequest) {
           clientName: true
         },
         orderBy: { createdAt: 'desc' }
+      }),
+      prisma.income.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          amount: true,
+          category: true,
+          paymentMethod: true,
+          date: true,
+          description: true,
+          reference: true
+        },
+        orderBy: { date: 'desc' }
       })
     ]);
 
@@ -77,7 +90,21 @@ export async function GET(req: NextRequest) {
         reference: `PAY-${payment.id}`,
         status: payment.status
       })),
-      
+
+      // Direct Income
+      ...incomeRecords.map(income => ({
+        id: `income_${income.id}`,
+        date: income.date,
+        account: income.paymentMethod,
+        description: `${income.category} - ${income.description}`,
+        debit: 0,
+        credit: income.amount,
+        balance: income.amount,
+        type: 'income',
+        reference: income.reference || `INC-${income.id}`,
+        category: income.category
+      })),
+
       // Expenses
       ...expenses.map(expense => ({
         id: `expense_${expense.id}`,
@@ -91,7 +118,7 @@ export async function GET(req: NextRequest) {
         reference: `EXP-${expense.id}`,
         category: expense.category
       })),
-      
+
       // Invoices (accounts receivable)
       ...invoices.map(invoice => ({
         id: `invoice_${invoice.id}`,
@@ -132,12 +159,12 @@ export async function GET(req: NextRequest) {
           transactionCount: 0
         };
       }
-      
+
       acc[entry.account].totalDebit += entry.debit;
       acc[entry.account].totalCredit += entry.credit;
       acc[entry.account].balance += entry.credit - entry.debit;
       acc[entry.account].transactionCount += 1;
-      
+
       return acc;
     }, {} as any);
 

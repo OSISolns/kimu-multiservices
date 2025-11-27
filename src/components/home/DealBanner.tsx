@@ -8,7 +8,7 @@ interface DealBannerProps {
 
 export default function DealBanner({ onDismiss }: DealBannerProps) {
     const featuredDeal = {
-        title: 'Drive Now, Pay Later with Kimu Transport and Multiservices',
+        title: 'Drive Now, Pay Later with Kimu Transport and Multiservices LTD',
         description: 'Own a Toyota Corolla Levin or BYD EV today with only 20% deposit. Limited slots available.',
         link: 'http://localhost:3000/offers?tab=sales#vehicles',
     };

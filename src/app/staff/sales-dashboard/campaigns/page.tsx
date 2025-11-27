@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser } from "../../../UserContext";
 import {
     FaBullhorn,
@@ -11,7 +11,12 @@ import {
     FaMoneyBillWave,
     FaTimes,
     FaCheck,
-    FaArrowRight
+    FaArrowRight,
+    FaEdit,
+    FaPause,
+    FaPlay,
+    FaTrash,
+    FaEllipsisV
 } from "react-icons/fa";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
@@ -29,51 +34,10 @@ interface Campaign {
     endDate: string;
 }
 
-const MOCK_CAMPAIGNS: Campaign[] = [
-    {
-        id: '1',
-        name: 'Summer Sale 2025',
-        status: 'Active',
-        type: 'Social',
-        reach: 15000,
-        engagement: 3200,
-        conversion: 150,
-        budget: 5000,
-        spent: 2100,
-        startDate: '2025-06-01',
-        endDate: '2025-06-30'
-    },
-    {
-        id: '2',
-        name: 'New Fleet Launch',
-        status: 'Draft',
-        type: 'Email',
-        reach: 0,
-        engagement: 0,
-        conversion: 0,
-        budget: 1000,
-        spent: 0,
-        startDate: '2025-07-15',
-        endDate: '2025-08-15'
-    },
-    {
-        id: '3',
-        name: 'Q1 Clearance',
-        status: 'Completed',
-        type: 'Ads',
-        reach: 45000,
-        engagement: 8500,
-        conversion: 420,
-        budget: 10000,
-        spent: 9800,
-        startDate: '2025-01-01',
-        endDate: '2025-03-31'
-    }
-];
-
 export default function CampaignsPage() {
     const { user, isLoading } = useUser();
-    const [campaigns, setCampaigns] = useState<Campaign[]>(MOCK_CAMPAIGNS);
+    const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+    const [isLoadingData, setIsLoadingData] = useState(true);
     const [isWizardOpen, setIsWizardOpen] = useState(false);
     const [wizardStep, setWizardStep] = useState(1);
     const [newCampaign, setNewCampaign] = useState<Partial<Campaign>>({
@@ -81,31 +45,247 @@ export default function CampaignsPage() {
         type: 'Email',
         budget: 0
     });
+    const [isManageModalOpen, setIsManageModalOpen] = useState(false);
+    const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editedCampaign, setEditedCampaign] = useState<Partial<Campaign>>({});
 
-    const handleSaveCampaign = () => {
-        if (!newCampaign.name) return;
+    useEffect(() => {
+        const fetchCampaigns = async () => {
+            try {
+                setIsLoadingData(true);
+                const response = await fetch('/api/campaigns?limit=100');
+                if (response.ok) {
+                    const data = await response.json();
+                    // API returns data wrapped in { success, timestamp, data: { campaigns, pagination } }
+                    const campaigns = data.data?.campaigns || [];
+                    const fetchedCampaigns = campaigns.map((c: any) => {
+                        const start = new Date(c.startDate);
+                        const end = new Date(c.endDate);
+                        const now = new Date();
 
-        const campaign: Campaign = {
-            id: Math.random().toString(36).substr(2, 9),
-            name: newCampaign.name!,
-            status: 'Draft',
-            type: newCampaign.type as any,
-            reach: 0,
-            engagement: 0,
-            conversion: 0,
-            budget: newCampaign.budget || 0,
-            spent: 0,
-            startDate: newCampaign.startDate || '',
-            endDate: newCampaign.endDate || ''
+                        let status: 'Active' | 'Draft' | 'Completed' | 'Paused' = 'Draft';
+                        if (now > end) status = 'Completed';
+                        else if (now >= start && now <= end) status = 'Active';
+                        else if (now < start) status = 'Draft';
+
+                        // Extract type from name if present (e.g. "[Email] Summer Sale")
+                        let type: 'Email' | 'Social' | 'Ads' | 'Event' = 'Email';
+                        let name = c.name;
+                        if (c.name.startsWith('[')) {
+                            const typeMatch = c.name.match(/^\[(.*?)\]/);
+                            if (typeMatch) {
+                                type = typeMatch[1] as any;
+                                name = c.name.replace(/^\[.*?\]\s*/, '');
+                            }
+                        }
+
+                        return {
+                            id: c.id.toString(),
+                            name: name,
+                            status: status,
+                            type: type,
+                            reach: c.reach,
+                            engagement: c.engagement,
+                            conversion: c.conversions,
+                            budget: c.budget,
+                            spent: 0, // Not tracked in DB yet
+                            startDate: start.toISOString().split('T')[0],
+                            endDate: end.toISOString().split('T')[0]
+                        };
+                    });
+                    setCampaigns(fetchedCampaigns);
+                }
+            } catch (error) {
+                console.error('Error fetching campaigns:', error);
+            } finally {
+                setIsLoadingData(false);
+            }
         };
 
-        setCampaigns([...campaigns, campaign]);
-        setIsWizardOpen(false);
-        setWizardStep(1);
-        setNewCampaign({ status: 'Draft', type: 'Email', budget: 0 });
+        if (user && !isLoading) {
+            fetchCampaigns();
+        }
+    }, [user, isLoading]);
+
+    const handleSaveCampaign = async () => {
+        if (!newCampaign.name || !newCampaign.startDate || !newCampaign.endDate) {
+            alert("Please fill in all required fields.");
+            return;
+        }
+
+        try {
+            // Prepend type to name to persist it
+            const nameWithType = `[${newCampaign.type}] ${newCampaign.name}`;
+
+            const payload = {
+                name: nameWithType,
+                budget: newCampaign.budget || 0,
+                startDate: new Date(newCampaign.startDate).toISOString(),
+                endDate: new Date(newCampaign.endDate).toISOString(),
+                createdBy: user?.id,
+                reach: 0,
+                engagement: 0,
+                leads: 0,
+                conversions: 0
+            };
+
+            const response = await fetch('/api/campaigns', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const c = data.campaign;
+
+                const createdCampaign: Campaign = {
+                    id: c.id.toString(),
+                    name: newCampaign.name!,
+                    status: 'Draft', // Initially draft/scheduled
+                    type: newCampaign.type as any,
+                    reach: 0,
+                    engagement: 0,
+                    conversion: 0,
+                    budget: c.budget,
+                    spent: 0,
+                    startDate: newCampaign.startDate!,
+                    endDate: newCampaign.endDate!
+                };
+
+                setCampaigns([createdCampaign, ...campaigns]);
+                setIsWizardOpen(false);
+                setWizardStep(1);
+                setNewCampaign({ status: 'Draft', type: 'Email', budget: 0 });
+            } else {
+                const errorData = await response.json();
+                alert(`Failed to create campaign: ${errorData.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Error creating campaign:', error);
+            alert('An error occurred while creating the campaign.');
+        }
     };
 
-    if (isLoading) {
+    const handleManageCampaign = (campaign: Campaign) => {
+        setSelectedCampaign(campaign);
+        setIsManageModalOpen(true);
+        setIsEditMode(false);
+        setEditedCampaign(campaign);
+    };
+
+    const handleEditCampaign = async () => {
+        if (!selectedCampaign || !editedCampaign.name) {
+            alert('Please fill in all required fields.');
+            return;
+        }
+
+        try {
+            const nameWithType = editedCampaign.type && editedCampaign.name
+                ? `[${editedCampaign.type}] ${editedCampaign.name.replace(/^\[.*?\]\s*/, '')}`
+                : editedCampaign.name;
+
+            const payload = {
+                name: nameWithType,
+                budget: editedCampaign.budget,
+                startDate: editedCampaign.startDate ? new Date(editedCampaign.startDate).toISOString() : undefined,
+                endDate: editedCampaign.endDate ? new Date(editedCampaign.endDate).toISOString() : undefined,
+                reach: editedCampaign.reach,
+                engagement: editedCampaign.engagement,
+                conversions: editedCampaign.conversion,
+                userId: user?.id
+            };
+
+            const response = await fetch(`/api/campaigns/${selectedCampaign.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const c = data.data.campaign;
+
+                const updatedCampaign: Campaign = {
+                    ...selectedCampaign,
+                    name: editedCampaign.name.replace(/^\[.*?\]\s*/, ''),
+                    type: editedCampaign.type as any,
+                    budget: c.budget,
+                    startDate: editedCampaign.startDate!,
+                    endDate: editedCampaign.endDate!,
+                    reach: c.reach,
+                    engagement: c.engagement,
+                    conversion: c.conversions
+                };
+
+                setCampaigns(campaigns.map(camp =>
+                    camp.id === selectedCampaign.id ? updatedCampaign : camp
+                ));
+                setIsManageModalOpen(false);
+                setIsEditMode(false);
+            } else {
+                const errorData = await response.json();
+                alert(`Failed to update campaign: ${errorData.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Error updating campaign:', error);
+            alert('An error occurred while updating the campaign.');
+        }
+    };
+
+    const handlePauseCampaign = async () => {
+        if (!selectedCampaign) return;
+
+        const newStatus = selectedCampaign.status === 'Paused' ? 'Active' : 'Paused';
+
+        try {
+            const response = await fetch(`/api/campaigns/${selectedCampaign.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus, userId: user?.id })
+            });
+
+            if (response.ok) {
+                setCampaigns(campaigns.map(camp =>
+                    camp.id === selectedCampaign.id ? { ...camp, status: newStatus } : camp
+                ));
+                setSelectedCampaign({ ...selectedCampaign, status: newStatus });
+            }
+        } catch (error) {
+            console.error('Error updating campaign status:', error);
+            alert('Failed to update campaign status.');
+        }
+    };
+
+    const handleDeleteCampaign = async () => {
+        if (!selectedCampaign) return;
+
+        if (!confirm(`Are you sure you want to delete "${selectedCampaign.name}"? This action cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/campaigns/${selectedCampaign.id}?userId=${user?.id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                setCampaigns(campaigns.filter(camp => camp.id !== selectedCampaign.id));
+                setIsManageModalOpen(false);
+            } else {
+                const errorData = await response.json();
+                alert(`Failed to delete campaign: ${errorData.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Error deleting campaign:', error);
+            alert('An error occurred while deleting the campaign.');
+        }
+    };
+
+    if (isLoading || isLoadingData) {
         return <LoadingSpinner size="lg" message="Loading Campaigns..." />;
     }
 
@@ -180,51 +360,64 @@ export default function CampaignsPage() {
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {campaigns.map((campaign) => {
-                            const roi = campaign.spent > 0 ? ((campaign.conversion * 100) / campaign.spent).toFixed(1) : '0.0';
-                            return (
-                                <tr key={campaign.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="flex items-center">
-                                            <div className={`p-2 rounded-lg mr-3 
-                                                ${campaign.type === 'Social' ? 'bg-blue-100 text-blue-600' :
-                                                    campaign.type === 'Email' ? 'bg-yellow-100 text-yellow-600' :
-                                                        campaign.type === 'Ads' ? 'bg-red-100 text-red-600' : 'bg-purple-100 text-purple-600'}`}>
-                                                <FaBullhorn />
+                        {campaigns.length === 0 ? (
+                            <tr>
+                                <td colSpan={6} className="px-6 py-10 text-center text-gray-500">
+                                    No campaigns found. Create one to get started.
+                                </td>
+                            </tr>
+                        ) : (
+                            campaigns.map((campaign) => {
+                                const roi = campaign.spent > 0 ? ((campaign.conversion * 100) / campaign.spent).toFixed(1) : '0.0';
+                                return (
+                                    <tr key={campaign.id} className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center">
+                                                <div className={`p-2 rounded-lg mr-3 
+                                                    ${campaign.type === 'Social' ? 'bg-blue-100 text-blue-600' :
+                                                        campaign.type === 'Email' ? 'bg-yellow-100 text-yellow-600' :
+                                                            campaign.type === 'Ads' ? 'bg-red-100 text-red-600' : 'bg-purple-100 text-purple-600'}`}>
+                                                    <FaBullhorn />
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-medium text-gray-900">{campaign.name}</div>
+                                                    <div className="text-xs text-gray-500">{campaign.type} • {campaign.startDate}</div>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <div className="text-sm font-medium text-gray-900">{campaign.name}</div>
-                                                <div className="text-xs text-gray-500">{campaign.type} • {campaign.startDate}</div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                ${campaign.status === 'Active' ? 'bg-green-100 text-green-800' :
+                                                    campaign.status === 'Draft' ? 'bg-gray-100 text-gray-800' :
+                                                        campaign.status === 'Completed' ? 'bg-blue-100 text-blue-800' :
+                                                            'bg-yellow-100 text-yellow-800'}`}>
+                                                {campaign.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {campaign.reach.toLocaleString()}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm text-gray-900">RWF {campaign.budget.toLocaleString()}</div>
+                                            <div className="text-xs text-gray-500">RWF {campaign.spent.toLocaleString()} spent</div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <div className="flex items-center gap-1 text-green-600 font-medium">
+                                                <FaChartLine /> {roi}x
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                            ${campaign.status === 'Active' ? 'bg-green-100 text-green-800' :
-                                                campaign.status === 'Draft' ? 'bg-gray-100 text-gray-800' :
-                                                    campaign.status === 'Completed' ? 'bg-blue-100 text-blue-800' :
-                                                        'bg-yellow-100 text-yellow-800'}`}>
-                                            {campaign.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {campaign.reach.toLocaleString()}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-gray-900">RWF {campaign.budget.toLocaleString()}</div>
-                                        <div className="text-xs text-gray-500">RWF {campaign.spent.toLocaleString()} spent</div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <div className="flex items-center gap-1 text-green-600 font-medium">
-                                            <FaChartLine /> {roi}x
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button className="text-blue-600 hover:text-blue-900">Manage</button>
-                                    </td>
-                                </tr>
-                            );
-                        })}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <button
+                                                onClick={() => handleManageCampaign(campaign)}
+                                                className="text-blue-600 hover:text-blue-900 flex items-center gap-1 ml-auto"
+                                            >
+                                                <FaEllipsisV /> Manage
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            })
+                        )}
                     </tbody>
                 </table>
             </div>
@@ -352,6 +545,162 @@ export default function CampaignsPage() {
                                 </button>
                             )}
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Campaign Management Modal */}
+            {isManageModalOpen && selectedCampaign && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 m-4">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold text-gray-900">
+                                {isEditMode ? 'Edit Campaign' : 'Manage Campaign'}
+                            </h3>
+                            <button onClick={() => setIsManageModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                                <FaTimes />
+                            </button>
+                        </div>
+
+                        {isEditMode ? (
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Campaign Name</label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        value={editedCampaign.name?.replace(/^\[.*?\]\s*/, '') || ''}
+                                        onChange={e => setEditedCampaign({ ...editedCampaign, name: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {['Email', 'Social', 'Ads', 'Event'].map(type => (
+                                            <button
+                                                key={type}
+                                                onClick={() => setEditedCampaign({ ...editedCampaign, type: type as any })}
+                                                className={`py-2 px-3 text-sm rounded-lg border transition-all
+                                                    ${editedCampaign.type === type
+                                                        ? 'bg-blue-50 border-blue-500 text-blue-700 font-medium'
+                                                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                                            >
+                                                {type}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                                        <input
+                                            type="date"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            value={editedCampaign.startDate || ''}
+                                            onChange={e => setEditedCampaign({ ...editedCampaign, startDate: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                                        <input
+                                            type="date"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            value={editedCampaign.endDate || ''}
+                                            onChange={e => setEditedCampaign({ ...editedCampaign, endDate: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Budget (RWF)</label>
+                                    <input
+                                        type="number"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        value={editedCampaign.budget || ''}
+                                        onChange={e => setEditedCampaign({ ...editedCampaign, budget: parseInt(e.target.value) })}
+                                    />
+                                </div>
+                                <div className="flex gap-3 mt-6">
+                                    <button
+                                        onClick={() => setIsEditMode(false)}
+                                        className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleEditCampaign}
+                                        className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                                    >
+                                        Save Changes
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="text-sm text-gray-500">Campaign Name</p>
+                                        <p className="font-semibold text-gray-900">{selectedCampaign.name}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-gray-500">Type</p>
+                                        <p className="font-semibold text-gray-900">{selectedCampaign.type}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-gray-500">Status</p>
+                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                            ${selectedCampaign.status === 'Active' ? 'bg-green-100 text-green-800' :
+                                                selectedCampaign.status === 'Draft' ? 'bg-gray-100 text-gray-800' :
+                                                    selectedCampaign.status === 'Completed' ? 'bg-blue-100 text-blue-800' :
+                                                        'bg-yellow-100 text-yellow-800'}`}>
+                                            {selectedCampaign.status}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-gray-500">Budget</p>
+                                        <p className="font-semibold text-gray-900">RWF {selectedCampaign.budget.toLocaleString()}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-gray-500">Reach</p>
+                                        <p className="font-semibold text-gray-900">{selectedCampaign.reach.toLocaleString()}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-gray-500">Engagement</p>
+                                        <p className="font-semibold text-gray-900">{selectedCampaign.engagement.toLocaleString()}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-gray-500">Conversions</p>
+                                        <p className="font-semibold text-gray-900">{selectedCampaign.conversion.toLocaleString()}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-gray-500">Duration</p>
+                                        <p className="font-semibold text-gray-900 text-xs">
+                                            {selectedCampaign.startDate} to {selectedCampaign.endDate}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="border-t pt-4 space-y-3">
+                                    <button
+                                        onClick={() => setIsEditMode(true)}
+                                        className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center justify-center gap-2"
+                                    >
+                                        <FaEdit /> Edit Campaign
+                                    </button>
+                                    <button
+                                        onClick={handlePauseCampaign}
+                                        className="w-full px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-medium flex items-center justify-center gap-2"
+                                    >
+                                        {selectedCampaign.status === 'Paused' ? <><FaPlay /> Resume Campaign</> : <><FaPause /> Pause Campaign</>}
+                                    </button>
+                                    <button
+                                        onClick={handleDeleteCampaign}
+                                        className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium flex items-center justify-center gap-2"
+                                    >
+                                        <FaTrash /> Delete Campaign
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

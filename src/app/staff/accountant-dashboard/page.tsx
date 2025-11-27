@@ -23,6 +23,7 @@ import InvoiceManager from '@/components/accounting/InvoiceManager';
 import BudgetTracker from '@/components/accounting/BudgetTracker';
 import GeneralLedger from '@/components/accounting/GeneralLedger';
 import PayrollDashboard from '@/components/payroll/PayrollDashboard';
+import PettyCashManager from '@/components/accounting/PettyCashManager';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -67,12 +68,13 @@ type FinancialRecord = {
   mtnMomoRWF: number;
   equityBankRWF: number;
   bkBankRWF: number;
+  cashRWF: number;
   date: string;
   [key: string]: any;
 };
 
 type FinancialData = {
-  openingBalances: { mtnMomoRWF: number; equityBankRWF: number; bkBankRWF: number };
+  openingBalances: { mtnMomoRWF: number; equityBankRWF: number; bkBankRWF: number; cashRWF: number };
   income: FinancialRecord[];
   expenses: FinancialRecord[];
 };
@@ -85,7 +87,7 @@ export default function UpgradedAccountantDashboard() {
   const { user, isLoading } = useUser();
   const [activeTab, setActiveTab] = useState('overview');
   const [financialData, setFinancialData] = useState<FinancialData>({
-    openingBalances: { mtnMomoRWF: 0, equityBankRWF: 0, bkBankRWF: 0 },
+    openingBalances: { mtnMomoRWF: 0, equityBankRWF: 0, bkBankRWF: 0, cashRWF: 0 },
     income: [],
     expenses: []
   });
@@ -94,21 +96,23 @@ export default function UpgradedAccountantDashboard() {
   const [dateRange, setDateRange] = useState('month');
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Ensure all data has the correct structure with both bank accounts
+  // Ensure all data has the correct structure with all accounts
   const ensureDataStructure = (data: any): FinancialData => {
     return {
       ...data,
       income: data.income.map((item: any) => ({
         ...item,
-        mtnMomoRWF: item.mtnMomoRWF ?? item.cashRWF ?? 0,
-        equityBankRWF: item.equityBankRWF ?? item.bankRWF ?? 0,
-        bkBankRWF: item.bkBankRWF ?? 0
+        mtnMomoRWF: item.mtnMomoRWF ?? 0,
+        equityBankRWF: item.equityBankRWF ?? 0,
+        bkBankRWF: item.bkBankRWF ?? 0,
+        cashRWF: item.cashRWF ?? 0
       })),
       expenses: data.expenses.map((item: any) => ({
         ...item,
-        mtnMomoRWF: item.mtnMomoRWF ?? item.cashRWF ?? 0,
-        equityBankRWF: item.equityBankRWF ?? item.bankRWF ?? 0,
-        bkBankRWF: item.bkBankRWF ?? 0
+        mtnMomoRWF: item.mtnMomoRWF ?? 0,
+        equityBankRWF: item.equityBankRWF ?? 0,
+        bkBankRWF: item.bkBankRWF ?? 0,
+        cashRWF: item.cashRWF ?? 0
       }))
     } as FinancialData;
   };
@@ -175,6 +179,7 @@ export default function UpgradedAccountantDashboard() {
     { id: 'expenses', name: 'Expenses', icon: FaReceipt },
     { id: 'invoices', name: 'Invoices', icon: FaFileInvoiceDollar },
     { id: 'budget', name: 'Budget', icon: FaChartPie },
+    { id: 'pettycash', name: 'Petty Cash', icon: FaPiggyBank },
     { id: 'ledger', name: 'General Ledger', icon: FaBalanceScale },
     { id: 'payroll', name: 'Payroll', icon: FaUsers },
     { id: 'reports', name: 'Reports', icon: FaChartBar }
@@ -190,9 +195,9 @@ export default function UpgradedAccountantDashboard() {
 
   // Calculate totals
   const totalIncome = financialData.income.reduce((sum, item) =>
-    sum + item.mtnMomoRWF + item.equityBankRWF + item.bkBankRWF, 0);
+    sum + (item.mtnMomoRWF || 0) + (item.equityBankRWF || 0) + (item.bkBankRWF || 0) + (item.cashRWF || 0), 0);
   const totalExpenses = financialData.expenses.reduce((sum, item) =>
-    sum + item.mtnMomoRWF + item.equityBankRWF + item.bkBankRWF, 0);
+    sum + (item.mtnMomoRWF || 0) + (item.equityBankRWF || 0) + (item.bkBankRWF || 0) + (item.cashRWF || 0), 0);
   const netProfit = totalIncome - totalExpenses;
 
   // Chart Data Preparation
@@ -255,13 +260,36 @@ export default function UpgradedAccountantDashboard() {
     }
   };
 
-  // Prepare data for charts (simplified for demo, ideally aggregate by date)
+  // Helper to aggregate data by day of week
+  const aggregateByDay = (data: FinancialRecord[]) => {
+    const aggregated = new Array(7).fill(0);
+
+    data.forEach(item => {
+      const date = new Date(item.date);
+      const dayIndex = date.getDay(); // 0 = Sunday, 1 = Monday, ...
+      const amount = (item.mtnMomoRWF || 0) + (item.equityBankRWF || 0) + (item.bkBankRWF || 0) + (item.cashRWF || 0);
+      aggregated[dayIndex] += amount;
+    });
+
+    // Rotate to start from Monday as per labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    // Indices: 1, 2, 3, 4, 5, 6, 0
+    return [
+      aggregated[1],
+      aggregated[2],
+      aggregated[3],
+      aggregated[4],
+      aggregated[5],
+      aggregated[6],
+      aggregated[0]
+    ];
+  };
+
   const incomeData = {
     labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     datasets: [
       {
         label: 'Income',
-        data: [120000, 190000, 30000, 50000, 20000, 30000, 45000], // Placeholder logic, replace with real aggregation
+        data: aggregateByDay(financialData.income),
         borderColor: 'rgb(34, 197, 94)',
         backgroundColor: 'rgba(34, 197, 94, 0.5)',
         tension: 0.4,
@@ -274,30 +302,33 @@ export default function UpgradedAccountantDashboard() {
     datasets: [
       {
         label: 'Expenses',
-        data: [50000, 20000, 10000, 15000, 80000, 10000, 5000], // Placeholder logic
+        data: aggregateByDay(financialData.expenses),
         backgroundColor: 'rgba(239, 68, 68, 0.5)',
       },
     ],
   };
 
   const balanceDistributionData = {
-    labels: ['MTN Momo', 'Equity Bank', 'BK Bank'],
+    labels: ['MTN Momo', 'Equity Bank', 'BK Bank', 'Cash'],
     datasets: [
       {
         data: [
           financialData.openingBalances.mtnMomoRWF,
           financialData.openingBalances.equityBankRWF,
-          financialData.openingBalances.bkBankRWF
+          financialData.openingBalances.bkBankRWF,
+          financialData.openingBalances.cashRWF
         ],
         backgroundColor: [
           'rgba(59, 130, 246, 0.8)',
           'rgba(16, 185, 129, 0.8)',
           'rgba(139, 92, 246, 0.8)',
+          'rgba(245, 158, 11, 0.8)',
         ],
         borderColor: [
           'rgba(59, 130, 246, 1)',
           'rgba(16, 185, 129, 1)',
           'rgba(139, 92, 246, 1)',
+          'rgba(245, 158, 11, 1)',
         ],
         borderWidth: 1,
       },
@@ -485,6 +516,12 @@ export default function UpgradedAccountantDashboard() {
                         {formatRWF(financialData.openingBalances?.bkBankRWF || 0)}
                       </div>
                     </div>
+                    <div className="p-4 bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 hover:bg-white/20 transition-colors">
+                      <div className="text-sm text-gray-300 mb-1">Cash</div>
+                      <div className="text-xl font-bold tracking-wide">
+                        {formatRWF(financialData.openingBalances?.cashRWF || 0)}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -555,7 +592,7 @@ export default function UpgradedAccountantDashboard() {
                         .slice(0, 10)
                         .map((transaction) => {
                           const isIncome = financialData.income.includes(transaction);
-                          const amount = transaction.mtnMomoRWF + transaction.equityBankRWF + transaction.bkBankRWF;
+                          const amount = (transaction.mtnMomoRWF || 0) + (transaction.equityBankRWF || 0) + (transaction.bkBankRWF || 0) + (transaction.cashRWF || 0);
                           return (
                             <tr key={`${isIncome ? 'income' : 'expense'}-${transaction.id}`} className="hover:bg-gray-50/50 transition-colors">
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">
@@ -618,6 +655,12 @@ export default function UpgradedAccountantDashboard() {
               <GeneralLedger onDataExport={(data) => {
                 console.log('Exporting data:', data);
               }} />
+            </div>
+          )}
+
+          {activeTab === 'pettycash' && (
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/50 p-6">
+              <PettyCashManager />
             </div>
           )}
 

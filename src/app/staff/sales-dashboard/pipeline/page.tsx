@@ -83,7 +83,10 @@ export default function PipelinePage() {
                             className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
                         />
                     </div>
-                    <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium shadow-sm">
+                    <button
+                        onClick={() => alert('Add Deal feature coming soon!\n\nThis will allow you to create new deals and add them to your sales pipeline.')}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
+                    >
                         <FaPlus className="w-4 h-4" />
                         <span>Add Deal</span>
                     </button>
@@ -102,7 +105,10 @@ export default function PipelinePage() {
                                         {column.leads.length}
                                     </span>
                                 </h3>
-                                <button className="text-gray-400 hover:text-gray-600">
+                                <button
+                                    onClick={() => alert(`${column.stage} Column Options\n\n• Add Deal to ${column.stage}\n• Sort Deals\n• Filter Deals\n• Export Data\n\nFull pipeline management features coming soon!`)}
+                                    className="text-gray-400 hover:text-gray-600"
+                                >
                                     <FaEllipsisH />
                                 </button>
                             </div>

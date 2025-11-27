@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     headers.set('Cache-Control', 'public, max-age=300'); // 5 minutes cache
 
     // Optimized database queries with select only needed fields
-    const [payments, bookings] = await Promise.all([
+    const [payments, bookings, incomeRecords, expenseRecords] = await Promise.all([
       prisma.payment.findMany({
         select: {
           id: true,
@@ -34,6 +34,28 @@ export async function GET(req: NextRequest) {
           createdAt: true
         },
         orderBy: { createdAt: 'desc' }
+      }),
+      prisma.income.findMany({
+        select: {
+          id: true,
+          amount: true,
+          paymentMethod: true,
+          date: true,
+          description: true,
+          category: true
+        },
+        orderBy: { date: 'desc' }
+      }),
+      prisma.expense.findMany({
+        select: {
+          id: true,
+          amount: true,
+          paymentMethod: true,
+          date: true,
+          description: true,
+          category: true
+        },
+        orderBy: { date: 'desc' }
       })
     ]);
 
@@ -41,44 +63,82 @@ export async function GET(req: NextRequest) {
     let openingBalances = {
       mtnMomoRWF: 0,
       equityBankRWF: 0,
-      bkBankRWF: 0
+      bkBankRWF: 0,
+      cashRWF: 0
     };
 
     // If date range is provided, calculate opening balances from historical data
     if (startDate && endDate) {
       const startDateObj = new Date(startDate);
-      const historicalPayments = payments.filter(payment => 
+      const historicalPayments = payments.filter(payment =>
         payment.paymentDate && new Date(payment.paymentDate) < startDateObj
       );
+      const historicalIncome = incomeRecords.filter(inc =>
+        inc.date && new Date(inc.date) < startDateObj
+      );
+      const historicalExpenses = expenseRecords.filter(exp =>
+        exp.date && new Date(exp.date) < startDateObj
+      );
+
+      const calculateBalance = (method: string) => {
+        const income = historicalPayments
+          .filter(p => p.paymentMethod === method && p.status === 'completed')
+          .reduce((sum, p) => sum + p.amount, 0) +
+          historicalIncome
+            .filter(i => i.paymentMethod === method)
+            .reduce((sum, i) => sum + i.amount, 0);
+
+        const expense = historicalExpenses
+          .filter(e => e.paymentMethod === method)
+          .reduce((sum, e) => sum + e.amount, 0);
+
+        return income - expense;
+      };
 
       openingBalances = {
-        mtnMomoRWF: historicalPayments
-          .filter(p => p.paymentMethod === 'MTN Momo' && p.status === 'completed')
-          .reduce((sum, p) => sum + p.amount, 0),
-        equityBankRWF: historicalPayments
-          .filter(p => p.paymentMethod === 'Equity Bank' && p.status === 'completed')
-          .reduce((sum, p) => sum + p.amount, 0),
-        bkBankRWF: historicalPayments
-          .filter(p => p.paymentMethod === 'BK Bank' && p.status === 'completed')
-          .reduce((sum, p) => sum + p.amount, 0)
+        mtnMomoRWF: calculateBalance('MTN Momo'),
+        equityBankRWF: calculateBalance('Equity Bank'),
+        bkBankRWF: calculateBalance('BK Bank'),
+        cashRWF: calculateBalance('Cash')
       };
     }
 
     // Convert payments to income data
-    const income = payments
+    const paymentIncome = payments
       .filter(payment => payment.status === 'completed')
       .map((payment, index) => ({
-        id: index + 1,
+        id: `pay_${payment.id}`,
         description: `Payment - ${payment.paymentMethod} - ${payment.amount.toLocaleString()} RWF`,
         mtnMomoRWF: payment.paymentMethod === 'MTN Momo' ? payment.amount : 0,
         equityBankRWF: payment.paymentMethod === 'Equity Bank' ? payment.amount : 0,
         bkBankRWF: payment.paymentMethod === 'BK Bank' ? payment.amount : 0,
+        cashRWF: payment.paymentMethod === 'Cash' ? payment.amount : 0,
         date: payment.paymentDate?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0]
       }));
 
-    // For now, expenses are empty as we don't have an expenses table
-    // In a real system, you would fetch expenses from a separate expenses table
-    const expenses: any[] = [];
+    const directIncome = incomeRecords.map((inc, index) => ({
+      id: `inc_${inc.id}`,
+      description: `${inc.category} - ${inc.description}`,
+      mtnMomoRWF: inc.paymentMethod === 'MTN Momo' ? inc.amount : 0,
+      equityBankRWF: inc.paymentMethod === 'Equity Bank' ? inc.amount : 0,
+      bkBankRWF: inc.paymentMethod === 'BK Bank' ? inc.amount : 0,
+      cashRWF: inc.paymentMethod === 'Cash' ? inc.amount : 0,
+      date: inc.date?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0]
+    }));
+
+    const income = [...paymentIncome, ...directIncome].sort((a, b) =>
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    const expenses = expenseRecords.map((exp, index) => ({
+      id: `exp_${exp.id}`,
+      description: `${exp.category} - ${exp.description}`,
+      mtnMomoRWF: exp.paymentMethod === 'MTN Momo' ? exp.amount : 0,
+      equityBankRWF: exp.paymentMethod === 'Equity Bank' ? exp.amount : 0,
+      bkBankRWF: exp.paymentMethod === 'BK Bank' ? exp.amount : 0,
+      cashRWF: exp.paymentMethod === 'Cash' ? exp.amount : 0,
+      date: exp.date?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0]
+    })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     const financialData = {
       openingBalances,
@@ -93,38 +153,41 @@ export async function GET(req: NextRequest) {
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
-      
-             filteredIncome = financialData.income.filter(item => {
-         const itemDate = new Date(item.date);
-         return itemDate >= start && itemDate <= end;
-       });
-       
-       filteredExpenses = financialData.expenses.filter(item => {
-         const itemDate = new Date(item.date);
-         return itemDate >= start && itemDate <= end;
-       });
+
+      filteredIncome = financialData.income.filter(item => {
+        const itemDate = new Date(item.date);
+        return itemDate >= start && itemDate <= end;
+      });
+
+      filteredExpenses = financialData.expenses.filter(item => {
+        const itemDate = new Date(item.date);
+        return itemDate >= start && itemDate <= end;
+      });
     }
 
     // Calculate totals
-    const totalIncomeRWF = filteredIncome.reduce((sum, item) => 
-      sum + (item.mtnMomoRWF || 0) + (item.equityBankRWF || 0) + (item.bkBankRWF || 0), 0);
-    
-    const totalExpenseRWF = filteredExpenses.reduce((sum, item) => 
-      sum + (item.mtnMomoRWF || 0) + (item.equityBankRWF || 0) + (item.bkBankRWF || 0), 0);
+    const totalIncomeRWF = filteredIncome.reduce((sum, item) =>
+      sum + (item.mtnMomoRWF || 0) + (item.equityBankRWF || 0) + (item.bkBankRWF || 0) + (item.cashRWF || 0), 0);
+
+    const totalExpenseRWF = filteredExpenses.reduce((sum, item) =>
+      sum + (item.mtnMomoRWF || 0) + (item.equityBankRWF || 0) + (item.bkBankRWF || 0) + (item.cashRWF || 0), 0);
 
     const netProfit = totalIncomeRWF - totalExpenseRWF;
 
     // Calculate closing balances
     const closingBalances = {
-      mtnMomoRWF: financialData.openingBalances.mtnMomoRWF + 
+      mtnMomoRWF: financialData.openingBalances.mtnMomoRWF +
         filteredIncome.reduce((sum, item) => sum + (item.mtnMomoRWF || 0), 0) -
         filteredExpenses.reduce((sum, item) => sum + (item.mtnMomoRWF || 0), 0),
-      equityBankRWF: financialData.openingBalances.equityBankRWF + 
+      equityBankRWF: financialData.openingBalances.equityBankRWF +
         filteredIncome.reduce((sum, item) => sum + (item.equityBankRWF || 0), 0) -
         filteredExpenses.reduce((sum, item) => sum + (item.equityBankRWF || 0), 0),
-      bkBankRWF: financialData.openingBalances.bkBankRWF + 
+      bkBankRWF: financialData.openingBalances.bkBankRWF +
         filteredIncome.reduce((sum, item) => sum + (item.bkBankRWF || 0), 0) -
-        filteredExpenses.reduce((sum, item) => sum + (item.bkBankRWF || 0), 0)
+        filteredExpenses.reduce((sum, item) => sum + (item.bkBankRWF || 0), 0),
+      cashRWF: financialData.openingBalances.cashRWF +
+        filteredIncome.reduce((sum, item) => sum + (item.cashRWF || 0), 0) -
+        filteredExpenses.reduce((sum, item) => sum + (item.cashRWF || 0), 0)
     };
 
     const summaryData = {
@@ -132,7 +195,7 @@ export async function GET(req: NextRequest) {
       totalIncome: totalIncomeRWF,
       totalExpenses: totalExpenseRWF,
       netProfit: netProfit,
-             openingBalances: financialData.openingBalances,
+      openingBalances: financialData.openingBalances,
       closingBalances: closingBalances,
       income: filteredIncome,
       expenses: filteredExpenses,
@@ -163,13 +226,13 @@ export async function POST(req: NextRequest) {
     // This would typically save the financial summary to the database
     // For now, we'll just return the generated summary
     const response = await fetch(`${req.nextUrl.origin}/api/financial-summary?period=${period}&startDate=${startDate}&endDate=${endDate}&generatedBy=${generatedBy}`);
-    
+
     if (!response.ok) {
       throw new Error('Failed to generate financial summary');
     }
 
     const summaryData = await response.json();
-    
+
     return NextResponse.json({
       success: true,
       message: 'Financial summary generated successfully',
@@ -179,4 +242,4 @@ export async function POST(req: NextRequest) {
     console.error('Error in POST financial summary:', error);
     return NextResponse.json({ error: 'Failed to process financial summary request' }, { status: 500 });
   }
-} 
+}

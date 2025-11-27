@@ -20,9 +20,9 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
   if (typeof children === 'object' && children && 'props' in children && (children as any).props?.className?.includes('not-authorized')) showSidebar = false;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex overflow-x-hidden">
       {showSidebar && <StaffSidebar />}
-      <main className="flex-1 max-w-full mx-auto p-8 flex flex-col gap-8">
+      <main className="flex-1 w-full overflow-x-hidden">
         {children}
       </main>
     </div>

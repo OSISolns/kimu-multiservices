@@ -2,9 +2,18 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Employee, Payroll, PayrollSummary, PayrollStats } from '@/types/payroll';
+import { FaTimes, FaSpinner, FaUserPlus, FaMoneyBillWave, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 
 interface PayrollDashboardProps {
   user: any;
+}
+
+interface User {
+  id: number;
+  username: string;
+  fullName: string;
+  email: string;
+  role: string;
 }
 
 export default function PayrollDashboard({ user }: PayrollDashboardProps) {
@@ -12,10 +21,39 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
   const [payrollStats, setPayrollStats] = useState<PayrollStats | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [payrolls, setPayrolls] = useState<Payroll[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState(
     new Date().toISOString().slice(0, 7)
   );
+
+  // Add Employee Modal State
+  const [showAddEmployeeModal, setShowAddEmployeeModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newEmployeeData, setNewEmployeeData] = useState({
+    userId: '',
+    employeeId: '',
+    position: '',
+    department: '',
+    employmentType: 'full-time',
+    hireDate: new Date().toISOString().split('T')[0],
+    salary: '',
+    bankAccount: '',
+    bankName: '',
+    taxId: '',
+    socialSecurityId: '',
+    notes: ''
+  });
+
+  // Process Payroll Modal State
+  const [showProcessPayrollModal, setShowProcessPayrollModal] = useState(false);
+  const [processPayrollData, setProcessPayrollData] = useState({
+    period: new Date().toISOString().slice(0, 7),
+    workingDays: 22,
+    notes: '',
+    selectedEmployeeIds: [] as number[],
+    selectAll: true
+  });
 
   const fetchPayrollData = useCallback(async () => {
     try {
@@ -42,15 +80,25 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
     }
   }, [selectedPeriod]);
 
+  const fetchUsers = useCallback(async () => {
+    try {
+      const response = await fetch('/api/users');
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.users || []);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchPayrollData();
-  }, [fetchPayrollData]);
+    fetchUsers();
+  }, [fetchPayrollData, fetchUsers]);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-RW', {
-      style: 'currency',
-      currency: 'RWF',
-    }).format(amount);
+    return amount.toLocaleString('en-RW') + ' RWF';
   };
 
   const tabs = [
@@ -61,17 +109,117 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
   ];
 
   const handleAddEmployee = () => {
-    setActiveTab('employees');
+    setShowAddEmployeeModal(true);
   };
 
   const handleProcessPayroll = () => {
-    setActiveTab('payrolls');
+    // Initialize with current period and all active employees selected
+    setProcessPayrollData({
+      period: new Date().toISOString().slice(0, 7),
+      workingDays: 22,
+      notes: '',
+      selectedEmployeeIds: employees.filter(e => e.status === 'active').map(e => e.id),
+      selectAll: true
+    });
+    setShowProcessPayrollModal(true);
   };
 
   const handleGenerateReport = (reportType: 'monthly' | 'department' | 'employee') => {
-
     alert(`Generate ${reportType} payroll report for ${selectedPeriod}`);
   };
+
+  const handleCreateEmployee = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('/api/payroll/employees', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...newEmployeeData,
+          userId: parseInt(newEmployeeData.userId),
+          salary: parseFloat(newEmployeeData.salary)
+        })
+      });
+
+      if (response.ok) {
+        setShowAddEmployeeModal(false);
+        setNewEmployeeData({
+          userId: '',
+          employeeId: '',
+          position: '',
+          department: '',
+          employmentType: 'full-time',
+          hireDate: new Date().toISOString().split('T')[0],
+          salary: '',
+          bankAccount: '',
+          bankName: '',
+          taxId: '',
+          socialSecurityId: '',
+          notes: ''
+        });
+        fetchPayrollData(); // Refresh list
+        alert('Employee added successfully!');
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.error || 'Failed to add employee'}`);
+      }
+    } catch (error) {
+      console.error('Error creating employee:', error);
+      alert('Failed to add employee. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleProcessPayrollSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const [year, month] = processPayrollData.period.split('-').map(Number);
+
+      const response = await fetch('/api/payroll/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          employeeIds: processPayrollData.selectedEmployeeIds,
+          period: processPayrollData.period,
+          year,
+          month,
+          workingDays: Number(processPayrollData.workingDays),
+          notes: processPayrollData.notes
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setShowProcessPayrollModal(false);
+        fetchPayrollData();
+
+        if (result.errors && result.errors.length > 0) {
+          alert(`Payroll processed with some errors:\n${result.errors.map((e: any) => `${e.employeeName}: ${e.error}`).join('\n')}`);
+        } else {
+          alert(`Successfully processed payroll for ${result.summary.processed} employees.`);
+        }
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.error || 'Failed to process payroll'}`);
+      }
+    } catch (error) {
+      console.error('Error processing payroll:', error);
+      alert('Failed to process payroll. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Filter users who are not yet employees
+  const availableUsers = users.filter(u => !employees.some(e => e.userId === u.id));
+
+  // Active employees for payroll processing
+  const activeEmployees = employees.filter(e => e.status === 'active');
 
   if (isLoading) {
     return (
@@ -120,7 +268,7 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">Total Employees</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {payrollStats.totalStats.totalPayrolls}
+                  {employees.length}
                 </p>
               </div>
             </div>
@@ -185,8 +333,8 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
               >
                 <span className="mr-2">{tab.icon}</span>
@@ -235,8 +383,11 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium text-gray-900">Employees</h3>
-                <button onClick={handleAddEmployee} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                  Add Employee
+                <button
+                  onClick={handleAddEmployee}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
+                >
+                  <FaUserPlus /> Add Employee
                 </button>
               </div>
               <div className="overflow-x-auto">
@@ -282,10 +433,10 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${employee.status === 'active'
-                              ? 'bg-green-100 text-green-800'
-                              : employee.status === 'inactive'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-red-100 text-red-800'
+                            ? 'bg-green-100 text-green-800'
+                            : employee.status === 'inactive'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-red-100 text-red-800'
                             }`}>
                             {employee.status}
                           </span>
@@ -302,8 +453,11 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium text-gray-900">Payrolls</h3>
-                <button onClick={handleProcessPayroll} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                  Process Payroll
+                <button
+                  onClick={handleProcessPayroll}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
+                >
+                  <FaMoneyBillWave /> Process Payroll
                 </button>
               </div>
               <div className="overflow-x-auto">
@@ -328,36 +482,44 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {payrolls.map((payroll) => (
-                      <tr key={payroll.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {payroll.employee.user.fullName || payroll.employee.user.username}
-                          </div>
+                    {payrolls.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                          No payroll records found for this period.
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {payroll.period}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatCurrency(payroll.grossSalary)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatCurrency(payroll.netSalary)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${payroll.status === 'paid'
+                      </tr>
+                    ) : (
+                      payrolls.map((payroll) => (
+                        <tr key={payroll.id}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">
+                              {payroll.employee.user.fullName || payroll.employee.user.username}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {payroll.period}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {formatCurrency(payroll.grossSalary)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {formatCurrency(payroll.netSalary)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${payroll.status === 'paid'
                               ? 'bg-green-100 text-green-800'
                               : payroll.status === 'processed'
                                 ? 'bg-blue-100 text-blue-800'
                                 : payroll.status === 'draft'
                                   ? 'bg-yellow-100 text-yellow-800'
                                   : 'bg-red-100 text-red-800'
-                            }`}>
-                            {payroll.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                              }`}>
+                              {payroll.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -400,7 +562,317 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
           )}
         </div>
       </div>
+
+      {/* Add Employee Modal */}
+      {showAddEmployeeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
+              <h3 className="text-lg font-bold text-gray-900">Add New Employee</h3>
+              <button
+                onClick={() => setShowAddEmployeeModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateEmployee} className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Select User</label>
+                  <select
+                    required
+                    value={newEmployeeData.userId}
+                    onChange={(e) => setNewEmployeeData({ ...newEmployeeData, userId: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                  >
+                    <option value="">Select a user...</option>
+                    {availableUsers.map(u => (
+                      <option key={u.id} value={u.id}>
+                        {u.fullName || u.username} ({u.email})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">Only users without employee records are shown.</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
+                  <input
+                    type="text"
+                    required
+                    value={newEmployeeData.employeeId}
+                    onChange={(e) => setNewEmployeeData({ ...newEmployeeData, employeeId: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                    placeholder="EMP-001"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                  <input
+                    type="text"
+                    required
+                    value={newEmployeeData.position}
+                    onChange={(e) => setNewEmployeeData({ ...newEmployeeData, position: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                    placeholder="Software Engineer"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                  <input
+                    type="text"
+                    required
+                    value={newEmployeeData.department}
+                    onChange={(e) => setNewEmployeeData({ ...newEmployeeData, department: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                    placeholder="Engineering"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Employment Type</label>
+                  <select
+                    required
+                    value={newEmployeeData.employmentType}
+                    onChange={(e) => setNewEmployeeData({ ...newEmployeeData, employmentType: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                  >
+                    <option value="full-time">Full Time</option>
+                    <option value="part-time">Part Time</option>
+                    <option value="contract">Contract</option>
+                    <option value="intern">Intern</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Hire Date</label>
+                  <input
+                    type="date"
+                    required
+                    value={newEmployeeData.hireDate}
+                    onChange={(e) => setNewEmployeeData({ ...newEmployeeData, hireDate: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Salary (RWF)</label>
+                  <input
+                    type="number"
+                    required
+                    value={newEmployeeData.salary}
+                    onChange={(e) => setNewEmployeeData({ ...newEmployeeData, salary: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
+                  <input
+                    type="text"
+                    value={newEmployeeData.bankName}
+                    onChange={(e) => setNewEmployeeData({ ...newEmployeeData, bankName: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                    placeholder="Bank of Kigali"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Bank Account</label>
+                  <input
+                    type="text"
+                    value={newEmployeeData.bankAccount}
+                    onChange={(e) => setNewEmployeeData({ ...newEmployeeData, bankAccount: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                    placeholder="Account Number"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tax ID (TIN)</label>
+                  <input
+                    type="text"
+                    value={newEmployeeData.taxId}
+                    onChange={(e) => setNewEmployeeData({ ...newEmployeeData, taxId: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                    placeholder="TIN Number"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Social Security ID (RSSB)</label>
+                  <input
+                    type="text"
+                    value={newEmployeeData.socialSecurityId}
+                    onChange={(e) => setNewEmployeeData({ ...newEmployeeData, socialSecurityId: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                    placeholder="RSSB Number"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea
+                  value={newEmployeeData.notes}
+                  onChange={(e) => setNewEmployeeData({ ...newEmployeeData, notes: e.target.value })}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                  placeholder="Additional notes..."
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setShowAddEmployeeModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-lg shadow-blue-500/30 transition-all active:scale-95 font-medium flex justify-center items-center gap-2"
+                >
+                  {isSubmitting && <FaSpinner className="animate-spin" />}
+                  Add Employee
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Process Payroll Modal */}
+      {showProcessPayrollModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+              <h3 className="text-lg font-bold text-gray-900">Process Payroll</h3>
+              <button
+                onClick={() => setShowProcessPayrollModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            <form onSubmit={handleProcessPayrollSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Payroll Period</label>
+                <input
+                  type="month"
+                  required
+                  value={processPayrollData.period}
+                  onChange={(e) => setProcessPayrollData({ ...processPayrollData, period: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Working Days</label>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  max="31"
+                  value={processPayrollData.workingDays}
+                  onChange={(e) => setProcessPayrollData({ ...processPayrollData, workingDays: parseInt(e.target.value) })}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-medium text-gray-700">Select Employees</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newSelectAll = !processPayrollData.selectAll;
+                      setProcessPayrollData({
+                        ...processPayrollData,
+                        selectAll: newSelectAll,
+                        selectedEmployeeIds: newSelectAll ? activeEmployees.map(e => e.id) : []
+                      });
+                    }}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    {processPayrollData.selectAll ? 'Deselect All' : 'Select All'}
+                  </button>
+                </div>
+                <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-xl p-2 space-y-1">
+                  {activeEmployees.length === 0 ? (
+                    <p className="text-sm text-gray-500 text-center py-4">No active employees found.</p>
+                  ) : (
+                    activeEmployees.map(employee => (
+                      <label key={employee.id} className="flex items-center p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={processPayrollData.selectedEmployeeIds.includes(employee.id)}
+                          onChange={(e) => {
+                            const newSelected = e.target.checked
+                              ? [...processPayrollData.selectedEmployeeIds, employee.id]
+                              : processPayrollData.selectedEmployeeIds.filter(id => id !== employee.id);
+
+                            setProcessPayrollData({
+                              ...processPayrollData,
+                              selectedEmployeeIds: newSelected,
+                              selectAll: newSelected.length === activeEmployees.length
+                            });
+                          }}
+                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-gray-300"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">
+                          {employee.user.fullName || employee.user.username}
+                          <span className="text-xs text-gray-500 ml-1">({employee.position})</span>
+                        </span>
+                      </label>
+                    ))
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Selected: {processPayrollData.selectedEmployeeIds.length} employees
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
+                <textarea
+                  value={processPayrollData.notes}
+                  onChange={(e) => setProcessPayrollData({ ...processPayrollData, notes: e.target.value })}
+                  rows={2}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                  placeholder="Payroll notes..."
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setShowProcessPayrollModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || processPayrollData.selectedEmployeeIds.length === 0}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-lg shadow-blue-500/30 transition-all active:scale-95 font-medium flex justify-center items-center gap-2"
+                >
+                  {isSubmitting && <FaSpinner className="animate-spin" />}
+                  Process Payroll
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-

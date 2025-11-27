@@ -1,11 +1,12 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
   // Use default output in node_modules/.prisma to avoid Windows file locks on engine DLLs
 }
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
+  url      = env("TURSO_DATABASE_URL")
 }
 
 model User {
@@ -231,7 +232,7 @@ model Expense {
   id            Int      @id @default(autoincrement())
   description   String
   amount        Float
-  category      String   // fuel, maintenance, insurance, salaries, utilities, office, marketing, other
+  category      String   // fuel, maintenance, insurance, salaries, wages, utilities, office, marketing, traffic_tickets, other
   paymentMethod String   // MTN Momo, Equity Bank, BK Bank, Cash
   date          DateTime
   receiptNumber String?
@@ -265,7 +266,7 @@ model Invoice {
 
 model Budget {
   id          Int      @id @default(autoincrement())
-  category    String   // fuel, maintenance, insurance, salaries, utilities, office, marketing, other
+  category    String   // fuel, maintenance, insurance, salaries, wages, utilities, office, marketing, traffic_tickets, other
   amount      Float
   period      String   // monthly, quarterly, yearly
   year        Int
@@ -465,4 +466,20 @@ model PayrollItem {
   @@index([payrollId])
   @@index([employeeId])
   @@index([type])
+}
+
+model PettyCashTransaction {
+  id            Int      @id @default(autoincrement())
+  date          DateTime @default(now())
+  description   String
+  amount        Float
+  type          String   // "CREDIT" (Deposit), "DEBIT" (Expense)
+  category      String?
+  receiptUrl    String?
+  requestedBy   String?
+  approvedBy    String?
+  status        String   @default("pending") // pending, approved, rejected, completed
+  balanceAfter  Float?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

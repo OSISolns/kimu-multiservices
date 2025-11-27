@@ -39,7 +39,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [isMounted, setIsMounted] = useState(false);
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
   const warningTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const INACTIVITY_TIMEOUT = useMemo(() => 15 * 60 * 1000, []); // 15 minutes in milliseconds
+  const INACTIVITY_TIMEOUT = useMemo(() => {
+    if (user?.role === 'accountant') {
+      return 10 * 60 * 1000; // 10 minutes for accountants
+    }
+    return 15 * 60 * 1000; // 15 minutes default
+  }, [user?.role]);
   const WARNING_TIME = useMemo(() => 60 * 1000, []); // Show warning 60 seconds before logout
 
   // Ensure we're on the client side to avoid hydration mismatch
@@ -65,7 +70,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     console.log('UserContext: Logging out user');
     setUser(null);
     setShowInactivityWarning(false);
-    
+
     if (isMounted) {
       try {
         localStorage.removeItem('user');
@@ -74,7 +79,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         console.error('Error removing user data from localStorage:', error);
       }
     }
-    
+
     // Clear all timers
     if (inactivityTimerRef.current) {
       clearTimeout(inactivityTimerRef.current);
@@ -148,7 +153,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     if (!user || !isMounted) return;
 
     const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
-    
+
     const handleActivity = () => {
       resetInactivityTimer();
     };
@@ -170,14 +175,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Only load user from localStorage after mounting to avoid hydration mismatch
     if (!isMounted) return;
-    
+
     try {
       // Load user from localStorage (for now)
       const storedUser = localStorage.getItem('user');
       const isStaff = localStorage.getItem('isStaff');
-      
+
       console.log('UserContext: Loading user data', { storedUser, isStaff });
-      
+
       if (storedUser && isStaff) {
         try {
           const userData = JSON.parse(storedUser);
@@ -204,14 +209,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
   // Listen for storage changes (when user logs in/out from other tabs)
   useEffect(() => {
     if (!isMounted) return;
-    
+
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'user' || e.key === 'isStaff') {
         console.log('UserContext: Storage changed, reloading user data');
         try {
           const storedUser = localStorage.getItem('user');
           const isStaff = localStorage.getItem('isStaff');
-          
+
           if (storedUser && isStaff) {
             try {
               setUser(JSON.parse(storedUser));

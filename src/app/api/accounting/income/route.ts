@@ -25,14 +25,14 @@ export async function GET(req: NextRequest) {
     const category = searchParams.get('category');
 
     let whereClause: any = {};
-    
+
     if (startDate && endDate) {
       whereClause.date = {
         gte: new Date(startDate),
         lte: new Date(endDate)
       };
     }
-    
+
     if (category) {
       whereClause.category = category;
     }
@@ -71,3 +71,54 @@ export const POST = withValidation(incomeSchema, async (req, validatedData) => {
     return NextResponse.json({ error: 'Failed to create income' }, { status: 500 });
   }
 });
+
+export const PUT = withValidation(incomeSchema, async (req, validatedData) => {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'Income ID is required' }, { status: 400 });
+    }
+
+    // Clean up empty strings for optional fields
+    const cleanData = {
+      ...validatedData,
+      date: new Date(validatedData.date),
+      reference: validatedData.reference || undefined,
+      notes: validatedData.notes || undefined,
+      clientName: validatedData.clientName || undefined,
+      clientPhone: validatedData.clientPhone || undefined
+    };
+
+    const income = await prisma.income.update({
+      where: { id: parseInt(id) },
+      data: cleanData
+    });
+
+    return NextResponse.json(income);
+  } catch (error) {
+    console.error('Error updating income:', error);
+    return NextResponse.json({ error: 'Failed to update income' }, { status: 500 });
+  }
+});
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'Income ID is required' }, { status: 400 });
+    }
+
+    await prisma.income.delete({
+      where: { id: parseInt(id) }
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting income:', error);
+    return NextResponse.json({ error: 'Failed to delete income' }, { status: 500 });
+  }
+}

@@ -26,48 +26,16 @@ interface Activity {
     relatedTo?: string; // e.g., Lead Name
 }
 
-// Dummy data
-const MOCK_ACTIVITIES: Activity[] = [
-    {
-        id: '1',
-        type: 'Call',
-        title: 'Follow up with John Doe',
-        description: 'Discuss the new proposal regarding fleet management.',
-        date: new Date().toISOString().split('T')[0],
-        time: '10:00',
-        status: 'Pending',
-        relatedTo: 'John Doe'
-    },
-    {
-        id: '2',
-        type: 'Meeting',
-        title: 'Product Demo with ABC Corp',
-        description: 'Showcase the new vehicle tracking features.',
-        date: new Date().toISOString().split('T')[0],
-        time: '14:00',
-        status: 'Pending',
-        relatedTo: 'ABC Corp'
-    },
-    {
-        id: '3',
-        type: 'Email',
-        title: 'Send contract to XYZ Ltd',
-        description: 'Final version of the lease agreement.',
-        date: new Date(Date.now() + 86400000).toISOString().split('T')[0], // Tomorrow
-        time: '09:00',
-        status: 'Pending',
-        relatedTo: 'XYZ Ltd'
-    }
-];
-
 export default function ActivitiesPage() {
     const { user, isLoading } = useUser();
     const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
-    const [activities, setActivities] = useState<Activity[]>(MOCK_ACTIVITIES);
+    const [activities, setActivities] = useState<Activity[]>([]);
+    const [isLoadingData, setIsLoadingData] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newActivity, setNewActivity] = useState<Partial<Activity>>({
         type: 'Call',
         date: new Date().toISOString().split('T')[0],
+        time: '12:00',
         status: 'Pending'
     });
 
@@ -76,23 +44,94 @@ export default function ActivitiesPage() {
     const [month, setMonth] = useState(now.getMonth());
     const [year, setYear] = useState(now.getFullYear());
 
-    const handleSaveActivity = () => {
-        if (!newActivity.title || !newActivity.date) return;
-
-        const activity: Activity = {
-            id: Math.random().toString(36).substr(2, 9),
-            type: newActivity.type as any,
-            title: newActivity.title!,
-            description: newActivity.description || '',
-            date: newActivity.date!,
-            time: newActivity.time || '12:00',
-            status: 'Pending',
-            relatedTo: newActivity.relatedTo
+    useEffect(() => {
+        const fetchActivities = async () => {
+            try {
+                setIsLoadingData(true);
+                const response = await fetch('/api/activities?limit=100');
+                if (response.ok) {
+                    const data = await response.json();
+                    // API returns data wrapped in { success, timestamp, data: { activities, pagination } }
+                    const activities = data.data?.activities || data.activities || [];
+                    const fetchedActivities = activities.map((a: any) => {
+                        const dateObj = new Date(a.date);
+                        return {
+                            id: a.id,
+                            type: a.type.charAt(0).toUpperCase() + a.type.slice(1), // Capitalize
+                            title: a.activity,
+                            description: a.outcome,
+                            date: dateObj.toISOString().split('T')[0],
+                            time: dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                            status: 'Completed', // Default to completed as these are logs
+                            relatedTo: a.client
+                        };
+                    });
+                    setActivities(fetchedActivities);
+                }
+            } catch (error) {
+                console.error('Error fetching activities:', error);
+            } finally {
+                setIsLoadingData(false);
+            }
         };
 
-        setActivities([...activities, activity]);
-        setIsModalOpen(false);
-        setNewActivity({ type: 'Call', date: new Date().toISOString().split('T')[0], status: 'Pending' });
+        if (user && !isLoading) {
+            fetchActivities();
+        }
+    }, [user, isLoading]);
+
+    const handleSaveActivity = async () => {
+        if (!newActivity.title || !newActivity.date || !newActivity.relatedTo) {
+            alert("Please fill in Title, Date, and Related To fields.");
+            return;
+        }
+
+        try {
+            const dateTime = new Date(`${newActivity.date}T${newActivity.time || '12:00'}:00`);
+
+            const payload = {
+                client: newActivity.relatedTo,
+                activity: newActivity.title,
+                outcome: newActivity.description || 'Scheduled',
+                type: newActivity.type?.toLowerCase(),
+                date: dateTime.toISOString(),
+                createdBy: user?.id
+            };
+
+            const response = await fetch('/api/activities', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const a = data.activity;
+                const dateObj = new Date(a.date);
+                const createdActivity: Activity = {
+                    id: a.id,
+                    type: a.type.charAt(0).toUpperCase() + a.type.slice(1) as any,
+                    title: a.activity,
+                    description: a.outcome,
+                    date: dateObj.toISOString().split('T')[0],
+                    time: dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    status: 'Pending',
+                    relatedTo: a.client
+                };
+
+                setActivities([createdActivity, ...activities]);
+                setIsModalOpen(false);
+                setNewActivity({ type: 'Call', date: new Date().toISOString().split('T')[0], time: '12:00', status: 'Pending' });
+            } else {
+                const errorData = await response.json();
+                alert(`Failed to save activity: ${errorData.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Error saving activity:', error);
+            alert('An error occurred while saving the activity.');
+        }
     };
 
     const getMonthDays = (year: number, month: number) => {
@@ -107,7 +146,7 @@ export default function ActivitiesPage() {
     const days = getMonthDays(year, month);
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-    if (isLoading) {
+    if (isLoading || isLoadingData) {
         return <LoadingSpinner size="lg" message="Loading Activities..." />;
     }
 
@@ -299,7 +338,7 @@ export default function ActivitiesPage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Related To</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Related To (Client Name)</label>
                                 <input
                                     type="text"
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -310,7 +349,7 @@ export default function ActivitiesPage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Description / Outcome</label>
                                 <textarea
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     rows={3}

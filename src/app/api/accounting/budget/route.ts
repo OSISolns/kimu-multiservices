@@ -4,7 +4,7 @@ import { withValidation } from '@/lib/api';
 import { z } from 'zod';
 
 const budgetSchema = z.object({
-  category: z.enum(['fuel', 'maintenance', 'insurance', 'salaries', 'utilities', 'office', 'marketing', 'other']),
+  category: z.enum(['fuel', 'maintenance', 'insurance', 'salaries', 'utilities', 'office', 'marketing', 'traffic_tickets', 'other']),
   amount: z.number().positive('Amount must be positive'),
   period: z.enum(['monthly', 'quarterly', 'yearly']),
   year: z.number().min(2020).max(2030),
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     // Get actual expenses for comparison
     const startDate = new Date(parseInt(year), 0, 1);
     const endDate = new Date(parseInt(year), 11, 31);
-    
+
     if (period === 'monthly') {
       const month = searchParams.get('month') || (new Date().getMonth() + 1).toString();
       startDate.setMonth(parseInt(month) - 1);
@@ -62,10 +62,10 @@ export async function GET(req: NextRequest) {
       const actualAmount = expenses
         .filter(expense => expense.category === budget.category)
         .reduce((sum, expense) => sum + expense.amount, 0);
-      
+
       const variance = budget.amount - actualAmount;
       const variancePercentage = budget.amount > 0 ? (variance / budget.amount) * 100 : 0;
-      
+
       return {
         ...budget,
         actualAmount,

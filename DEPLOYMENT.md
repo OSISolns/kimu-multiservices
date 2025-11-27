@@ -4,7 +4,7 @@
 
 1. **Vercel Account**: Sign up at [vercel.com](https://vercel.com)
 2. **Vercel CLI**: Install globally with `npm install -g vercel`
-3. **Database**: Neon PostgreSQL database (already configured)
+3. **Database**: Turso (libSQL) database (already configured)
 4. **Environment Variables**: Set up in Vercel dashboard
 
 ## Environment Variables Setup
@@ -13,7 +13,8 @@ In your Vercel dashboard, add these environment variables:
 
 ```bash
 # Database
-DATABASE_URL=postgresql://neondb_owner:npg_qLJzwm23yHoV@ep-dawn-cherry-abegw7ea-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+TURSO_DATABASE_URL=libsql://your-db-name.turso.io
+TURSO_AUTH_TOKEN=your-turso-auth-token
 
 # JWT Secret (generate a strong secret)
 JWT_SECRET=your-super-secure-jwt-secret-here
@@ -109,11 +110,11 @@ npx prisma generate
 
 ### Database Connection Issues
 
-If you see PostgreSQL connection errors:
+If you see Turso/libSQL connection errors:
 
-1. **Check DATABASE_URL**: Ensure it's correctly set in Vercel
-2. **Use Pooled Connection**: Neon pooled connections work better with Vercel
-3. **Check Neon Dashboard**: Verify database is active
+1. **Check Credentials**: Ensure `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` are correct
+2. **Check Database Status**: Verify your database is active in the Turso dashboard
+3. **Check Region**: Ensure your Turso database region is close to your Vercel deployment region
 
 ### Build Failures
 
@@ -131,7 +132,7 @@ If you see PostgreSQL connection errors:
 
 - **Vercel Analytics**: Built-in performance monitoring
 - **Function Logs**: Check serverless function logs
-- **Database Monitoring**: Monitor Neon database usage
+- **Database Monitoring**: Monitor Turso database usage
 
 ## Security
 

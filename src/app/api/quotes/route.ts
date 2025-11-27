@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { validateInput, sanitizeString } from '@/lib/validation';
 import { handleApiError, createSuccessResponse, createValidationErrorResponse } from '@/lib/errors';
 import { logActivity, logError, logInfo } from '@/lib/logger';
 import { z } from 'zod';
-
-// Create a new Prisma client instance
-const prisma = new PrismaClient();
 
 const createQuoteSchema = z.object({
   customerId: z.number().int().positive('Customer ID must be a positive integer'),
@@ -23,7 +20,7 @@ export async function POST(req: NextRequest) {
     // Debug: Check if prisma is defined
     console.log('Prisma client:', prisma);
     console.log('Prisma quote model:', prisma?.quote);
-    
+
     // Test database connection
     try {
       await prisma.$queryRaw`SELECT 1`;
@@ -35,9 +32,9 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       );
     }
-    
+
     const body = await req.json();
-    
+
     // Validate input
     const validation = validateInput(createQuoteSchema, body);
     if (!validation.success) {
@@ -45,16 +42,16 @@ export async function POST(req: NextRequest) {
     }
 
     const { customerId, serviceType, amount, currency, validUntil, notes, createdBy } = validation.data!;
-    
+
     // Sanitize string inputs
     const sanitizedServiceType = sanitizeString(serviceType);
     const sanitizedNotes = notes ? sanitizeString(notes) : null;
-    
+
     // Check if customer exists
     const customer = await prisma.lead.findUnique({
       where: { id: customerId }
     });
-    
+
     if (!customer) {
       return NextResponse.json(
         { success: false, error: 'Customer not found' },

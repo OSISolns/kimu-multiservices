@@ -52,12 +52,14 @@ export interface FinancialTransaction {
   mtnMomoRWF?: number;
   equityBankRWF?: number;
   bkBankRWF?: number;
+  cashRWF?: number;
 }
 
 export interface AccountBalances {
   mtnMomoRWF: number;
   equityBankRWF: number;
   bkBankRWF: number;
+  cashRWF: number;
 }
 
 export interface FinancialSummary {

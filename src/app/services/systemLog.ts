@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 export interface SystemLogData {
   action: string;
@@ -27,4 +25,4 @@ export const SystemActions = {
   USER_USAGE_REPORT: 'user_usage_report',
   SYSTEM_UPDATE: 'system_update',
   MANUAL_LOG: 'manual_log',
-} as const; 
+} as const;

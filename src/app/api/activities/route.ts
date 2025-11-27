@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { validateInput, sanitizeString } from '@/lib/validation';
 import { handleApiError, createSuccessResponse, createValidationErrorResponse } from '@/lib/errors';
 import { logActivity, logError, logInfo } from '@/lib/logger';
 import { z } from 'zod';
-
-// Create a new Prisma client instance
-const prisma = new PrismaClient();
 
 const createActivitySchema = z.object({
   client: z.string().min(1, 'Client name is required'),
@@ -20,7 +17,7 @@ const createActivitySchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    
+
     // Validate input
     const validation = validateInput(createActivitySchema, body);
     if (!validation.success) {
@@ -28,22 +25,25 @@ export async function POST(req: NextRequest) {
     }
 
     const { client, activity, outcome, type, date, createdBy } = validation.data!;
-    
+
     // Sanitize string inputs
     const sanitizedClient = sanitizeString(client);
     const sanitizedActivity = sanitizeString(activity);
     const sanitizedOutcome = sanitizeString(outcome);
-    
+
     // Create the activity
-    const newActivity = await prisma.activityLog.create({
+    // Note: Activity model doesn't have userId, so we don't save createdBy in the table
+    const newActivity = await prisma.activity.create({
       data: {
-        action: sanitizedActivity,
-        details: `Client: ${sanitizedClient}, Outcome: ${sanitizedOutcome}, Type: ${type}`,
-        userId: createdBy
+        client: sanitizedClient,
+        activity: sanitizedActivity,
+        outcome: sanitizedOutcome,
+        type: type,
+        date: date ? new Date(date) : new Date(),
       }
     });
 
-    // Log the activity creation
+    // Log the activity creation in system logs
     await logActivity(
       createdBy,
       'ACTIVITY_LOGGED',
@@ -62,11 +62,11 @@ export async function POST(req: NextRequest) {
     return createSuccessResponse({
       activity: {
         id: newActivity.id.toString(),
-        date: newActivity.createdAt.toISOString(),
-        client: sanitizedClient,
-        activity: sanitizedActivity,
-        outcome: sanitizedOutcome,
-        type: type,
+        date: newActivity.date.toISOString(),
+        client: newActivity.client,
+        activity: newActivity.activity,
+        outcome: newActivity.outcome,
+        type: newActivity.type,
         createdAt: newActivity.createdAt
       }
     });
@@ -82,34 +82,31 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const skip = (page - 1) * limit;
 
-    const where: any = {};
-    if (userId) where.userId = parseInt(userId);
+    // Note: Activity model doesn't have userId, so we can't filter by userId
 
     const [activities, total] = await Promise.all([
-      prisma.activityLog.findMany({
-        where,
+      prisma.activity.findMany({
         orderBy: {
-          createdAt: 'desc'
+          date: 'desc'
         },
         skip,
         take: limit
       }),
-      prisma.activityLog.count({ where })
+      prisma.activity.count()
     ]);
 
     return createSuccessResponse({
       activities: activities.map(activity => ({
         id: activity.id.toString(),
-        date: activity.createdAt.toISOString(),
-        client: activity.details?.split(',')[0]?.replace('Client: ', '') || 'Unknown',
-        activity: activity.action,
-        outcome: activity.details?.split(',')[1]?.replace(' Outcome: ', '') || 'Unknown',
-        type: activity.details?.split(',')[2]?.replace(' Type: ', '') || 'call',
+        date: activity.date.toISOString(),
+        client: activity.client,
+        activity: activity.activity,
+        outcome: activity.outcome,
+        type: activity.type,
         createdAt: activity.createdAt
       })),
       pagination: {
