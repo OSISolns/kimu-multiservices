@@ -150,10 +150,10 @@ export default function UsersPage() {
     if (!isLoading && !user) {
       console.log('UsersPage: No user, redirecting to login');
       router.push('/staff/login');
-    } else if (!isLoading && user && !['admin', 'manager'].includes(user.role)) {
-      console.log('UsersPage: User is not admin or manager, redirecting to dashboard', { role: user.role });
+    } else if (!isLoading && user && !['admin', 'manager', 'accountant'].includes(user.role)) {
+      console.log('UsersPage: User is not admin, manager or accountant, redirecting to dashboard', { role: user.role });
       router.push('/staff/sales-dashboard');
-    } else if (!isLoading && user && ['admin', 'manager'].includes(user.role)) {
+    } else if (!isLoading && user && ['admin', 'manager', 'accountant'].includes(user.role)) {
       console.log('UsersPage: User is admin or manager, fetching users');
       fetchUsers();
     }
@@ -611,7 +611,7 @@ export default function UsersPage() {
   }
 
   // Show unauthorized message if user is not admin or manager
-  if (!user || !['admin', 'manager'].includes(user.role)) {
+  if (!user || !['admin', 'manager', 'accountant'].includes(user.role)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -635,7 +635,7 @@ export default function UsersPage() {
               <button onClick={exportUsersToExcel} className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors">
                 Export to Excel
               </button>
-              {user.role === 'admin' && (
+              {(user.role === 'admin' || user.role === 'accountant') && (
                 <button
                   onClick={() => setShowAddUserModal(true)}
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"

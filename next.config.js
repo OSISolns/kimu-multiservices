@@ -5,11 +5,18 @@ const nextConfig = {
   outputFileTracingRoot: __dirname,
   images: {
     formats: ['image/webp', 'image/avif'],
-    domains: ['localhost', 'images.unsplash.com'],
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'fcea86c8543e01f387dc6840916f203c.r2.cloudflarestorage.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
       },
     ],
   },

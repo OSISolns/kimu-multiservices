@@ -36,17 +36,17 @@ export default function BookingsPage() {
 
   const fetchBookings = useCallback(async () => {
     if (!user?.username) return;
-    
+
     try {
       const response = await fetch('/api/bookings');
-        if (response.ok) {
+      if (response.ok) {
         const data = await response.json();
         console.log('Bookings API response:', data); // Debug log
         setBookings(data.bookings || []);
-        }
-      } catch (error) {
+      }
+    } catch (error) {
       console.error('Error fetching bookings:', error);
-      } finally {
+    } finally {
       setLoading(false);
     }
   }, [user?.username]);
@@ -78,15 +78,15 @@ export default function BookingsPage() {
   }, [user, resetInactivityTimer]);
 
   if (userLoading || loading) {
-  return (
+    return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <Image src="/logo.png" alt="KIMU Transport Logo" width={80} height={80} className="w-20 h-20 mx-auto mb-4 animate-pulse"/>
+          <Image src="/logo.png" alt="KIMU Transport Logo" width={80} height={80} className="w-20 h-20 mx-auto mb-4 animate-pulse" unoptimized />
           <p className="text-gray-600">Loading bookings...</p>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   if (!user) {
     router.push('/staff/login');
@@ -95,15 +95,15 @@ export default function BookingsPage() {
 
   const filteredBookings = bookings.filter(booking => {
     const matchesFilter = filter === 'all' || booking.status.toLowerCase() === filter.toLowerCase();
-      const matchesSearch = 
+    const matchesSearch =
       booking.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.phone.includes(searchTerm) ||
       (booking.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.carType.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.nationality.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     return matchesFilter && matchesSearch;
-    });
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -133,7 +133,7 @@ export default function BookingsPage() {
           <p className="text-gray-600 mt-2">
             Manage all vehicle rental bookings and customer requests.
           </p>
-          </div>
+        </div>
 
         {/* Filters and Search */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
@@ -168,8 +168,8 @@ export default function BookingsPage() {
             <h2 className="text-lg font-semibold text-gray-900">
               Bookings ({filteredBookings.length})
             </h2>
-              </div>
-          
+          </div>
+
           {filteredBookings.length > 0 ? (
             <div className="divide-y divide-gray-200">
               {filteredBookings.map((booking) => (
@@ -182,8 +182,8 @@ export default function BookingsPage() {
                         <div className="flex-shrink-0">
                           <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                             <FaCar className="text-blue-600 text-xl" />
-                </div>
-              </div>
+                          </div>
+                        </div>
                         <div className="flex-1">
                           <h3 className="text-lg font-semibold text-gray-900">
                             {booking.name}
@@ -192,21 +192,21 @@ export default function BookingsPage() {
                             <span className="flex items-center">
                               <FaPhone className="mr-2" />
                               {booking.phone}
-                        </span>
+                            </span>
                             {booking.email && (
                               <span className="flex items-center">
                                 <FaEnvelope className="mr-2" />
                                 {booking.email}
-                          </span>
+                              </span>
                             )}
                             <span className="flex items-center">
                               <FaCar className="mr-2" />
                               {booking.carType}
                             </span>
-        </div>
-          </div>
-              </div>
-              
+                          </div>
+                        </div>
+                      </div>
+
                       {/* Trip Details */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -216,32 +216,32 @@ export default function BookingsPage() {
                             <span className="text-sm text-gray-600">
                               {new Date(booking.pickupDate).toLocaleDateString()} at {booking.pickupTime}
                             </span>
-                  </div>
-                    <div className="flex items-center space-x-2">
+                          </div>
+                          <div className="flex items-center space-x-2">
                             <FaCalendarAlt className="text-red-500" />
                             <span className="text-sm font-medium text-gray-700">Return:</span>
                             <span className="text-sm text-gray-600">
                               {new Date(booking.returnDate).toLocaleDateString()} at {booking.returnTime}
                             </span>
-                    </div>
-                  </div>
+                          </div>
+                        </div>
                         <div className="space-y-2">
                           <div className="flex items-center space-x-2">
                             <FaCar className="text-blue-500" />
                             <span className="text-sm font-medium text-gray-700">Duration:</span>
                             <span className="text-sm text-gray-600">
                               {booking.rentalDays} day{booking.rentalDays !== 1 ? 's' : ''}
-                    </span>
-                  </div>
+                            </span>
+                          </div>
                           <div className="flex items-center space-x-2">
                             <FaCheckCircle className="text-green-500" />
                             <span className="text-sm font-medium text-gray-700">Status:</span>
                             <span className="text-sm text-gray-600">
                               {booking.returnConfirmed ? 'Return Confirmed' : 'Return Pending'}
                             </span>
-                  </div>
-                  </div>
-                </div>
+                          </div>
+                        </div>
+                      </div>
 
                       {/* Additional Info */}
                       <div className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
@@ -249,19 +249,19 @@ export default function BookingsPage() {
                           <FaCar className="text-blue-500" />
                           <span className="text-sm font-medium text-gray-700">Car Type:</span>
                           <span className="text-sm text-gray-600">{booking.carType}</span>
-                      </div>
+                        </div>
                         <div className="flex items-center space-x-2">
                           <FaCheckCircle className="text-green-500" />
                           <span className="text-sm font-medium text-gray-700">Full Tank:</span>
                           <span className="text-sm text-gray-600">{booking.fullTank ? 'Yes' : 'No'}</span>
-                      </div>
+                        </div>
                         <div className="flex items-center space-x-2">
                           <FaCar className="text-blue-500" />
                           <span className="text-sm font-medium text-gray-700">Nationality:</span>
                           <span className="text-sm text-gray-600">{booking.nationality}</span>
-                      </div>
-                      </div>
                         </div>
+                      </div>
+                    </div>
 
                     {/* Status and Actions */}
                     <div className="flex flex-col items-end space-y-4 mt-4 lg:mt-0">
@@ -276,34 +276,34 @@ export default function BookingsPage() {
                         <p className="text-sm text-gray-500">
                           Created: {new Date(booking.createdAt).toLocaleDateString()}
                         </p>
-              </div>
-              
+                      </div>
+
                       <div className="flex space-x-2">
-                  <button
+                        <button
                           onClick={() => router.push(`/staff/bookings/${booking.id}`)}
                           className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
                           <FaEye className="mr-2" />
                           View
-                  </button>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
               ))}
-                </div>
+            </div>
           ) : (
             <div className="text-center py-12">
               <FaCalendarAlt className="text-gray-400 text-5xl mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No bookings found</h3>
               <p className="text-gray-500">
-                {searchTerm || filter !== 'all' 
+                {searchTerm || filter !== 'all'
                   ? 'Try adjusting your search or filter criteria.'
                   : 'No bookings have been created yet.'
                 }
               </p>
-          </div>
-        )}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -23,7 +23,7 @@ export default function StaffSidebar() {
   return (
     <aside className="w-64 bg-white border-r flex flex-col py-8 px-6 min-h-screen">
       <div className="flex items-center gap-3 mb-10">
-        <Image src="/logo.png" alt="KIMU Transport Logo" width={48} height={48} className="w-12 h-12" />
+        <Image src="/logo.png" alt="KIMU Transport Logo" width={48} height={48} className="w-12 h-12" unoptimized />
         <span className="font-bold text-xl text-orange-700">KIMU Transport & Multiservices</span>
       </div>
       <nav className="flex-1 flex flex-col justify-between">

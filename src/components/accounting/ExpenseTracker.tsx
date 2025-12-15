@@ -23,7 +23,7 @@ const categories = [
   'utilities', 'office', 'marketing', 'traffic_tickets', 'other'
 ];
 
-const paymentMethods = ['MTN Momo', 'Equity Bank', 'BK Bank', 'Cash'];
+const paymentMethods = ['MTN Momo', 'Equity Bank', 'BK Bank', 'Bank of Africa', 'Access Bank', 'COPEDU', 'Cash'];
 
 export default function ExpenseTracker({ onExpenseAdded }: ExpenseTrackerProps) {
   const [expenses, setExpenses] = useState<Expense[]>([]);

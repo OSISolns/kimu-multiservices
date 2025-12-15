@@ -43,14 +43,14 @@ export default function PayrollReports({ user }: PayrollReportsProps) {
         period: selectedPeriod,
         year: selectedYear.toString(),
       });
-      
+
       if (selectedDepartment) {
         params.append('department', selectedDepartment);
       }
 
       const response = await fetch(`/api/payroll/reports?${params}`);
       const data = await response.json();
-      
+
       if (data.success) {
         setReportData(data.data);
       } else {
@@ -66,13 +66,13 @@ export default function PayrollReports({ user }: PayrollReportsProps) {
 
   const exportToCSV = (data: any[], filename: string) => {
     if (!data || data.length === 0) return;
-    
+
     const headers = Object.keys(data[0]);
     const csvContent = [
       headers.join(','),
       ...data.map(row => headers.map(header => `"${row[header] || ''}"`).join(','))
     ].join('\n');
-    
+
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -91,7 +91,7 @@ export default function PayrollReports({ user }: PayrollReportsProps) {
 
   const renderSummaryReport = () => {
     if (!reportData) return null;
-    
+
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -143,7 +143,7 @@ export default function PayrollReports({ user }: PayrollReportsProps) {
                 <div key={payroll.id} className="flex justify-between items-center py-2 border-b border-gray-100">
                   <div>
                     <div className="text-sm font-medium text-gray-900">
-                      {payroll.employee.user.fullName || payroll.employee.user.username}
+                      {payroll.employee.user?.fullName || payroll.employee.user?.username || `${payroll.employee.firstName} ${payroll.employee.lastName}`}
                     </div>
                     <div className="text-xs text-gray-500">{payroll.period}</div>
                   </div>
@@ -161,7 +161,7 @@ export default function PayrollReports({ user }: PayrollReportsProps) {
 
   const renderMonthlyReport = () => {
     if (!reportData) return null;
-    
+
     return (
       <div className="space-y-6">
         <div className="bg-white p-6 rounded-lg shadow">
@@ -211,7 +211,7 @@ export default function PayrollReports({ user }: PayrollReportsProps) {
 
   const renderDepartmentReport = () => {
     if (!reportData) return null;
-    
+
     return (
       <div className="space-y-6">
         <div className="bg-white p-6 rounded-lg shadow">
@@ -273,7 +273,7 @@ export default function PayrollReports({ user }: PayrollReportsProps) {
 
   const renderEmployeeReport = () => {
     if (!reportData) return null;
-    
+
     return (
       <div className="space-y-6">
         <div className="bg-white p-6 rounded-lg shadow">
@@ -305,7 +305,7 @@ export default function PayrollReports({ user }: PayrollReportsProps) {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {payroll.employee.user.fullName || payroll.employee.user.username}
+                          {payroll.employee.user?.fullName || payroll.employee.user?.username || `${payroll.employee.firstName} ${payroll.employee.lastName}`}
                         </div>
                         <div className="text-sm text-gray-500">{payroll.employee.position}</div>
                       </div>
@@ -320,13 +320,12 @@ export default function PayrollReports({ user }: PayrollReportsProps) {
                       {formatCurrency(payroll.netSalary)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        payroll.status === 'paid'
-                          ? 'bg-green-100 text-green-800'
-                          : payroll.status === 'processed'
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${payroll.status === 'paid'
+                        ? 'bg-green-100 text-green-800'
+                        : payroll.status === 'processed'
                           ? 'bg-blue-100 text-blue-800'
                           : 'bg-yellow-100 text-yellow-800'
-                      }`}>
+                        }`}>
                         {payroll.status}
                       </span>
                     </td>
@@ -342,7 +341,7 @@ export default function PayrollReports({ user }: PayrollReportsProps) {
 
   const renderStatsReport = () => {
     if (!reportData) return null;
-    
+
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -409,7 +408,7 @@ export default function PayrollReports({ user }: PayrollReportsProps) {
     <div className="space-y-6">
       <div className="bg-white shadow rounded-lg p-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Payroll Reports</h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -427,7 +426,7 @@ export default function PayrollReports({ user }: PayrollReportsProps) {
               ))}
             </select>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Period
@@ -439,7 +438,7 @@ export default function PayrollReports({ user }: PayrollReportsProps) {
               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Department (Optional)

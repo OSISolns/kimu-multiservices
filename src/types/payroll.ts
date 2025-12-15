@@ -2,7 +2,11 @@
 
 export interface Employee {
   id: number;
-  userId: number;
+  userId?: number;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
   employeeId: string;
   position: string;
   department: string;
@@ -20,7 +24,7 @@ export interface Employee {
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
-  user: {
+  user?: {
     id: number;
     username: string;
     fullName?: string;
@@ -130,7 +134,11 @@ export interface PayrollReport {
 }
 
 export interface CreateEmployeeData {
-  userId: number;
+  userId?: number;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
   employeeId: string;
   position: string;
   department: string;

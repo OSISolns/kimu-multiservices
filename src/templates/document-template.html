@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{DOCUMENT_TYPE}} - {{DOCUMENT_NUMBER}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            color: #000;
+            line-height: 1.4;
+            background: #fff;
+            font-size: 12px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+
+        /* Header Section */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f97316;
+        }
+
+        .company-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+        }
+
+        .company-name {
+            color: #f97316;
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .tagline {
+            font-size: 10px;
+            color: #000;
+            margin: 0;
+        }
+
+        .document-info {
+            text-align: right;
+        }
+
+        .document-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .info-row {
+            font-size: 10px;
+            margin-bottom: 2px;
+        }
+
+        /* Parties Section */
+        .parties {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .party {
+            flex: 1;
+        }
+
+        .party-header {
+            font-size: 12px;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 5px;
+        }
+
+        .party-details p {
+            font-size: 10px;
+            margin-bottom: 2px;
+        }
+
+        /* Service Description */
+        .service-description {
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            font-size: 12px;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 5px;
+        }
+
+        .description-box {
+            background-color: #f8fafc;
+            padding: 10px;
+            font-size: 10px;
+        }
+
+        /* Items Table */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .items-table th {
+            background-color: #fed7aa;
+            padding: 8px;
+            text-align: left;
+            font-size: 10px;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .items-table td {
+            padding: 8px;
+            font-size: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .items-table th:last-child,
+        .items-table td:last-child {
+            text-align: right;
+        }
+
+        /* Totals Section */
+        .totals {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 30px;
+        }
+
+        .totals-table {
+            width: 250px;
+        }
+
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            font-size: 10px;
+        }
+
+        .totals-row.total {
+            background-color: #fed7aa;
+            padding: 8px;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+
+        /* Status Badge */
+        .status-section {
+            margin-bottom: 20px;
+            border-top: 1px solid #f97316;
+            padding-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-radius: 2px;
+        }
+
+        .status-badge.paid {
+            background: #22c55e;
+        }
+
+        .status-badge.pending {
+            background: #f59e0b;
+        }
+
+        .status-badge.overdue {
+            background: #ef4444;
+        }
+
+        .status-badge.draft {
+            background: #64748b;
+        }
+
+        .thank-you {
+            text-align: right;
+            font-size: 10px;
+        }
+
+        /* Payment Information */
+        .payment-info {
+            background: #f8fafc;
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 20px;
+        }
+
+        .payment-methods {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .payment-method h4 {
+            font-size: 10px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .payment-method p {
+            font-size: 9px;
+            margin-bottom: 2px;
+        }
+
+        .mobile-money {
+            border-top: 1px solid #e2e8f0;
+            margin-top: 10px;
+            padding-top: 10px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .mobile-money h4 {
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .mobile-money p {
+            font-size: 10px;
+        }
+
+        /* Notes & Terms */
+        .notes-terms {
+            margin-top: 20px;
+            font-size: 10px;
+        }
+
+        .notes-terms h3 {
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .notes-terms p,
+        .notes-terms li {
+            margin-bottom: 4px;
+        }
+
+        .notes-terms ul {
+            padding-left: 20px;
+        }
+
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+            }
+
+            .container {
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="company-info">
+                <div class="logo-section">
+                    <img src="/logo.png" alt="KIMU Logo" class="logo" onerror="this.style.display='none'">
+                    <h1 class="company-name">KIMU</h1>
+                </div>
+                <p class="tagline">Transport & Multiservices</p>
+                <p class="tagline">Your Trusted Travel Partner</p>
+            </div>
+            <div class="document-info">
+                <div class="document-title">{{DOCUMENT_TYPE}}</div>
+                <div class="info-row"><strong>{{DOCUMENT_TYPE}} #:</strong> {{DOCUMENT_NUMBER}}</div>
+                <div class="info-row"><strong>Date:</strong> {{ISSUE_DATE}}</div>
+                {{#if DUE_DATE}}
+                <div class="info-row"><strong>Due:</strong> {{DUE_DATE}}</div>
+                {{/if}}
+                {{#if VALID_UNTIL}}
+                <div class="info-row"><strong>Valid Until:</strong> {{VALID_UNTIL}}</div>
+                {{/if}}
+            </div>
+        </div>
+
+        <!-- Parties -->
+        <div class="parties">
+            <div class="party">
+                <div class="party-header">From:</div>
+                <div class="party-details">
+                    <p><strong>KIMU Transport & Multiservices</strong></p>
+                    <p>Gisozi, KG 780 St, Kigali, Rwanda</p>
+                    <p>Email: kimutransport6@gmail.com</p>
+                    <p>Phone: +250 798 284 312</p>
+                    <p>Phone: +250 788 447 574</p>
+                </div>
+            </div>
+            <div class="party" style="text-align: right;">
+                <div class="party-header">{{RECIPIENT_LABEL}}:</div>
+                <div class="party-details">
+                    <p><strong>{{CLIENT_NAME}}</strong></p>
+                    {{#if CLIENT_ADDRESS}}<p>{{CLIENT_ADDRESS}}</p>{{/if}}
+                    {{#if CLIENT_EMAIL}}<p>{{CLIENT_EMAIL}}</p>{{/if}}
+                    {{#if CLIENT_PHONE}}<p>{{CLIENT_PHONE}}</p>{{/if}}
+                </div>
+            </div>
+        </div>
+
+        <!-- Service Description -->
+        {{#if SERVICE_DESCRIPTION}}
+        <div class="service-description">
+            <div class="section-header">Service Description:</div>
+            <div class="description-box">
+                {{SERVICE_DESCRIPTION}}
+            </div>
+        </div>
+        {{/if}}
+
+        <!-- Items -->
+        <div class="items-section">
+            <div class="section-header">Items:</div>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Qty</th>
+                        <th>Unit Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each ITEMS}}
+                    <tr>
+                        <td>{{this.description}}</td>
+                        <td>{{this.quantity}}</td>
+                        <td>{{this.unitPrice}}</td>
+                        <td>{{this.total}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Totals -->
+        <div class="totals">
+            <div class="totals-table">
+                <div class="totals-row">
+                    <span>Subtotal:</span>
+                    <span>{{SUBTOTAL}}</span>
+                </div>
+                {{#if TAX_RATE}}
+                <div class="totals-row">
+                    <span>Tax ({{TAX_RATE}}%):</span>
+                    <span>{{TAX_AMOUNT}}</span>
+                </div>
+                {{/if}}
+                {{#if DISCOUNT}}
+                <div class="totals-row">
+                    <span>Discount:</span>
+                    <span>-{{DISCOUNT}}</span>
+                </div>
+                {{/if}}
+                <div class="totals-row total">
+                    <span>Total Amount:</span>
+                    <span>{{TOTAL_AMOUNT}}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div class="status-section">
+            <div>
+                <span style="font-size: 10px; margin-right: 5px;">Status:</span>
+                <span class="status-badge {{STATUS_CLASS}}">{{STATUS}}</span>
+            </div>
+            <div class="thank-you">
+                <p>Thank you for choosing KIMU!</p>
+                <p>For inquiries, contact us at kimutransport6@gmail.com</p>
+            </div>
+        </div>
+
+        <!-- Payment Info -->
+        {{#if SHOW_PAYMENT_INFO}}
+        <div class="payment-info">
+            <div class="section-header">Payment Information:</div>
+            <div class="payment-methods">
+                <div class="payment-method">
+                    <h4>COPEDU Bank:</h4>
+                    <p>Account: KIMU Transport & Multiservices Ltd</p>
+                    <p>Account #: 1011020164888</p>
+                </div>
+                <div class="payment-method">
+                    <h4>Equity Bank:</h4>
+                    <p>Account: KIMU Transport Multiservices Ltd</p>
+                    <p>Account #: 4019201132304</p>
+                </div>
+                <div class="payment-method">
+                    <h4>BK Bank:</h4>
+                    <p>Account: KIMU Transport Multiservices Ltd</p>
+                    <p>Account #: 100185378726</p>
+                </div>
+            </div>
+            <div class="payment-methods" style="margin-top: 10px;">
+                <div class="payment-method">
+                    <h4>BANK OF AFRICA:</h4>
+                    <p>Account: KIMU Transport & Multiservices Ltd</p>
+                    <p>Account #: 1002100203435401</p>
+                </div>
+                <div class="payment-method">
+                    <h4>Access BANK:</h4>
+                    <p>Account: KIMU Transport & Multiservices Ltd</p>
+                    <p>Account #: 01766750009</p>
+                </div>
+            </div>
+            <div class="mobile-money">
+                <h4>Mobile Money:</h4>
+                <p><strong>MOMO PAY:</strong> 627309 - Kimu Transport</p>
+            </div>
+        </div>
+        {{/if}}
+
+        <!-- Notes & Terms -->
+        {{#if NOTES}}
+        <div class="notes-terms">
+            <h3>Notes:</h3>
+            <p>{{NOTES}}</p>
+        </div>
+        {{/if}}
+
+        {{#if SHOW_TERMS}}
+        <div class="notes-terms">
+            <h3>Terms and Conditions:</h3>
+            <ul>
+                <li>Payment is due within {{PAYMENT_TERMS}} days from the invoice date.</li>
+                <li>Late payments may incur additional charges.</li>
+                <li>All services are subject to availability.</li>
+                <li>Cancellations must be made at least 24 hours in advance.</li>
+            </ul>
+        </div>
+        {{/if}}
+    </div>
+</body>
+
+</html>

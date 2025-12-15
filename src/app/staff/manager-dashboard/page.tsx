@@ -48,15 +48,16 @@ export default function ManagerDashboardPage() {
             setError('');
             try {
                 const username = user?.username || "";
+                const headers = { "x-username": username };
 
                 const [bookingsRes, paymentsRes, notificationsRes, usersRes, vehiclesRes, quotesRes, leadsRes] = await Promise.allSettled([
-                    fetch("/api/bookings").then((r) => r.ok ? r.json() : { error: `Bookings API failed: ${r.status}`, data: [] }),
-                    fetch("/api/payments").then((r) => r.ok ? r.json() : { error: `Payments API failed: ${r.status}`, data: [] }),
-                    fetch("/api/notifications").then((r) => r.ok ? r.json() : { error: `Notifications API failed: ${r.status}`, data: [] }),
-                    fetch("/api/users", { headers: { "x-username": username } }).then((r) => r.ok ? r.json() : { error: `Users API failed: ${r.status}`, users: [] }),
-                    fetch("/api/vehicles").then((r) => r.ok ? r.json() : { error: `Vehicles API failed: ${r.status}`, data: [] }),
-                    fetch("/api/quotes").then((r) => r.ok ? r.json() : { error: `Quotes API failed: ${r.status}`, quotes: [] }),
-                    fetch("/api/leads").then((r) => r.ok ? r.json() : { error: `Leads API failed: ${r.status}`, leads: [] }),
+                    fetch("/api/bookings", { headers }).then((r) => r.ok ? r.json() : { error: `Bookings API failed: ${r.status}`, data: [] }),
+                    fetch("/api/payments", { headers }).then((r) => r.ok ? r.json() : { error: `Payments API failed: ${r.status}`, data: [] }),
+                    fetch("/api/notifications", { headers }).then((r) => r.ok ? r.json() : { error: `Notifications API failed: ${r.status}`, data: [] }),
+                    fetch("/api/users", { headers }).then((r) => r.ok ? r.json() : { error: `Users API failed: ${r.status}`, users: [] }),
+                    fetch("/api/vehicles", { headers }).then((r) => r.ok ? r.json() : { error: `Vehicles API failed: ${r.status}`, data: [] }),
+                    fetch("/api/quotes", { headers }).then((r) => r.ok ? r.json() : { error: `Quotes API failed: ${r.status}`, quotes: [] }),
+                    fetch("/api/leads", { headers }).then((r) => r.ok ? r.json() : { error: `Leads API failed: ${r.status}`, leads: [] }),
                 ]);
 
                 if (cancelled) return;
@@ -75,7 +76,11 @@ export default function ManagerDashboardPage() {
                 const notificationsData = Array.isArray(extractData(notificationsRes, [])) ? extractData(notificationsRes, []) : [];
                 const usersData = extractData(usersRes, {})?.users || [];
                 const vehiclesData = Array.isArray(extractData(vehiclesRes, [])) ? extractData(vehiclesRes, []) : [];
-                const quotesData = extractData(quotesRes, {})?.quotes || extractData(quotesRes, {})?.data || (Array.isArray(extractData(quotesRes, [])) ? extractData(quotesRes, []) : []);
+
+                // Fix quotes data extraction: API returns { success: true, data: { quotes: [...] } }
+                const quotesResult = extractData(quotesRes, {});
+                const quotesData = quotesResult?.data?.quotes || quotesResult?.quotes || quotesResult?.data || (Array.isArray(quotesResult) ? quotesResult : []);
+
                 const leadsData = extractData(leadsRes, {})?.leads || extractData(leadsRes, {})?.data || (Array.isArray(extractData(leadsRes, [])) ? extractData(leadsRes, []) : []);
 
                 setBookings(bookingsData);
@@ -328,8 +333,8 @@ export default function ManagerDashboardPage() {
                                         <td className="py-3">{b.type}</td>
                                         <td className="py-3">
                                             <span className={`px-2 py-1 rounded-full text-xs ${b.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                                                    b.status === 'Active' ? 'bg-blue-100 text-blue-800' :
-                                                        'bg-yellow-100 text-yellow-800'
+                                                b.status === 'Active' ? 'bg-blue-100 text-blue-800' :
+                                                    'bg-yellow-100 text-yellow-800'
                                                 }`}>
                                                 {b.status || (b.returnConfirmed ? "Completed" : "Pending")}
                                             </span>
@@ -361,7 +366,7 @@ export default function ManagerDashboardPage() {
                                         <td className="py-3">{l.name}</td>
                                         <td className="py-3">
                                             <span className={`px-2 py-1 rounded-full text-xs ${l.stage === 'Closed' ? 'bg-green-100 text-green-800' :
-                                                    'bg-blue-100 text-blue-800'
+                                                'bg-blue-100 text-blue-800'
                                                 }`}>
                                                 {l.stage}
                                             </span>

@@ -30,8 +30,13 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
   // Add Employee Modal State
   const [showAddEmployeeModal, setShowAddEmployeeModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
   const [newEmployeeData, setNewEmployeeData] = useState({
     userId: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
     employeeId: '',
     position: '',
     department: '',
@@ -40,7 +45,6 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
     salary: '',
     bankAccount: '',
     bankName: '',
-    taxId: '',
     socialSecurityId: '',
     notes: ''
   });
@@ -82,15 +86,21 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
 
   const fetchUsers = useCallback(async () => {
     try {
-      const response = await fetch('/api/users');
+      const response = await fetch('/api/users', {
+        headers: {
+          'x-username': user.username,
+        },
+      });
       if (response.ok) {
         const data = await response.json();
         setUsers(data.users || []);
+      } else {
+        console.error('Error fetching users:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Error fetching users:', error);
     }
-  }, []);
+  }, [user.username]);
 
   useEffect(() => {
     fetchPayrollData();
@@ -109,6 +119,14 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
   ];
 
   const handleAddEmployee = () => {
+    // Auto-generate Employee ID
+    const nextId = employees.length + 1;
+    const generatedEmployeeId = `KTMEMP${String(nextId).padStart(3, '0')}`;
+
+    setNewEmployeeData(prev => ({
+      ...prev,
+      employeeId: generatedEmployeeId
+    }));
     setShowAddEmployeeModal(true);
   };
 
@@ -133,20 +151,35 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
     setIsSubmitting(true);
 
     try {
+      const payload = { ...newEmployeeData };
+      if (isNewUser) {
+        delete (payload as any).userId;
+      } else {
+        delete (payload as any).firstName;
+        delete (payload as any).lastName;
+        delete (payload as any).email;
+        delete (payload as any).phone;
+        (payload as any).userId = parseInt(newEmployeeData.userId);
+      }
+
       const response = await fetch('/api/payroll/employees', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...newEmployeeData,
-          userId: parseInt(newEmployeeData.userId),
+          ...payload,
           salary: parseFloat(newEmployeeData.salary)
         })
       });
 
       if (response.ok) {
         setShowAddEmployeeModal(false);
+        setIsNewUser(false);
         setNewEmployeeData({
           userId: '',
+          firstName: '',
+          lastName: '',
+          email: '',
+          phone: '',
           employeeId: '',
           position: '',
           department: '',
@@ -155,7 +188,6 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
           salary: '',
           bankAccount: '',
           bankName: '',
-          taxId: '',
           socialSecurityId: '',
           notes: ''
         });
@@ -417,9 +449,9 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
                             <div className="text-sm font-medium text-gray-900">
-                              {employee.user.fullName || employee.user.username}
+                              {employee.user?.fullName || employee.user?.username || `${employee.firstName} ${employee.lastName}`}
                             </div>
-                            <div className="text-sm text-gray-500">{employee.employeeId}</div>
+                            <div className="text-sm text-gray-500">{employee.user?.email || employee.email || employee.employeeId}</div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -493,7 +525,7 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
                         <tr key={payroll.id}>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm font-medium text-gray-900">
-                              {payroll.employee.user.fullName || payroll.employee.user.username}
+                              {payroll.employee.user?.fullName || payroll.employee.user?.username || `${payroll.employee.firstName} ${payroll.employee.lastName}`}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -578,11 +610,29 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
             </div>
 
             <form onSubmit={handleCreateEmployee} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              {/* User Selection Toggle */}
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-medium text-gray-700">Link System User?</span>
+                <button
+                  type="button"
+                  onClick={() => setIsNewUser(!isNewUser)}
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${!isNewUser ? 'bg-blue-600' : 'bg-gray-200'
+                    }`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${!isNewUser ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                  />
+                </button>
+              </div>
+
+              {!isNewUser ? (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Select User</label>
                   <select
-                    required
+                    required={!isNewUser}
                     value={newEmployeeData.userId}
                     onChange={(e) => setNewEmployeeData({ ...newEmployeeData, userId: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
@@ -596,17 +646,62 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
                   </select>
                   <p className="text-xs text-gray-500 mt-1">Only users without employee records are shown.</p>
                 </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                    <input
+                      type="text"
+                      required={isNewUser}
+                      value={newEmployeeData.firstName}
+                      onChange={(e) => setNewEmployeeData({ ...newEmployeeData, firstName: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                    <input
+                      type="text"
+                      required={isNewUser}
+                      value={newEmployeeData.lastName}
+                      onChange={(e) => setNewEmployeeData({ ...newEmployeeData, lastName: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input
+                      type="email"
+                      required={isNewUser}
+                      value={newEmployeeData.email}
+                      onChange={(e) => setNewEmployeeData({ ...newEmployeeData, email: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                    <input
+                      type="tel"
+                      value={newEmployeeData.phone}
+                      onChange={(e) => setNewEmployeeData({ ...newEmployeeData, phone: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                    />
+                  </div>
+                </div>
+              )}
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
                   <input
                     type="text"
                     required
                     value={newEmployeeData.employeeId}
-                    onChange={(e) => setNewEmployeeData({ ...newEmployeeData, employeeId: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                    placeholder="EMP-001"
+                    readOnly
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 text-gray-600 cursor-not-allowed outline-none"
+                    placeholder="KTMEMP001"
                   />
+                  <p className="text-xs text-gray-500 mt-1">Auto-generated</p>
                 </div>
 
                 <div>
@@ -617,7 +712,7 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
                     value={newEmployeeData.position}
                     onChange={(e) => setNewEmployeeData({ ...newEmployeeData, position: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                    placeholder="Software Engineer"
+                    placeholder="Position"
                   />
                 </div>
 
@@ -629,7 +724,7 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
                     value={newEmployeeData.department}
                     onChange={(e) => setNewEmployeeData({ ...newEmployeeData, department: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                    placeholder="Engineering"
+                    placeholder="Department"
                   />
                 </div>
 
@@ -672,7 +767,7 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Bank Name <span className="text-gray-400 font-normal">(Optional)</span></label>
                   <input
                     type="text"
                     value={newEmployeeData.bankName}
@@ -683,7 +778,7 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Bank Account</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Bank Account <span className="text-gray-400 font-normal">(Optional)</span></label>
                   <input
                     type="text"
                     value={newEmployeeData.bankAccount}
@@ -694,18 +789,7 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Tax ID (TIN)</label>
-                  <input
-                    type="text"
-                    value={newEmployeeData.taxId}
-                    onChange={(e) => setNewEmployeeData({ ...newEmployeeData, taxId: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                    placeholder="TIN Number"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Social Security ID (RSSB)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Social Security ID (RSSB) <span className="text-gray-400 font-normal">(Optional)</span></label>
                   <input
                     type="text"
                     value={newEmployeeData.socialSecurityId}
@@ -829,7 +913,7 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
                           className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-gray-300"
                         />
                         <span className="ml-2 text-sm text-gray-700">
-                          {employee.user.fullName || employee.user.username}
+                          {employee.user?.fullName || employee.user?.username || `${employee.firstName} ${employee.lastName}`}
                           <span className="text-xs text-gray-500 ml-1">({employee.position})</span>
                         </span>
                       </label>

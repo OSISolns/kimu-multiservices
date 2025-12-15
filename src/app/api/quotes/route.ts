@@ -182,3 +182,126 @@ export async function GET(req: NextRequest) {
     return handleApiError(error, '/api/quotes');
   }
 }
+
+export async function PUT(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { id, ...updateData } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'Quote ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate input if necessary, for now we assume partial updates are allowed
+    // and we trust the input types match the schema roughly.
+    // Ideally use a partial schema of createQuoteSchema
+
+    const quoteId = parseInt(id);
+
+    const existingQuote = await prisma.quote.findUnique({
+      where: { id: quoteId }
+    });
+
+    if (!existingQuote) {
+      return NextResponse.json(
+        { success: false, error: 'Quote not found' },
+        { status: 404 }
+      );
+    }
+
+    const updatedQuote = await prisma.quote.update({
+      where: { id: quoteId },
+      data: {
+        ...updateData,
+        updatedAt: new Date()
+      },
+      include: {
+        customer: true
+      }
+    });
+
+    await logActivity(
+      updatedQuote.createdBy, // Assuming createdBy is preserved or passed in body if changed, otherwise use existing
+      'QUOTE_UPDATED',
+      `Quote updated (ID: ${updatedQuote.id})`
+    );
+
+    return createSuccessResponse({
+      quote: {
+        id: updatedQuote.id,
+        customerId: updatedQuote.customerId,
+        customer: {
+          id: updatedQuote.customer.id,
+          name: updatedQuote.customer.name,
+          company: updatedQuote.customer.company,
+          email: updatedQuote.customer.email
+        },
+        serviceType: updatedQuote.serviceType,
+        amount: updatedQuote.amount,
+        currency: updatedQuote.currency,
+        validUntil: updatedQuote.validUntil,
+        status: updatedQuote.status,
+        notes: updatedQuote.notes,
+        createdAt: updatedQuote.createdAt,
+        updatedAt: updatedQuote.updatedAt
+      }
+    });
+
+  } catch (error) {
+    await logError('Failed to update quote', error as Error, {
+      action: 'UPDATE_QUOTE_FAILED'
+    });
+    return handleApiError(error, '/api/quotes');
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'Quote ID is required' },
+        { status: 400 }
+      );
+    }
+
+    const quoteId = parseInt(id);
+
+    const existingQuote = await prisma.quote.findUnique({
+      where: { id: quoteId }
+    });
+
+    if (!existingQuote) {
+      return NextResponse.json(
+        { success: false, error: 'Quote not found' },
+        { status: 404 }
+      );
+    }
+
+    await prisma.quote.delete({
+      where: { id: quoteId }
+    });
+
+    await logActivity(
+      existingQuote.createdBy,
+      'QUOTE_DELETED',
+      `Quote deleted (ID: ${quoteId})`
+    );
+
+    return createSuccessResponse({
+      success: true,
+      message: 'Quote deleted successfully'
+    });
+
+  } catch (error) {
+    await logError('Failed to delete quote', error as Error, {
+      action: 'DELETE_QUOTE_FAILED'
+    });
+    return handleApiError(error, '/api/quotes');
+  }
+}

@@ -66,7 +66,7 @@ export default function AddUserPage() {
     return null;
   }
 
-  if (user.role !== 'admin' && user.role !== 'staff') {
+  if (user.role !== 'admin' && user.role !== 'staff' && user.role !== 'accountant') {
     router.push('/staff/admin-dashboard');
     return null;
   }

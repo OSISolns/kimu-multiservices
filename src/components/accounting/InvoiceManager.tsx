@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from 'react';
-import { FaPlus, FaEdit, FaTrash, FaFileInvoiceDollar, FaEye, FaDownload, FaPaperPlane, FaEnvelope, FaReceipt } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaFileInvoiceDollar, FaEye, FaDownload, FaReceipt } from 'react-icons/fa';
 import jsPDF from 'jspdf';
 import Image from 'next/image';
 
@@ -37,20 +37,17 @@ const statusColors = {
   paid: 'bg-green-100 text-green-800'
 };
 
+import DocumentPreview from '@/components/documents/DocumentPreview';
+
 export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps) {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [showDocumentPreview, setShowDocumentPreview] = useState(false);
+  const [previewDocumentId, setPreviewDocumentId] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showEmailModal, setShowEmailModal] = useState(false);
-  const [emailData, setEmailData] = useState({
-    recipientEmail: '',
-    subject: '',
-    message: ''
-  });
-  const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   const [formData, setFormData] = useState({
     invoiceNumber: '',
@@ -58,7 +55,7 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
     clientEmail: '',
     clientPhone: '',
     amount: '',
-    taxRate: 18,
+    taxRate: 0,
     dueDate: '',
     description: '',
     items: [{ description: '', quantity: 1, unitPrice: '', total: '' }],
@@ -96,8 +93,8 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
 
   const calculateTotals = (items: any[], taxRate: number) => {
     const amount = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-    const taxAmount = amount * (taxRate / 100);
-    const grandTotal = amount + taxAmount;
+    const taxAmount = 0;
+    const grandTotal = amount;
 
     return { amount, taxAmount, grandTotal };
   };
@@ -206,7 +203,7 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
       clientEmail: '',
       clientPhone: '',
       amount: '',
-      taxRate: 18,
+      taxRate: 0,
       dueDate: '',
       description: '',
       items: [{ description: '', quantity: 1, unitPrice: '', total: '' }],
@@ -220,7 +217,7 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
   const paidInvoices = invoices.filter(invoice => invoice.status === 'paid').length;
   const outstandingInvoices = invoices.filter(invoice => invoice.status === 'outstanding').length;
 
-  const generatePDF = (invoice: Invoice) => {
+  const generatePDF = async (invoice: Invoice) => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -260,7 +257,13 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
     // KIMU Logo - Use existing logo image
     try {
       // Add the logo image from public folder
-      doc.addImage('/logo.png', 'PNG', margin + 2, 8, 8, 8);
+      const logoImg = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new window.Image();
+        img.src = '/logo.png';
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+      });
+      doc.addImage(logoImg, 'PNG', margin + 2, 8, 8, 8);
     } catch (error) {
       // Fallback to simple text if image fails to load
       doc.setTextColor(249, 115, 22); // Orange
@@ -381,12 +384,7 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
     doc.text(`${invoice.totalAmount.toLocaleString()} RWF`, totalsX + 20, yPosition);
     yPosition += 4;
 
-    // Tax
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Tax (${invoice.taxRate}%):`, totalsX, yPosition);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`${invoice.taxAmount.toLocaleString()} RWF`, totalsX + 20, yPosition);
-    yPosition += 4;
+
 
     // Grand Total with light orange background
     doc.setFillColor(254, 215, 170); // Light orange
@@ -440,11 +438,11 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
 
     // Payment info card background with rounded corners effect
     doc.setFillColor(248, 250, 252); // Light gray background
-    doc.rect(margin, yPosition, pageWidth - 2 * margin, 35, 'F');
+    doc.rect(margin, yPosition, pageWidth - 2 * margin, 50, 'F');
 
     // Add subtle border
     doc.setDrawColor(200, 200, 200);
-    doc.rect(margin, yPosition, pageWidth - 2 * margin, 35);
+    doc.rect(margin, yPosition, pageWidth - 2 * margin, 50);
 
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(8);
@@ -459,6 +457,7 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
     const col2X = margin + 50;
     const col3X = margin + 92;
 
+    // Row 1
     // COPEDU Bank
     doc.setFont('helvetica', 'bold');
     doc.text('COPEDU Bank:', col1X, yPosition + 12);
@@ -480,21 +479,38 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
     doc.text('Account: KIMU Transport Multiservices Ltd', col3X, yPosition + 16);
     doc.text('Account #: 100185378726', col3X, yPosition + 20);
 
+    // Row 2
+    const row2Y = yPosition + 26;
+
+    // BANK OF AFRICA
+    doc.setFont('helvetica', 'bold');
+    doc.text('BANK OF AFRICA:', col1X, row2Y);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Account: KIMU Transport & Multiservices Ltd', col1X, row2Y + 4);
+    doc.text('Account #: 1002100203435401', col1X, row2Y + 8);
+
+    // Access BANK
+    doc.setFont('helvetica', 'bold');
+    doc.text('Access BANK:', col2X, row2Y);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Account: KIMU Transport & Multiservices Ltd', col2X, row2Y + 4);
+    doc.text('Account #: 01766750009', col2X, row2Y + 8);
+
     // Mobile Money section with separator line
     doc.setDrawColor(200, 200, 200);
-    doc.line(margin + 8, yPosition + 24, pageWidth - margin - 8, yPosition + 24);
+    doc.line(margin + 8, yPosition + 38, pageWidth - margin - 8, yPosition + 38);
 
     doc.setFont('helvetica', 'bold');
-    doc.text('Mobile Money:', margin + 8, yPosition + 28);
-    doc.text('MOMO PAY: 627309', margin + 8, yPosition + 32);
+    doc.text('Mobile Money:', margin + 8, yPosition + 42);
+    doc.text('MOMO PAY: 627309', margin + 8, yPosition + 46);
     doc.setFont('helvetica', 'normal');
-    doc.text('Kimu Transport', margin + 50, yPosition + 32);
+    doc.text('Kimu Transport', margin + 50, yPosition + 46);
 
     // Save the PDF
     doc.save(`invoice-${invoice.invoiceNumber}.pdf`);
   };
 
-  const generateReceipt = (invoice: Invoice) => {
+  const generateReceipt = async (invoice: Invoice) => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -533,7 +549,13 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
 
     // KIMU Logo
     try {
-      doc.addImage('/logo.png', 'PNG', margin + 2, 8, 8, 8);
+      const logoImg = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new window.Image();
+        img.src = '/logo.png';
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+      });
+      doc.addImage(logoImg, 'PNG', margin + 2, 8, 8, 8);
     } catch (error) {
       doc.setTextColor(22, 163, 74); // Green
       doc.setFontSize(10);
@@ -654,12 +676,7 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
     doc.text(`${invoice.totalAmount.toLocaleString()} RWF`, totalsX + 20, yPosition);
     yPosition += 4;
 
-    // Tax
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Tax (${invoice.taxRate}%):`, totalsX, yPosition);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`${invoice.taxAmount.toLocaleString()} RWF`, totalsX + 20, yPosition);
-    yPosition += 4;
+
 
     // Amount Paid with light green background
     doc.setFillColor(220, 252, 231); // Light green
@@ -705,58 +722,7 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
     doc.save(`receipt-${invoice.invoiceNumber}.pdf`);
   };
 
-  const sendInvoiceEmail = async () => {
-    if (!selectedInvoice) return;
 
-    setIsSendingEmail(true);
-    try {
-      const response = await fetch('/api/accounting/invoices/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          invoiceId: selectedInvoice.id,
-          recipientEmail: emailData.recipientEmail,
-          subject: emailData.subject,
-          message: emailData.message
-        })
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        alert('Invoice sent successfully!');
-        setShowEmailModal(false);
-        setEmailData({ recipientEmail: '', subject: '', message: '' });
-        // Refresh invoices to update status
-        fetchInvoices();
-      } else {
-        const error = await response.json();
-
-        if (error.code === 'EMAIL_NOT_CONFIGURED') {
-          alert('Email service is not configured. Please contact the administrator to set up email sending.');
-        } else if (error.code === 'RESEND_ERROR') {
-          alert(`Email service error: ${error.details || 'Please try again later.'}`);
-        } else {
-          alert(`Failed to send email: ${error.error || 'Unknown error'}`);
-        }
-      }
-    } catch (error) {
-      console.error('Error sending email:', error);
-      alert('Failed to send email. Please try again.');
-    } finally {
-      setIsSendingEmail(false);
-    }
-  };
-
-  const handleEmailClick = () => {
-    if (selectedInvoice) {
-      setEmailData({
-        recipientEmail: selectedInvoice.clientEmail,
-        subject: `Invoice ${selectedInvoice.invoiceNumber} - KIMU Transport & Multiservices`,
-        message: `Dear ${selectedInvoice.clientName},\n\nPlease find attached your invoice for the services provided.\n\nThank you for choosing KIMU Transport & Multiservices!\n\nBest regards,\nKIMU Team`
-      });
-      setShowEmailModal(true);
-    }
-  };
 
   const deleteInvoice = async (invoiceId: number) => {
     if (!confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) {
@@ -775,7 +741,6 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
         setInvoices(invoices.filter(invoice => invoice.id !== invoiceId));
         // Close any open modals
         setSelectedInvoice(null);
-        setShowEmailModal(false);
       } else {
         const error = await response.json();
         alert(`Failed to delete invoice: ${error.error || 'Unknown error'}`);
@@ -881,9 +846,6 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Due Date
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -894,13 +856,13 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
             <tbody className="bg-white divide-y divide-gray-200">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
                     Loading invoices...
                   </td>
                 </tr>
               ) : invoices.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
                     No invoices found
                   </td>
                 </tr>
@@ -927,26 +889,25 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {invoice.emailSent ? (
-                        <div className="flex items-center space-x-2">
-                          <span className="text-green-600">✓</span>
-                          <span className="text-xs text-gray-500">
-                            {invoice.emailSentAt ? new Date(invoice.emailSentAt).toLocaleDateString() : 'Sent'}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-gray-400">Not sent</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {new Date(invoice.dueDate).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
                         onClick={() => setSelectedInvoice(invoice)}
                         className="text-blue-600 hover:text-blue-900 mr-3"
+                        title="View Details"
                       >
                         <FaEye />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setPreviewDocumentId(invoice.id.toString());
+                          setShowDocumentPreview(true);
+                        }}
+                        className="text-green-600 hover:text-green-900 mr-3"
+                        title="Preview & Print"
+                      >
+                        <FaFileInvoiceDollar />
                       </button>
                       <button
                         onClick={() => setEditingInvoice(invoice)}
@@ -1175,10 +1136,13 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
                       <FaDownload /> Print
                     </button>
                     <button
-                      onClick={() => generatePDF(selectedInvoice)}
-                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2"
+                      onClick={() => {
+                        setPreviewDocumentId(selectedInvoice.id.toString());
+                        setShowDocumentPreview(true);
+                      }}
+                      className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 flex items-center gap-2"
                     >
-                      <FaFileInvoiceDollar /> PDF
+                      <FaFileInvoiceDollar /> Preview & Print
                     </button>
                     {selectedInvoice.status === 'paid' && (
                       <button
@@ -1188,12 +1152,6 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
                         <FaReceipt /> Receipt
                       </button>
                     )}
-                    <button
-                      onClick={handleEmailClick}
-                      className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 flex items-center gap-2"
-                    >
-                      <FaEnvelope /> Email
-                    </button>
                     <button
                       onClick={() => {
                         if (selectedInvoice && confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) {
@@ -1218,7 +1176,7 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
                   {/* Header with Branding */}
                   <div className="flex justify-between items-start mb-8 pb-6 border-b-2 border-orange-500">
                     <div className="flex items-center space-x-4">
-                      <Image src="/logo.png" alt="KIMU Logo" width={64} height={64} className="w-16 h-16" />
+                      <Image src="/logo.png" alt="KIMU Logo" width={64} height={64} className="w-16 h-16" unoptimized />
                       <div>
                         <h1 className="text-3xl font-bold text-orange-600">KIMU</h1>
                         <p className="text-lg text-gray-600">Transport & Multiservices</p>
@@ -1339,6 +1297,18 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
                         <p>Account #: 100185378726</p>
                       </div>
                     </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-700 mt-4">
+                      <div>
+                        <p><strong>BANK OF AFRICA:</strong></p>
+                        <small>Account: <b>KIMU Transport & Multiservices Ltd</b></small>
+                        <p>Account #: 1002100203435401</p>
+                      </div>
+                      <div>
+                        <p><strong>Access BANK:</strong></p>
+                        <small>Account: <b>KIMU Transport & Multiservices Ltd</b></small>
+                        <p>Account #: 01766750009</p>
+                      </div>
+                    </div>
                     <div className="mt-4 pt-4 border-t border-gray-300">
                       <p><strong>Mobile Money:</strong></p>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
@@ -1353,101 +1323,16 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
           </div>
         )}
 
-        {/* Email Modal */}
-        {showEmailModal && selectedInvoice && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
-              <div className="mt-3">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">Send Invoice via Email</h3>
-                  <button
-                    onClick={() => setShowEmailModal(false)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    ×
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Recipient Email
-                    </label>
-                    <input
-                      type="email"
-                      value={emailData.recipientEmail}
-                      onChange={(e) => setEmailData({ ...emailData, recipientEmail: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Subject
-                    </label>
-                    <input
-                      type="text"
-                      value={emailData.subject}
-                      onChange={(e) => setEmailData({ ...emailData, subject: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Message
-                    </label>
-                    <textarea
-                      value={emailData.message}
-                      onChange={(e) => setEmailData({ ...emailData, message: e.target.value })}
-                      rows={6}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter your message here..."
-                    />
-                  </div>
-
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-blue-900 mb-2">Invoice Details:</h4>
-                    <p><strong>Invoice #:</strong> {selectedInvoice.invoiceNumber}</p>
-                    <p><strong>Client:</strong> {selectedInvoice.clientName}</p>
-                    <p><strong>Amount:</strong> {selectedInvoice.grandTotal.toLocaleString()} RWF</p>
-                    <p><strong>Status:</strong>
-                      <span className={`ml-2 px-2 py-1 rounded-full text-xs ${statusColors[selectedInvoice.status as keyof typeof statusColors]}`}>
-                        {selectedInvoice.status}
-                      </span>
-                    </p>
-                  </div>
-
-                  <div className="flex justify-end space-x-3 pt-4">
-                    <button
-                      onClick={() => setShowEmailModal(false)}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={sendInvoiceEmail}
-                      disabled={isSendingEmail || !emailData.recipientEmail || !emailData.subject}
-                      className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50 flex items-center gap-2"
-                    >
-                      {isSendingEmail ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                          Sending...
-                        </>
-                      ) : (
-                        <>
-                          <FaEnvelope /> Send Email
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Document Preview Modal */}
+        {showDocumentPreview && previewDocumentId && (
+          <DocumentPreview
+            documentId={previewDocumentId}
+            documentType="invoice"
+            onClose={() => {
+              setShowDocumentPreview(false);
+              setPreviewDocumentId(null);
+            }}
+          />
         )}
       </div>
     </>

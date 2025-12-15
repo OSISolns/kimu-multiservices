@@ -6,7 +6,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("TURSO_DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -44,6 +44,7 @@ model User {
   reports               Report[]
   dashboards            Dashboard[]
   analyticsEvents       AnalyticsEvent[]
+  carListings           CarListing[]
 }
 
 model Vehicle {
@@ -367,7 +368,11 @@ model AnalyticsEvent {
 
 model Employee {
   id                Int      @id @default(autoincrement())
-  userId            Int      @unique
+  userId            Int?     @unique
+  firstName         String?
+  lastName          String?
+  email             String?
+  phone             String?
   employeeId        String   @unique
   position          String
   department        String
@@ -375,6 +380,7 @@ model Employee {
   hireDate          DateTime
   salary            Float
   bankAccount       String?
+  bankName          String?
   taxId             String?
   socialSecurityId  String?
   status            String   @default("active") // active, inactive, terminated
@@ -383,7 +389,7 @@ model Employee {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
   salaryStructures  SalaryStructure[]
   payrollItems      PayrollItem[]
   payrolls          Payroll[]
@@ -482,4 +488,45 @@ model PettyCashTransaction {
   balanceAfter  Float?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model SavedItem {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  itemType    String   // "vehicle", "lead", "quote", etc.
+  itemId      Int      // ID of the saved item
+  itemData    Json?    // Cached item data for quick display
+  notes       String?  // Optional user notes
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([userId, itemType, itemId])
+  @@index([userId])
+  @@index([itemType])
+}
+
+model CarListing {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  make          String
+  model         String
+  year          Int
+  price         Float
+  mileage       Int
+  condition     String   // New, Used
+  transmission  String   // Automatic, Manual
+  fuelType      String   // Petrol, Diesel, Electric, Hybrid
+  color         String
+  description   String?
+  images        Json     // Array of image URLs
+  status        String   @default("pending") // pending, approved, sold, rejected
+  contactPhone  String
+  location      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
 }

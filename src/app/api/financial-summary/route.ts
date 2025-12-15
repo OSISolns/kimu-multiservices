@@ -76,6 +76,9 @@ export async function GET(req: NextRequest) {
       mtnMomoRWF: 0,
       equityBankRWF: 0,
       bkBankRWF: 0,
+      bankOfAfricaRWF: 0,
+      accessBankRWF: 0,
+      copeduRWF: 0,
       cashRWF: 0,
       pettyCashRWF: 0
     };
@@ -127,6 +130,9 @@ export async function GET(req: NextRequest) {
         mtnMomoRWF: calculateBalance('MTN Momo'),
         equityBankRWF: calculateBalance('Equity Bank'),
         bkBankRWF: calculateBalance('BK Bank'),
+        bankOfAfricaRWF: calculateBalance('Bank of Africa'),
+        accessBankRWF: calculateBalance('Access Bank'),
+        copeduRWF: calculateBalance('COPEDU'),
         cashRWF: calculateBalance('Cash'),
         pettyCashRWF: calculatePettyCashBalance()
       };
@@ -141,6 +147,9 @@ export async function GET(req: NextRequest) {
         mtnMomoRWF: payment.paymentMethod === 'MTN Momo' ? payment.amount : 0,
         equityBankRWF: payment.paymentMethod === 'Equity Bank' ? payment.amount : 0,
         bkBankRWF: payment.paymentMethod === 'BK Bank' ? payment.amount : 0,
+        bankOfAfricaRWF: payment.paymentMethod === 'Bank of Africa' ? payment.amount : 0,
+        accessBankRWF: payment.paymentMethod === 'Access Bank' ? payment.amount : 0,
+        copeduRWF: payment.paymentMethod === 'COPEDU' ? payment.amount : 0,
         cashRWF: payment.paymentMethod === 'Cash' ? payment.amount : 0,
         pettyCashRWF: 0,
         date: payment.paymentDate?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0]
@@ -152,6 +161,9 @@ export async function GET(req: NextRequest) {
       mtnMomoRWF: inc.paymentMethod === 'MTN Momo' ? inc.amount : 0,
       equityBankRWF: inc.paymentMethod === 'Equity Bank' ? inc.amount : 0,
       bkBankRWF: inc.paymentMethod === 'BK Bank' ? inc.amount : 0,
+      bankOfAfricaRWF: inc.paymentMethod === 'Bank of Africa' ? inc.amount : 0,
+      accessBankRWF: inc.paymentMethod === 'Access Bank' ? inc.amount : 0,
+      copeduRWF: inc.paymentMethod === 'COPEDU' ? inc.amount : 0,
       cashRWF: inc.paymentMethod === 'Cash' ? inc.amount : 0,
       pettyCashRWF: 0,
       date: inc.date?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0]
@@ -168,6 +180,9 @@ export async function GET(req: NextRequest) {
       mtnMomoRWF: exp.paymentMethod === 'MTN Momo' ? exp.amount : 0,
       equityBankRWF: exp.paymentMethod === 'Equity Bank' ? exp.amount : 0,
       bkBankRWF: exp.paymentMethod === 'BK Bank' ? exp.amount : 0,
+      bankOfAfricaRWF: exp.paymentMethod === 'Bank of Africa' ? exp.amount : 0,
+      accessBankRWF: exp.paymentMethod === 'Access Bank' ? exp.amount : 0,
+      copeduRWF: exp.paymentMethod === 'COPEDU' ? exp.amount : 0,
       cashRWF: exp.paymentMethod === 'Cash' ? exp.amount : 0,
       pettyCashRWF: 0,
       category: exp.category,
@@ -183,6 +198,9 @@ export async function GET(req: NextRequest) {
         mtnMomoRWF: 0,
         equityBankRWF: 0,
         bkBankRWF: 0,
+        bankOfAfricaRWF: 0,
+        accessBankRWF: 0,
+        copeduRWF: 0,
         cashRWF: 0,
         pettyCashRWF: pc.amount,
         category: pc.category || 'Petty Cash',
@@ -226,28 +244,37 @@ export async function GET(req: NextRequest) {
 
     // Calculate totals
     const totalIncomeRWF = filteredIncome.reduce((sum, item) =>
-      sum + (item.mtnMomoRWF || 0) + (item.equityBankRWF || 0) + (item.bkBankRWF || 0) + (item.cashRWF || 0), 0);
+      sum + (item.mtnMomoRWF || 0) + (item.equityBankRWF || 0) + (item.bkBankRWF || 0) + (item.bankOfAfricaRWF || 0) + (item.accessBankRWF || 0) + (item.copeduRWF || 0) + (item.cashRWF || 0), 0);
 
     const totalExpenseRWF = filteredExpenses.reduce((sum, item) =>
-      sum + (item.mtnMomoRWF || 0) + (item.equityBankRWF || 0) + (item.bkBankRWF || 0) + (item.cashRWF || 0) + (item.pettyCashRWF || 0), 0);
+      sum + (item.mtnMomoRWF || 0) + (item.equityBankRWF || 0) + (item.bkBankRWF || 0) + (item.bankOfAfricaRWF || 0) + (item.accessBankRWF || 0) + (item.copeduRWF || 0) + (item.cashRWF || 0) + (item.pettyCashRWF || 0), 0);
 
     const netProfit = totalIncomeRWF - totalExpenseRWF;
 
     // Calculate closing balances
     const closingBalances = {
-      mtnMomoRWF: financialData.openingBalances.mtnMomoRWF +
+      mtnMomoRWF: (startDate && endDate ? financialData.openingBalances.mtnMomoRWF : 0) +
         filteredIncome.reduce((sum, item) => sum + (item.mtnMomoRWF || 0), 0) -
         filteredExpenses.reduce((sum, item) => sum + (item.mtnMomoRWF || 0), 0),
-      equityBankRWF: financialData.openingBalances.equityBankRWF +
+      equityBankRWF: (startDate && endDate ? financialData.openingBalances.equityBankRWF : 0) +
         filteredIncome.reduce((sum, item) => sum + (item.equityBankRWF || 0), 0) -
         filteredExpenses.reduce((sum, item) => sum + (item.equityBankRWF || 0), 0),
-      bkBankRWF: financialData.openingBalances.bkBankRWF +
+      bkBankRWF: (startDate && endDate ? financialData.openingBalances.bkBankRWF : 0) +
         filteredIncome.reduce((sum, item) => sum + (item.bkBankRWF || 0), 0) -
         filteredExpenses.reduce((sum, item) => sum + (item.bkBankRWF || 0), 0),
-      cashRWF: financialData.openingBalances.cashRWF +
+      bankOfAfricaRWF: (startDate && endDate ? financialData.openingBalances.bankOfAfricaRWF : 0) +
+        filteredIncome.reduce((sum, item) => sum + (item.bankOfAfricaRWF || 0), 0) -
+        filteredExpenses.reduce((sum, item) => sum + (item.bankOfAfricaRWF || 0), 0),
+      accessBankRWF: (startDate && endDate ? financialData.openingBalances.accessBankRWF : 0) +
+        filteredIncome.reduce((sum, item) => sum + (item.accessBankRWF || 0), 0) -
+        filteredExpenses.reduce((sum, item) => sum + (item.accessBankRWF || 0), 0),
+      copeduRWF: (startDate && endDate ? financialData.openingBalances.copeduRWF : 0) +
+        filteredIncome.reduce((sum, item) => sum + (item.copeduRWF || 0), 0) -
+        filteredExpenses.reduce((sum, item) => sum + (item.copeduRWF || 0), 0),
+      cashRWF: (startDate && endDate ? financialData.openingBalances.cashRWF : 0) +
         filteredIncome.reduce((sum, item) => sum + (item.cashRWF || 0), 0) -
         filteredExpenses.reduce((sum, item) => sum + (item.cashRWF || 0), 0),
-      pettyCashRWF: financialData.openingBalances.pettyCashRWF +
+      pettyCashRWF: (startDate && endDate ? financialData.openingBalances.pettyCashRWF : 0) +
         filteredPettyCashCredits.reduce((sum, item) => sum + item.amount, 0) -
         filteredExpenses.reduce((sum, item) => sum + (item.pettyCashRWF || 0), 0)
     };

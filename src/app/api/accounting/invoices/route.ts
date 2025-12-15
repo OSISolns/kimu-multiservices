@@ -9,7 +9,7 @@ const invoiceSchema = z.object({
   clientEmail: z.string().email('Valid email is required'),
   clientPhone: z.string().optional(),
   amount: z.number().positive('Amount must be positive'),
-  taxRate: z.number().min(0).max(100).default(18), // Rwanda VAT rate
+  taxRate: z.number().min(0).max(100).default(0), // Default to 0% tax
   dueDate: z.string().datetime(),
   description: z.string().min(1, 'Description is required'),
   items: z.array(z.object({
@@ -29,11 +29,11 @@ export async function GET(req: NextRequest) {
     const endDate = searchParams.get('endDate');
 
     let whereClause: any = {};
-    
+
     if (status) {
       whereClause.status = status;
     }
-    
+
     if (startDate && endDate) {
       whereClause.createdAt = {
         gte: new Date(startDate),
@@ -56,10 +56,10 @@ export async function GET(req: NextRequest) {
 export const POST = withValidation(invoiceSchema, async (req, validatedData) => {
   try {
     console.log('Creating invoice with data:', validatedData);
-    
-    const taxAmount = validatedData.amount * (validatedData.taxRate / 100);
-    const grandTotal = validatedData.amount + taxAmount;
-    
+
+    const taxAmount = 0;
+    const grandTotal = validatedData.amount;
+
     const invoice = await prisma.invoice.create({
       data: {
         invoiceNumber: validatedData.invoiceNumber,
@@ -82,7 +82,7 @@ export const POST = withValidation(invoiceSchema, async (req, validatedData) => 
     return NextResponse.json(invoice, { status: 201 });
   } catch (error) {
     console.error('Error creating invoice:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Failed to create invoice',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
@@ -117,15 +117,68 @@ export async function DELETE(req: NextRequest) {
       where: { id: invoiceIdNumber }
     });
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Invoice deleted successfully' 
+    return NextResponse.json({
+      success: true,
+      message: 'Invoice deleted successfully'
     });
 
   } catch (error) {
     console.error('Error deleting invoice:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Failed to delete invoice',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { id, ...updateData } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: 'Invoice ID is required' }, { status: 400 });
+    }
+
+    const invoiceId = parseInt(id);
+    if (isNaN(invoiceId)) {
+      return NextResponse.json({ error: 'Invalid invoice ID' }, { status: 400 });
+    }
+
+    const existingInvoice = await prisma.invoice.findUnique({
+      where: { id: invoiceId }
+    });
+
+    if (!existingInvoice) {
+      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
+    }
+
+    // Recalculate totals if amount or taxRate changes
+    let dataToUpdate = { ...updateData };
+    if (updateData.amount !== undefined || updateData.taxRate !== undefined) {
+      const amount = updateData.amount !== undefined ? updateData.amount : existingInvoice.amount;
+      const taxRate = updateData.taxRate !== undefined ? updateData.taxRate : existingInvoice.taxRate;
+      const taxAmount = 0;
+      const grandTotal = amount;
+
+      dataToUpdate.amount = amount;
+      dataToUpdate.taxRate = taxRate;
+      dataToUpdate.taxAmount = taxAmount;
+      dataToUpdate.totalAmount = amount;
+      dataToUpdate.grandTotal = grandTotal;
+    }
+
+    const updatedInvoice = await prisma.invoice.update({
+      where: { id: invoiceId },
+      data: dataToUpdate
+    });
+
+    return NextResponse.json(updatedInvoice);
+
+  } catch (error) {
+    console.error('Error updating invoice:', error);
+    return NextResponse.json({
+      error: 'Failed to update invoice',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }

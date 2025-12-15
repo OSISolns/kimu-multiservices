@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useUser } from "../../../UserContext";
-import { FaSearch, FaFilter, FaCar, FaGasPump, FaCog, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { FaSearch, FaFilter, FaCar, FaGasPump, FaCog, FaCheckCircle, FaTimesCircle, FaTimes, FaCalendar, FaClock, FaBookmark, FaRegBookmark } from "react-icons/fa";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import Image from "next/image";
 
@@ -19,12 +19,40 @@ interface Vehicle {
     isAvailable: boolean;
 }
 
+interface BookingFormData {
+    name: string;
+    email: string;
+    phone: string;
+    nationality: string;
+    idOrPassport: string;
+    pickupDate: string;
+    pickupTime: string;
+    returnDate: string;
+    returnTime: string;
+}
+
 export default function InventoryPage() {
     const { user, isLoading } = useUser();
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [isLoadingData, setIsLoadingData] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [filterStatus, setFilterStatus] = useState("All");
+    const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [savedMap, setSavedMap] = useState<Record<number, number>>({}); // vehicleId -> savedItemId
+    const [bookingForm, setBookingForm] = useState<BookingFormData>({
+        name: "",
+        email: "",
+        phone: "",
+        nationality: "",
+        idOrPassport: "",
+        pickupDate: "",
+        pickupTime: "09:00",
+        returnDate: "",
+        returnTime: "17:00",
+    });
 
     useEffect(() => {
         const fetchVehicles = async () => {
@@ -42,8 +70,27 @@ export default function InventoryPage() {
             }
         };
 
+        const fetchSavedItems = async () => {
+            try {
+                const response = await fetch('/api/saved-items');
+                if (response.ok) {
+                    const data = await response.json();
+                    const map: Record<number, number> = {};
+                    data.forEach((item: any) => {
+                        if (item.itemType === 'vehicle') {
+                            map[item.itemId] = item.id;
+                        }
+                    });
+                    setSavedMap(map);
+                }
+            } catch (error) {
+                console.error('Error fetching saved items:', error);
+            }
+        };
+
         if (user && !isLoading) {
             fetchVehicles();
+            fetchSavedItems();
         }
     }, [user, isLoading]);
 
@@ -56,6 +103,132 @@ export default function InventoryPage() {
             return matchesSearch && matchesStatus;
         }), [vehicles, searchTerm, filterStatus]
     );
+
+    const handleViewDetails = (vehicle: Vehicle) => {
+        setSelectedVehicle(vehicle);
+        setIsDetailModalOpen(true);
+    };
+
+    const handleBookNow = () => {
+        setIsDetailModalOpen(false);
+        setIsBookingModalOpen(true);
+        // Set default dates (today and tomorrow)
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        setBookingForm(prev => ({
+            ...prev,
+            pickupDate: today.toISOString().split('T')[0],
+            returnDate: tomorrow.toISOString().split('T')[0],
+        }));
+    };
+
+    const handleToggleSave = async (vehicle: Vehicle, e: React.MouseEvent) => {
+        e.stopPropagation();
+
+        const savedItemId = savedMap[vehicle.id];
+
+        try {
+            if (savedItemId) {
+                // Remove
+                const response = await fetch(`/api/saved-items/${savedItemId}`, { method: 'DELETE' });
+                if (response.ok) {
+                    const newMap = { ...savedMap };
+                    delete newMap[vehicle.id];
+                    setSavedMap(newMap);
+                } else {
+                    alert("Failed to remove from saved items");
+                }
+            } else {
+                // Save
+                const response = await fetch('/api/saved-items', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        itemType: 'vehicle',
+                        itemId: vehicle.id,
+                        itemData: vehicle,
+                        notes: `Saved from inventory on ${new Date().toLocaleDateString()}`
+                    })
+                });
+
+                if (response.ok) {
+                    const savedItem = await response.json();
+                    setSavedMap({ ...savedMap, [vehicle.id]: savedItem.id });
+                } else {
+                    const result = await response.json();
+                    if (result.error === 'Item already saved') {
+                        alert("Item already saved");
+                    } else {
+                        alert("Failed to save item");
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error toggling save:', error);
+            alert("An error occurred");
+        }
+    };
+
+    const handleBookingSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedVehicle || !user) return;
+
+        setIsSubmitting(true);
+        try {
+            const response = await fetch('/api/bookings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-username': user.username,
+                },
+                body: JSON.stringify({
+                    type: 'Car Rental',
+                    name: bookingForm.name,
+                    email: bookingForm.email,
+                    phone: bookingForm.phone,
+                    nationality: bookingForm.nationality,
+                    idOrPassport: bookingForm.idOrPassport,
+                    carType: selectedVehicle.name,
+                    pickupDate: bookingForm.pickupDate,
+                    pickupTime: bookingForm.pickupTime,
+                    returnDate: bookingForm.returnDate,
+                    returnTime: bookingForm.returnTime,
+                }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert(`Booking created successfully!\n\nBooking ID: ${result.bookingId}\nVehicle: ${selectedVehicle.name}\nRental Days: ${result.rentalDays || 'N/A'}`);
+                setIsBookingModalOpen(false);
+                setBookingForm({
+                    name: "",
+                    email: "",
+                    phone: "",
+                    nationality: "",
+                    idOrPassport: "",
+                    pickupDate: "",
+                    pickupTime: "09:00",
+                    returnDate: "",
+                    returnTime: "17:00",
+                });
+                // Refresh vehicles to update availability
+                const vehiclesResponse = await fetch('/api/vehicles');
+                if (vehiclesResponse.ok) {
+                    const data = await vehiclesResponse.json();
+                    setVehicles(data);
+                }
+            } else {
+                alert(`Booking failed: ${result.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Error creating booking:', error);
+            alert('Failed to create booking. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     if (isLoading || isLoadingData) {
         return <LoadingSpinner size="lg" message="Loading Inventory..." />;
@@ -101,7 +274,14 @@ export default function InventoryPage() {
                                 fill
                                 className="object-cover group-hover:scale-105 transition-transform duration-500"
                             />
-                            <div className="absolute top-3 right-3">
+                            <div className="absolute top-3 right-3 flex gap-2">
+                                <button
+                                    onClick={(e) => handleToggleSave(vehicle, e)}
+                                    className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:bg-white transition-colors text-blue-600"
+                                    title={savedMap[vehicle.id] ? "Remove from saved" : "Save vehicle"}
+                                >
+                                    {savedMap[vehicle.id] ? <FaBookmark /> : <FaRegBookmark />}
+                                </button>
                                 <span className={`px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-sm
                   ${vehicle.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                                     {vehicle.isAvailable ? <FaCheckCircle /> : <FaTimesCircle />}
@@ -123,7 +303,7 @@ export default function InventoryPage() {
                             </div>
 
                             <button
-                                onClick={() => alert(`Vehicle Details\n\n${vehicle.name}\nYear: ${vehicle.year}\nPrice: ${vehicle.price}/day\nTransmission: ${vehicle.transmission}\nFuel: ${vehicle.fuel}\nStatus: ${vehicle.status}\n\nFull vehicle details page coming soon!`)}
+                                onClick={() => handleViewDetails(vehicle)}
                                 className="w-full bg-gray-50 text-gray-700 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors font-medium text-sm"
                             >
                                 View Details
@@ -132,6 +312,254 @@ export default function InventoryPage() {
                     </div>
                 ))}
             </div>
+
+            {/* Vehicle Detail Modal */}
+            {isDetailModalOpen && selectedVehicle && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 m-4 max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-2xl font-bold text-gray-900">{selectedVehicle.name}</h3>
+                            <button onClick={() => setIsDetailModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                                <FaTimes className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-6">
+                            {/* Vehicle Image */}
+                            <div className="relative h-64 bg-gray-100 rounded-xl overflow-hidden">
+                                <Image
+                                    src={selectedVehicle.image || '/placeholder-car.png'}
+                                    alt={selectedVehicle.name}
+                                    fill
+                                    className="object-cover"
+                                />
+                                <div className="absolute top-4 right-4 flex gap-2">
+                                    <button
+                                        onClick={(e) => handleToggleSave(selectedVehicle, e)}
+                                        className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:bg-white transition-colors text-blue-600"
+                                        title={savedMap[selectedVehicle.id] ? "Remove from saved" : "Save vehicle"}
+                                    >
+                                        {savedMap[selectedVehicle.id] ? <FaBookmark className="w-5 h-5" /> : <FaRegBookmark className="w-5 h-5" />}
+                                    </button>
+                                    <span className={`px-3 py-1.5 rounded-full text-sm font-semibold flex items-center gap-2 shadow-lg
+                                        ${selectedVehicle.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                        {selectedVehicle.isAvailable ? <FaCheckCircle /> : <FaTimesCircle />}
+                                        {selectedVehicle.status}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Vehicle Details */}
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <p className="text-sm text-gray-500 mb-1">Category</p>
+                                    <p className="font-semibold text-gray-900">{selectedVehicle.category}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500 mb-1">Year</p>
+                                    <p className="font-semibold text-gray-900">{selectedVehicle.year}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500 mb-1">Transmission</p>
+                                    <p className="font-semibold text-gray-900 flex items-center gap-2">
+                                        <FaCog className="text-gray-400" />
+                                        {selectedVehicle.transmission}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500 mb-1">Fuel Type</p>
+                                    <p className="font-semibold text-gray-900 flex items-center gap-2">
+                                        <FaGasPump className="text-gray-400" />
+                                        {selectedVehicle.fuel}
+                                    </p>
+                                </div>
+                                <div className="col-span-2">
+                                    <p className="text-sm text-gray-500 mb-1">Rental Price</p>
+                                    <p className="text-2xl font-bold text-blue-600">
+                                        {selectedVehicle.price} <span className="text-sm text-gray-500 font-normal">/ day</span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex gap-3 pt-4 border-t">
+                                <button
+                                    onClick={() => setIsDetailModalOpen(false)}
+                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                                >
+                                    Close
+                                </button>
+                                {selectedVehicle.isAvailable && (
+                                    <button
+                                        onClick={handleBookNow}
+                                        className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                                    >
+                                        Book Now
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Booking Modal */}
+            {isBookingModalOpen && selectedVehicle && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 m-4 max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 className="text-2xl font-bold text-gray-900">Book {selectedVehicle.name}</h3>
+                                <p className="text-sm text-gray-500">Complete the form to create your booking</p>
+                            </div>
+                            <button onClick={() => setIsBookingModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                                <FaTimes className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleBookingSubmit} className="space-y-4">
+                            {/* Customer Information */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={bookingForm.name}
+                                        onChange={(e) => setBookingForm({ ...bookingForm, name: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="John Doe"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                    <input
+                                        type="email"
+                                        value={bookingForm.email}
+                                        onChange={(e) => setBookingForm({ ...bookingForm, email: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="john@example.com"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
+                                    <input
+                                        type="tel"
+                                        required
+                                        value={bookingForm.phone}
+                                        onChange={(e) => setBookingForm({ ...bookingForm, phone: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="+250 788 123 456"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Nationality *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={bookingForm.nationality}
+                                        onChange={(e) => setBookingForm({ ...bookingForm, nationality: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="Rwanda"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">ID/Passport *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={bookingForm.idOrPassport}
+                                        onChange={(e) => setBookingForm({ ...bookingForm, idOrPassport: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="ID or Passport Number"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Rental Period */}
+                            <div className="border-t pt-4">
+                                <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                    <FaCalendar className="text-blue-600" />
+                                    Rental Period
+                                </h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Date *</label>
+                                        <input
+                                            type="date"
+                                            required
+                                            value={bookingForm.pickupDate}
+                                            onChange={(e) => setBookingForm({ ...bookingForm, pickupDate: e.target.value })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Time *</label>
+                                        <input
+                                            type="time"
+                                            required
+                                            value={bookingForm.pickupTime}
+                                            onChange={(e) => setBookingForm({ ...bookingForm, pickupTime: e.target.value })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Return Date *</label>
+                                        <input
+                                            type="date"
+                                            required
+                                            value={bookingForm.returnDate}
+                                            onChange={(e) => setBookingForm({ ...bookingForm, returnDate: e.target.value })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Return Time *</label>
+                                        <input
+                                            type="time"
+                                            required
+                                            value={bookingForm.returnTime}
+                                            onChange={(e) => setBookingForm({ ...bookingForm, returnTime: e.target.value })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Vehicle Summary */}
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <h4 className="font-semibold text-gray-900 mb-2">Booking Summary</h4>
+                                <div className="space-y-1 text-sm">
+                                    <p><span className="text-gray-600">Vehicle:</span> <span className="font-medium">{selectedVehicle.name}</span></p>
+                                    <p><span className="text-gray-600">Daily Rate:</span> <span className="font-medium text-blue-600">{selectedVehicle.price}</span></p>
+                                </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsBookingModalOpen(false)}
+                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                                    disabled={isSubmitting}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isSubmitting ? 'Creating Booking...' : 'Confirm Booking'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
+
+
+

@@ -5,11 +5,13 @@ export async function sendEmail({
   subject,
   text,
   html,
+  attachments,
 }: {
   to: string;
   subject: string;
-  text: string;
+  text?: string;
   html?: string;
+  attachments?: any[];
 }) {
   try {
     // Configure SMTP transporter using Brevo (formerly Sendinblue)
@@ -32,8 +34,9 @@ export async function sendEmail({
       from,
       to,
       subject,
-      text,
-      html: html || text,
+      text: text || '',
+      html: html || text || '',
+      attachments,
     });
 
     console.log(`[Email Service] Email sent successfully: ${info.messageId}`);

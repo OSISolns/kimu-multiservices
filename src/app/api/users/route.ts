@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     console.log('API /users: Received username:', username);
     const user = username ? await prisma.user.findUnique({ where: { username } }) : null;
     console.log('API /users: Found user:', user ? { username: user.username, role: user.role } : null);
-    if (!user || !hasRole(user, ['admin', 'manager'])) {
+    if (!user || !hasRole(user, ['admin', 'manager', 'accountant'])) {
       console.log('API /users: Not authorized', { hasUser: !!user, role: user?.role });
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   try {
     const username = req.headers.get('x-username');
     const user = username ? await prisma.user.findUnique({ where: { username } }) : null;
-    if (!user || !hasRole(user, ['admin'])) {
+    if (!user || !hasRole(user, ['admin', 'accountant'])) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
     const { username: newUsername, password, role, fullName, email, phone, department } = await req.json();
@@ -76,7 +76,7 @@ export async function PUT(req: NextRequest) {
   try {
     const username = req.headers.get('x-username');
     const user = username ? await prisma.user.findUnique({ where: { username } }) : null;
-    if (!user || !hasRole(user, ['admin'])) {
+    if (!user || !hasRole(user, ['admin', 'accountant'])) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
     const { id, username: updateUsername, password, role } = await req.json();
@@ -101,7 +101,7 @@ export async function DELETE(req: NextRequest) {
   try {
     const adminUsername = req.headers.get('x-username');
     const admin = adminUsername ? await prisma.user.findUnique({ where: { username: adminUsername } }) : null;
-    if (!admin || !hasRole(admin, ['admin'])) {
+    if (!admin || !hasRole(admin, ['admin', 'accountant'])) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
@@ -145,7 +145,7 @@ export async function PATCH(req: NextRequest) {
     console.log('Admin username:', adminUsername);
     const admin = adminUsername ? await prisma.user.findUnique({ where: { username: adminUsername } }) : null;
     console.log('Admin found:', !!admin);
-    if (!admin || !hasRole(admin, ['admin'])) {
+    if (!admin || !hasRole(admin, ['admin', 'accountant'])) {
       console.log('Not authorized');
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }

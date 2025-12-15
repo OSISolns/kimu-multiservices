@@ -143,7 +143,7 @@ export default function Contact() {
           <FaHotel className="text-orange-400 absolute right-10 bottom-10 text-[100px] animate-bounce-slower" style={{ filter: 'blur(1px)' }} />
           {/* Company Logo Animation */}
           <div className="absolute right-10 top-10 animate-fade-scale">
-            <Image src="/logo.png" alt="Company Logo" width={90} height={90} className="opacity-60" style={{ filter: 'blur(0.5px)' }} />
+            <Image src="/logo.png" alt="Company Logo" width={90} height={90} className="opacity-60" style={{ filter: 'blur(0.5px)' }} unoptimized />
           </div>
         </div>
         <div className="container mx-auto px-4">

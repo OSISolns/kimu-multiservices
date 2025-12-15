@@ -4,7 +4,11 @@ import { withValidation, jsonError, jsonOk } from '@/lib/api';
 import { z } from 'zod';
 
 const createEmployeeSchema = z.object({
-  userId: z.number(),
+  userId: z.number().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
   employeeId: z.string().min(1),
   position: z.string().min(1),
   department: z.string().min(1),
@@ -18,6 +22,8 @@ const createEmployeeSchema = z.object({
   taxId: z.string().optional(),
   socialSecurityId: z.string().optional(),
   notes: z.string().optional(),
+}).refine(data => data.userId || (data.firstName && data.lastName), {
+  message: "Either User ID or First Name and Last Name must be provided",
 });
 
 const updateEmployeeSchema = z.object({
@@ -34,6 +40,10 @@ const updateEmployeeSchema = z.object({
   status: z.enum(['active', 'inactive', 'terminated']).optional(),
   terminationDate: z.string().transform(str => new Date(str)).optional(),
   notes: z.string().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
 });
 
 export async function GET(req: NextRequest) {
@@ -88,11 +98,54 @@ export async function GET(req: NextRequest) {
 
 export const POST = withValidation(createEmployeeSchema, async (req: NextRequest, body) => {
   try {
-    const adminUsername = req.headers.get('x-username');
-    const admin = adminUsername ? await prisma.user.findUnique({ where: { username: adminUsername } }) : null;
+    // Get user from JWT token in cookies OR x-username header
+    const token = req.cookies.get('auth-token')?.value;
+    const usernameHeader = req.headers.get('x-username');
+
+    console.log('🔍 Payroll Employee Creation - Auth token present:', !!token);
+    console.log('🔍 Payroll Employee Creation - Username header:', usernameHeader);
+
+    let admin;
+
+    if (token) {
+      try {
+        const { jwtVerify } = await import('jose');
+        const secretText = process.env.JWT_SECRET;
+        if (!secretText) {
+          console.log('❌ Payroll Employee Creation - JWT_SECRET not configured');
+          return jsonError('Server configuration error', 500);
+        }
+        const secret = new TextEncoder().encode(secretText);
+        const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
+        const userId = (payload as any)?.userId?.toString();
+
+        if (userId) {
+          admin = await prisma.user.findUnique({
+            where: { id: parseInt(userId) },
+            select: { id: true, username: true, role: true }
+          });
+        }
+      } catch (error) {
+        console.log('❌ Payroll Employee Creation - Invalid or expired token');
+        // Don't return error yet, try header auth
+      }
+    }
+
+    if (!admin && usernameHeader) {
+      console.log('⚠️ Payroll Employee Creation - Falling back to x-username header auth');
+      admin = await prisma.user.findUnique({
+        where: { username: usernameHeader },
+        select: { id: true, username: true, role: true }
+      });
+    }
+
+    console.log('🔍 Payroll Employee Creation - User found:', admin ? { username: admin.username, role: admin.role } : 'null');
+
     if (!admin || (admin.role !== 'admin' && admin.role !== 'accountant')) {
+      console.log('❌ Payroll Employee Creation - Authorization failed. Role:', admin?.role || 'no user');
       return jsonError('Not authorized', 403);
     }
+    console.log('✅ Payroll Employee Creation - Authorization passed');
 
     const data = body as z.infer<typeof createEmployeeSchema>;
 
@@ -105,13 +158,15 @@ export const POST = withValidation(createEmployeeSchema, async (req: NextRequest
       return jsonError('Employee ID already exists', 409);
     }
 
-    // Check if user already has an employee record
-    const existingUserEmployee = await prisma.employee.findUnique({
-      where: { userId: data.userId },
-    });
+    // Check if user already has an employee record (only if userId is provided)
+    if (data.userId) {
+      const existingUserEmployee = await prisma.employee.findUnique({
+        where: { userId: data.userId },
+      });
 
-    if (existingUserEmployee) {
-      return jsonError('User already has an employee record', 409);
+      if (existingUserEmployee) {
+        return jsonError('User already has an employee record', 409);
+      }
     }
 
     const employee = await prisma.employee.create({
@@ -150,8 +205,45 @@ export const POST = withValidation(createEmployeeSchema, async (req: NextRequest
 
 export async function PUT(req: NextRequest) {
   try {
-    const adminUsername = req.headers.get('x-username');
-    const admin = adminUsername ? await prisma.user.findUnique({ where: { username: adminUsername } }) : null;
+    // Get user from JWT token in cookies OR x-username header
+    const token = req.cookies.get('auth-token')?.value;
+    const usernameHeader = req.headers.get('x-username');
+
+    let admin;
+
+    if (token) {
+      try {
+        const { jwtVerify } = await import('jose');
+        const secretText = process.env.JWT_SECRET;
+        if (!secretText) {
+          return jsonError('Server configuration error', 500);
+        }
+        const secret = new TextEncoder().encode(secretText);
+        const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
+        const userId = (payload as any)?.userId?.toString();
+
+        if (userId) {
+          admin = await prisma.user.findUnique({
+            where: { id: parseInt(userId) },
+            select: { id: true, username: true, role: true }
+          });
+        }
+      } catch (error) {
+        // Don't return error yet, try header auth
+      }
+    }
+
+    if (!admin && usernameHeader) {
+      admin = await prisma.user.findUnique({
+        where: { username: usernameHeader },
+        select: { id: true, username: true, role: true }
+      });
+    }
+
+    if (!admin) {
+      return jsonError('Not authenticated', 401);
+    }
+
     if (!admin || (admin.role !== 'admin' && admin.role !== 'accountant')) {
       return jsonError('Not authorized', 403);
     }
@@ -192,8 +284,45 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const adminUsername = req.headers.get('x-username');
-    const admin = adminUsername ? await prisma.user.findUnique({ where: { username: adminUsername } }) : null;
+    // Get user from JWT token in cookies OR x-username header
+    const token = req.cookies.get('auth-token')?.value;
+    const usernameHeader = req.headers.get('x-username');
+
+    let admin;
+
+    if (token) {
+      try {
+        const { jwtVerify } = await import('jose');
+        const secretText = process.env.JWT_SECRET;
+        if (!secretText) {
+          return jsonError('Server configuration error', 500);
+        }
+        const secret = new TextEncoder().encode(secretText);
+        const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
+        const userId = (payload as any)?.userId?.toString();
+
+        if (userId) {
+          admin = await prisma.user.findUnique({
+            where: { id: parseInt(userId) },
+            select: { id: true, username: true, role: true }
+          });
+        }
+      } catch (error) {
+        // Don't return error yet, try header auth
+      }
+    }
+
+    if (!admin && usernameHeader) {
+      admin = await prisma.user.findUnique({
+        where: { username: usernameHeader },
+        select: { id: true, username: true, role: true }
+      });
+    }
+
+    if (!admin) {
+      return jsonError('Not authenticated', 401);
+    }
+
     if (!admin || admin.role !== 'admin') {
       return jsonError('Not authorized', 403);
     }

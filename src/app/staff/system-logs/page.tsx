@@ -18,16 +18,9 @@ interface Pagination {
   totalPages: number;
 }
 
-// Dummy admin check (replace with real auth/session check)
-function useIsAdmin() {
-  // TODO: Replace with real session/user role check
-  // For now, always return true for demonstration
-  return true;
-}
-
 export default function SystemLogsAdminPage() {
-  const isAdmin = useIsAdmin();
   const router = useRouter();
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [systemLogs, setSystemLogs] = useState<SystemLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState<Pagination | null>(null);
@@ -42,12 +35,40 @@ export default function SystemLogsAdminPage() {
   const [backupLoading, setBackupLoading] = useState(false);
   const [backupResult, setBackupResult] = useState<string | null>(null);
 
+  // Check admin status on mount
   useEffect(() => {
-    if (!isAdmin) {
-      router.replace('/');
-      return;
+    async function checkAdminStatus() {
+      try {
+        // Make a test request to a protected endpoint
+        const response = await fetch('/api/system-logs?page=1&limit=1');
+
+        if (response.status === 403) {
+          // Not authorized
+          setIsAdmin(false);
+          router.replace('/');
+          return;
+        }
+
+        if (response.ok) {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+          router.replace('/');
+        }
+      } catch (error) {
+        console.error('Admin check failed:', error);
+        setIsAdmin(false);
+        router.replace('/');
+      }
     }
-    fetchSystemLogs();
+
+    checkAdminStatus();
+  }, [router]);
+
+  useEffect(() => {
+    if (isAdmin === true) {
+      fetchSystemLogs();
+    }
     // eslint-disable-next-line
   }, [filters, isAdmin]);
 
@@ -117,7 +138,16 @@ export default function SystemLogsAdminPage() {
     }
   };
 
-  if (!isAdmin) {
+  // Show loading while checking admin status
+  if (isAdmin === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (isAdmin === false) {
     return (
       <div className="min-h-screen flex items-center justify-center text-xl">Access denied.</div>
     );

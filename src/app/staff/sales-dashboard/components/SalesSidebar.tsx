@@ -31,7 +31,7 @@ export default function SalesSidebar() {
     return (
         <aside className="w-64 bg-white border-r border-gray-200 flex flex-col h-screen sticky top-0">
             <div className="p-6 flex items-center gap-3 border-b border-gray-100">
-                <Image src="/logo.png" alt="KIMU Logo" width={40} height={40} className="w-10 h-10" />
+                <Image src="/logo.png" alt="KIMU Logo" width={40} height={40} className="w-10 h-10" unoptimized />
                 <div>
                     <h1 className="font-bold text-gray-900 leading-tight">Sales Portal</h1>
                     <p className="text-xs text-gray-500">KIMU Multiservices</p>
@@ -46,8 +46,8 @@ export default function SalesSidebar() {
                             key={item.name}
                             href={item.href}
                             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
-                                    ? 'bg-blue-50 text-blue-600 shadow-sm'
-                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                ? 'bg-blue-50 text-blue-600 shadow-sm'
+                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                 }`}
                         >
                             <item.icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'}`} />

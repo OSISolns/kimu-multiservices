@@ -25,7 +25,7 @@ const categories = [
   'hotel', 'car_sales', 'other'
 ];
 
-const paymentMethods = ['MTN Momo', 'Equity Bank', 'BK Bank', 'Cash'];
+const paymentMethods = ['MTN Momo', 'Equity Bank', 'BK Bank', 'Bank of Africa', 'Access Bank', 'COPEDU', 'Cash'];
 
 export default function IncomeTracker({ onIncomeAdded }: IncomeTrackerProps) {
   const [income, setIncome] = useState<Income[]>([]);

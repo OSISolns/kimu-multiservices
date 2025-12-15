@@ -28,7 +28,20 @@ export const POST = withValidation(processPayrollSchema, async (req: NextRequest
         id: { in: data.employeeIds },
         status: 'active',
       },
-      include: {
+      select: {
+        id: true,
+        userId: true,
+        employeeId: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        position: true,
+        department: true,
+        employmentType: true,
+        hireDate: true,
+        salary: true,
+        status: true,
         user: {
           select: {
             id: true,
@@ -71,7 +84,7 @@ export const POST = withValidation(processPayrollSchema, async (req: NextRequest
         if (existingPayroll) {
           errors.push({
             employeeId: employee.id,
-            employeeName: employee.user.fullName || employee.user.username,
+            employeeName: employee.user?.fullName || employee.user?.username || `${employee.firstName} ${employee.lastName}`,
             error: 'Payroll already exists for this period',
           });
           continue;
@@ -82,7 +95,7 @@ export const POST = withValidation(processPayrollSchema, async (req: NextRequest
         if (!salaryStructure) {
           errors.push({
             employeeId: employee.id,
-            employeeName: employee.user.fullName || employee.user.username,
+            employeeName: employee.user?.fullName || employee.user?.username || `${employee.firstName} ${employee.lastName}`,
             error: 'No active salary structure found',
           });
           continue;
@@ -95,7 +108,7 @@ export const POST = withValidation(processPayrollSchema, async (req: NextRequest
         const baseSalary = salaryStructure.baseSalary;
         const totalAllowances = Object.values(allowances || {}).reduce((sum: number, amount: any) => sum + (amount || 0), 0);
         const totalDeductions = Object.values(deductions || {}).reduce((sum: number, amount: any) => sum + (amount || 0), 0);
-        
+
         const grossSalary = baseSalary + totalAllowances;
         const netSalary = grossSalary - totalDeductions;
 
@@ -106,13 +119,13 @@ export const POST = withValidation(processPayrollSchema, async (req: NextRequest
           amount: number;
           description?: string;
         }> = [
-          {
-            type: 'salary',
-            name: 'Basic Salary',
-            amount: baseSalary,
-            description: 'Base salary',
-          },
-        ];
+            {
+              type: 'salary',
+              name: 'Basic Salary',
+              amount: baseSalary,
+              description: 'Base salary',
+            },
+          ];
 
         // Add allowance items
         if (allowances) {
@@ -192,7 +205,7 @@ export const POST = withValidation(processPayrollSchema, async (req: NextRequest
         console.error(`Error processing payroll for employee ${employee.id}:`, error);
         errors.push({
           employeeId: employee.id,
-          employeeName: employee.user.fullName || employee.user.username,
+          employeeName: employee.user?.fullName || employee.user?.username || `${employee.firstName} ${employee.lastName}`,
           error: error instanceof Error ? error.message : 'Unknown error',
         });
       }

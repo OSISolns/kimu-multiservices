@@ -12,8 +12,8 @@ const globalForPrisma = globalThis as unknown as {
  * - Otherwise we fall back to a local SQLite database (dev.db).
  */
 function initializePrismaClient(): PrismaClient {
-  const tursoUrl = process.env.TURSO_DATABASE_URL;
-  const tursoToken = process.env.TURSO_AUTH_TOKEN;
+  const tursoUrl = process.env.TURSO_DATABASE_URL || process.env.kimutransport_TURSO_DATABASE_URL;
+  const tursoToken = process.env.TURSO_AUTH_TOKEN || process.env.kimutransport_TURSO_AUTH_TOKEN;
 
   if (tursoUrl && tursoToken) {
     console.log('🚀 Initialising Prisma with Turso libSQL adapter');
@@ -21,6 +21,8 @@ function initializePrismaClient(): PrismaClient {
       url: tursoUrl,
       authToken: tursoToken,
     });
+    // When using driver adapters, Prisma Client should not have datasources configured
+    // The adapter handles the connection directly
     return new PrismaClient({
       adapter,
       log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],

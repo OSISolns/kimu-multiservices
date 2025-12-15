@@ -60,8 +60,143 @@ export default function TransportReportsPage() {
   }, [user, isLoading, router, dateRange, reportType, fetchTransportReport])
 
   const exportReport = () => {
-    // TODO: Implement report export functionality
-    console.log('Exporting transport report...')
+    if (!reportData) {
+      alert('No report data available to export');
+      return;
+    }
+
+    // Generate HTML report
+    const reportHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Transport Report - KIMU Multi-Services</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: Arial, sans-serif; padding: 40px; background: #fff; }
+          .header { text-align: center; margin-bottom: 40px; border-bottom: 3px solid #2563eb; padding-bottom: 20px; }
+          .header h1 { color: #1f2937; font-size: 28px; margin-bottom: 10px; }
+          .header p { color: #6b7280; font-size: 14px; }
+          .section { margin-bottom: 30px; }
+          .section-title { font-size: 20px; color: #1f2937; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 12px; }
+          .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+          .metric-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; }
+          .metric-label { font-size: 12px; color: #6b7280; text-transform: uppercase; margin-bottom: 8px; }
+          .metric-value { font-size: 28px; font-weight: bold; color: #1f2937; }
+          .metric-card.green .metric-value { color: #059669; }
+          .metric-card.orange .metric-value { color: #ea580c; }
+          .metric-card.red .metric-value { color: #dc2626; }
+          .details-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; }
+          .detail-box { border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; }
+          .detail-row { display: flex; justify-between; padding: 12px 0; border-bottom: 1px solid #f3f4f6; }
+          .detail-row:last-child { border-bottom: none; }
+          .detail-label { color: #6b7280; }
+          .detail-value { font-weight: 600; color: #1f2937; }
+          .maintenance-item { padding: 10px; background: #f9fafb; border-radius: 6px; margin-bottom: 8px; }
+          .maintenance-item strong { color: #1f2937; }
+          .maintenance-item small { color: #6b7280; display: block; margin-top: 4px; }
+          .footer { margin-top: 40px; padding-top: 20px; border-top: 2px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 12px; }
+          @media print {
+            body { padding: 20px; }
+            .no-print { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>KIMU Multi-Services</h1>
+          <p>Transport Fleet Report</p>
+          <p>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+          <p>Period: Last ${dateRange} days | Type: ${reportType.charAt(0).toUpperCase() + reportType.slice(1)}</p>
+        </div>
+
+        <div class="section">
+          <h2 class="section-title">Fleet Overview</h2>
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-label">Total Vehicles</div>
+              <div class="metric-value">${reportData.totalVehicles}</div>
+            </div>
+            <div class="metric-card green">
+              <div class="metric-label">Available</div>
+              <div class="metric-value">${reportData.availableVehicles}</div>
+            </div>
+            <div class="metric-card orange">
+              <div class="metric-label">In Use</div>
+              <div class="metric-value">${reportData.inUseVehicles}</div>
+            </div>
+            <div class="metric-card red">
+              <div class="metric-label">Maintenance</div>
+              <div class="metric-value">${reportData.maintenanceVehicles}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2 class="section-title">Performance & Maintenance</h2>
+          <div class="details-grid">
+            <div class="detail-box">
+              <h3 style="margin-bottom: 15px; color: #1f2937;">Fleet Performance</h3>
+              <div class="detail-row">
+                <span class="detail-label">Total Mileage</span>
+                <span class="detail-value">${reportData.totalMileage.toLocaleString()} km</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Avg Fuel Efficiency</span>
+                <span class="detail-value">${reportData.averageFuelEfficiency} L/100km</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Most Used Vehicle</span>
+                <span class="detail-value">${reportData.mostUsedVehicle}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Least Used Vehicle</span>
+                <span class="detail-value">${reportData.leastUsedVehicle}</span>
+              </div>
+            </div>
+
+            <div class="detail-box">
+              <h3 style="margin-bottom: 15px; color: #1f2937;">Maintenance Status</h3>
+              <div class="detail-row">
+                <span class="detail-label">Due for Maintenance</span>
+                <span class="detail-value" style="color: #dc2626;">${reportData.maintenanceDue}</span>
+              </div>
+              <div style="margin-top: 15px;">
+                <p style="font-weight: 600; margin-bottom: 10px; color: #374151;">Upcoming Maintenance:</p>
+                ${reportData.upcomingMaintenance.length > 0 ?
+        reportData.upcomingMaintenance.map(item => `
+                    <div class="maintenance-item">
+                      <strong>${item.vehicleName}</strong> - ${item.type}
+                      <small>${item.maintenanceDate}</small>
+                    </div>
+                  `).join('') :
+        '<p style="color: #6b7280; font-size: 14px;">No upcoming maintenance scheduled</p>'
+      }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p>© ${new Date().getFullYear()} KIMU Multi-Services. All rights reserved.</p>
+          <p>This report is confidential and intended for internal use only.</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Open in new window for printing/saving
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(reportHTML);
+      printWindow.document.close();
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+    } else {
+      alert('Please allow popups to export the report');
+    }
   }
 
   if (isLoading) {

@@ -2,16 +2,51 @@ import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs';
 
-// Hardcoded admin check (replace with real auth)
-function isAdminRequest(): boolean {
-    // TODO: implement admin check from cookies/session
-    return true;
+async function isAdminRequest(req: NextRequest): Promise<boolean> {
+    try {
+        const token = req.cookies.get('auth-token')?.value;
+
+        if (!token) {
+            return false;
+        }
+
+        const { jwtVerify } = await import('jose');
+        const secretText = process.env.JWT_SECRET;
+
+        if (!secretText) {
+            console.error('JWT_SECRET not configured');
+            return false;
+        }
+
+        const secret = new TextEncoder().encode(secretText);
+        const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
+
+        const userId = (payload as any)?.userId?.toString();
+
+        if (!userId) {
+            return false;
+        }
+
+        // Check if user is admin
+        const { prisma } = await import('@/lib/prisma');
+        const user = await prisma.user.findUnique({
+            where: { id: parseInt(userId) },
+            select: { role: true }
+        });
+
+        return user?.role === 'admin';
+    } catch (error) {
+        console.error('Admin check failed:', error);
+        return false;
+    }
 }
 
 export async function GET(req: NextRequest) {
     try {
         // Check if user is admin
-        if (!isAdminRequest()) {
+        const isAdmin = await isAdminRequest(req);
+
+        if (!isAdmin) {
             return NextResponse.json(
                 { error: 'Access denied. Admin privileges required.' },
                 { status: 403 }

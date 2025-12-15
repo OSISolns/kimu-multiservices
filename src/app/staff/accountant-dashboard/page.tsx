@@ -68,13 +68,17 @@ type FinancialRecord = {
   mtnMomoRWF: number;
   equityBankRWF: number;
   bkBankRWF: number;
+  bankOfAfricaRWF: number;
+  accessBankRWF: number;
+  copeduRWF: number;
   cashRWF: number;
   date: string;
   [key: string]: any;
 };
 
 type FinancialData = {
-  openingBalances: { mtnMomoRWF: number; equityBankRWF: number; bkBankRWF: number; cashRWF: number };
+  openingBalances: { mtnMomoRWF: number; equityBankRWF: number; bkBankRWF: number; bankOfAfricaRWF: number; accessBankRWF: number; copeduRWF: number; cashRWF: number };
+  closingBalances: { mtnMomoRWF: number; equityBankRWF: number; bkBankRWF: number; bankOfAfricaRWF: number; accessBankRWF: number; copeduRWF: number; cashRWF: number };
   income: FinancialRecord[];
   expenses: FinancialRecord[];
 };
@@ -87,7 +91,8 @@ export default function UpgradedAccountantDashboard() {
   const { user, isLoading } = useUser();
   const [activeTab, setActiveTab] = useState('overview');
   const [financialData, setFinancialData] = useState<FinancialData>({
-    openingBalances: { mtnMomoRWF: 0, equityBankRWF: 0, bkBankRWF: 0, cashRWF: 0 },
+    openingBalances: { mtnMomoRWF: 0, equityBankRWF: 0, bkBankRWF: 0, bankOfAfricaRWF: 0, accessBankRWF: 0, copeduRWF: 0, cashRWF: 0 },
+    closingBalances: { mtnMomoRWF: 0, equityBankRWF: 0, bkBankRWF: 0, bankOfAfricaRWF: 0, accessBankRWF: 0, copeduRWF: 0, cashRWF: 0 },
     income: [],
     expenses: []
   });
@@ -100,11 +105,15 @@ export default function UpgradedAccountantDashboard() {
   const ensureDataStructure = (data: any): FinancialData => {
     return {
       ...data,
+      closingBalances: data.closingBalances || { mtnMomoRWF: 0, equityBankRWF: 0, bkBankRWF: 0, bankOfAfricaRWF: 0, accessBankRWF: 0, copeduRWF: 0, cashRWF: 0 },
       income: data.income.map((item: any) => ({
         ...item,
         mtnMomoRWF: item.mtnMomoRWF ?? 0,
         equityBankRWF: item.equityBankRWF ?? 0,
         bkBankRWF: item.bkBankRWF ?? 0,
+        bankOfAfricaRWF: item.bankOfAfricaRWF ?? 0,
+        accessBankRWF: item.accessBankRWF ?? 0,
+        copeduRWF: item.copeduRWF ?? 0,
         cashRWF: item.cashRWF ?? 0
       })),
       expenses: data.expenses.map((item: any) => ({
@@ -112,6 +121,9 @@ export default function UpgradedAccountantDashboard() {
         mtnMomoRWF: item.mtnMomoRWF ?? 0,
         equityBankRWF: item.equityBankRWF ?? 0,
         bkBankRWF: item.bkBankRWF ?? 0,
+        bankOfAfricaRWF: item.bankOfAfricaRWF ?? 0,
+        accessBankRWF: item.accessBankRWF ?? 0,
+        copeduRWF: item.copeduRWF ?? 0,
         cashRWF: item.cashRWF ?? 0
       }))
     } as FinancialData;
@@ -195,9 +207,9 @@ export default function UpgradedAccountantDashboard() {
 
   // Calculate totals
   const totalIncome = financialData.income.reduce((sum, item) =>
-    sum + (item.mtnMomoRWF || 0) + (item.equityBankRWF || 0) + (item.bkBankRWF || 0) + (item.cashRWF || 0), 0);
+    sum + (item.mtnMomoRWF || 0) + (item.equityBankRWF || 0) + (item.bkBankRWF || 0) + (item.bankOfAfricaRWF || 0) + (item.accessBankRWF || 0) + (item.copeduRWF || 0) + (item.cashRWF || 0), 0);
   const totalExpenses = financialData.expenses.reduce((sum, item) =>
-    sum + (item.mtnMomoRWF || 0) + (item.equityBankRWF || 0) + (item.bkBankRWF || 0) + (item.cashRWF || 0), 0);
+    sum + (item.mtnMomoRWF || 0) + (item.equityBankRWF || 0) + (item.bkBankRWF || 0) + (item.bankOfAfricaRWF || 0) + (item.accessBankRWF || 0) + (item.copeduRWF || 0) + (item.cashRWF || 0), 0);
   const netProfit = totalIncome - totalExpenses;
 
   // Chart Data Preparation
@@ -267,7 +279,7 @@ export default function UpgradedAccountantDashboard() {
     data.forEach(item => {
       const date = new Date(item.date);
       const dayIndex = date.getDay(); // 0 = Sunday, 1 = Monday, ...
-      const amount = (item.mtnMomoRWF || 0) + (item.equityBankRWF || 0) + (item.bkBankRWF || 0) + (item.cashRWF || 0);
+      const amount = (item.mtnMomoRWF || 0) + (item.equityBankRWF || 0) + (item.bkBankRWF || 0) + (item.bankOfAfricaRWF || 0) + (item.accessBankRWF || 0) + (item.copeduRWF || 0) + (item.cashRWF || 0);
       aggregated[dayIndex] += amount;
     });
 
@@ -309,25 +321,34 @@ export default function UpgradedAccountantDashboard() {
   };
 
   const balanceDistributionData = {
-    labels: ['MTN Momo', 'Equity Bank', 'BK Bank', 'Cash'],
+    labels: ['MTN Momo', 'Equity Bank', 'BK Bank', 'Bank of Africa', 'Access Bank', 'COPEDU', 'Cash'],
     datasets: [
       {
         data: [
-          financialData.openingBalances.mtnMomoRWF,
-          financialData.openingBalances.equityBankRWF,
-          financialData.openingBalances.bkBankRWF,
-          financialData.openingBalances.cashRWF
+          financialData.closingBalances.mtnMomoRWF,
+          financialData.closingBalances.equityBankRWF,
+          financialData.closingBalances.bkBankRWF,
+          financialData.closingBalances.bankOfAfricaRWF,
+          financialData.closingBalances.accessBankRWF,
+          financialData.closingBalances.copeduRWF,
+          financialData.closingBalances.cashRWF
         ],
         backgroundColor: [
           'rgba(59, 130, 246, 0.8)',
           'rgba(16, 185, 129, 0.8)',
           'rgba(139, 92, 246, 0.8)',
+          'rgba(236, 72, 153, 0.8)',
+          'rgba(249, 115, 22, 0.8)',
+          'rgba(14, 165, 233, 0.8)',
           'rgba(245, 158, 11, 0.8)',
         ],
         borderColor: [
           'rgba(59, 130, 246, 1)',
           'rgba(16, 185, 129, 1)',
           'rgba(139, 92, 246, 1)',
+          'rgba(236, 72, 153, 1)',
+          'rgba(249, 115, 22, 1)',
+          'rgba(14, 165, 233, 1)',
           'rgba(245, 158, 11, 1)',
         ],
         borderWidth: 1,
@@ -501,25 +522,43 @@ export default function UpgradedAccountantDashboard() {
                     <div className="p-4 bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 hover:bg-white/20 transition-colors">
                       <div className="text-sm text-gray-300 mb-1">MTN Mobile Money</div>
                       <div className="text-xl font-bold tracking-wide">
-                        {formatRWF(financialData.openingBalances?.mtnMomoRWF || 0)}
+                        {formatRWF(financialData.closingBalances?.mtnMomoRWF || 0)}
                       </div>
                     </div>
                     <div className="p-4 bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 hover:bg-white/20 transition-colors">
                       <div className="text-sm text-gray-300 mb-1">Equity Bank</div>
                       <div className="text-xl font-bold tracking-wide">
-                        {formatRWF(financialData.openingBalances?.equityBankRWF || 0)}
+                        {formatRWF(financialData.closingBalances?.equityBankRWF || 0)}
                       </div>
                     </div>
                     <div className="p-4 bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 hover:bg-white/20 transition-colors">
                       <div className="text-sm text-gray-300 mb-1">BK Bank</div>
                       <div className="text-xl font-bold tracking-wide">
-                        {formatRWF(financialData.openingBalances?.bkBankRWF || 0)}
+                        {formatRWF(financialData.closingBalances?.bkBankRWF || 0)}
+                      </div>
+                    </div>
+                    <div className="p-4 bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 hover:bg-white/20 transition-colors">
+                      <div className="text-sm text-gray-300 mb-1">Bank of Africa</div>
+                      <div className="text-xl font-bold tracking-wide">
+                        {formatRWF(financialData.closingBalances?.bankOfAfricaRWF || 0)}
+                      </div>
+                    </div>
+                    <div className="p-4 bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 hover:bg-white/20 transition-colors">
+                      <div className="text-sm text-gray-300 mb-1">Access Bank</div>
+                      <div className="text-xl font-bold tracking-wide">
+                        {formatRWF(financialData.closingBalances?.accessBankRWF || 0)}
+                      </div>
+                    </div>
+                    <div className="p-4 bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 hover:bg-white/20 transition-colors">
+                      <div className="text-sm text-gray-300 mb-1">COPEDU Bank</div>
+                      <div className="text-xl font-bold tracking-wide">
+                        {formatRWF(financialData.closingBalances?.copeduRWF || 0)}
                       </div>
                     </div>
                     <div className="p-4 bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 hover:bg-white/20 transition-colors">
                       <div className="text-sm text-gray-300 mb-1">Cash</div>
                       <div className="text-xl font-bold tracking-wide">
-                        {formatRWF(financialData.openingBalances?.cashRWF || 0)}
+                        {formatRWF(financialData.closingBalances?.cashRWF || 0)}
                       </div>
                     </div>
                   </div>
@@ -592,7 +631,7 @@ export default function UpgradedAccountantDashboard() {
                         .slice(0, 10)
                         .map((transaction) => {
                           const isIncome = financialData.income.includes(transaction);
-                          const amount = (transaction.mtnMomoRWF || 0) + (transaction.equityBankRWF || 0) + (transaction.bkBankRWF || 0) + (transaction.cashRWF || 0);
+                          const amount = (transaction.mtnMomoRWF || 0) + (transaction.equityBankRWF || 0) + (transaction.bkBankRWF || 0) + (transaction.bankOfAfricaRWF || 0) + (transaction.accessBankRWF || 0) + (transaction.copeduRWF || 0) + (transaction.cashRWF || 0);
                           return (
                             <tr key={`${isIncome ? 'income' : 'expense'}-${transaction.id}`} className="hover:bg-gray-50/50 transition-colors">
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">

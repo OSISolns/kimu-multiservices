@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INVOICE - INV-593250</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            line-height: 1.6;
+            background: #fff;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+
+        /* Header Section */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #f0f0f0;
+        }
+
+        .company-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #FF8C00 0%, #FFA500 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+        }
+
+        .company-details h1 {
+            color: #FF8C00;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .company-details .tagline {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 1px;
+        }
+
+        .company-details .subtitle {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .document-info {
+            text-align: right;
+        }
+
+        .document-info h2 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .document-info p {
+            font-size: 13px;
+            color: #666;
+            margin: 4px 0;
+        }
+
+        .document-info strong {
+            color: #333;
+        }
+
+        /* Parties Section */
+        .parties {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .party h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .party p {
+            font-size: 13px;
+            color: #555;
+            margin: 4px 0;
+        }
+
+        /* Service Description */
+        .service-description {
+            margin-bottom: 30px;
+        }
+
+        .service-description h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .service-description p {
+            font-size: 13px;
+            color: #555;
+        }
+
+        /* Items Table */
+        .items-section h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+
+        .items-table thead {
+            background: #FFD699;
+        }
+
+        .items-table th {
+            padding: 12px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .items-table th:last-child,
+        .items-table td:last-child {
+            text-align: right;
+        }
+
+        .items-table tbody tr {
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .items-table td {
+            padding: 12px;
+            font-size: 13px;
+            color: #555;
+        }
+
+        /* Totals Section */
+        .totals {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 40px;
+        }
+
+        .totals-table {
+            width: 350px;
+        }
+
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+
+        .totals-row.subtotal,
+        .totals-row.tax {
+            color: #555;
+        }
+
+        .totals-row.total {
+            background: #FFD699;
+            font-weight: 700;
+            font-size: 14px;
+            color: #333;
+            margin-top: 4px;
+        }
+
+        /* Status and Footer */
+        .status-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 30px 0;
+            border-top: 2px solid #f0f0f0;
+            margin-bottom: 30px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            background: #FFA500;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            border-radius: 4px;
+        }
+
+        .thank-you {
+            text-align: right;
+        }
+
+        .thank-you p {
+            font-size: 13px;
+            color: #555;
+            margin: 4px 0;
+        }
+
+        .thank-you p:first-child {
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* Payment Information */
+        .payment-info {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .payment-info h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .payment-method h4 {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 6px;
+        }
+
+        .payment-method p {
+            font-size: 12px;
+            color: #555;
+            margin: 3px 0;
+        }
+
+        .mobile-money {
+            grid-column: 1 / -1;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        /* Terms and Conditions */
+        .terms {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .terms h3 {
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .terms ul {
+            list-style-position: inside;
+            padding-left: 0;
+        }
+
+        .terms li {
+            font-size: 11px;
+            color: #555;
+            margin: 6px 0;
+            line-height: 1.5;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+            }
+
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="company-info">
+                <div class="logo">K</div>
+                <div class="company-details">
+                    <h1>KIMU</h1>
+                    <p class="tagline">Transport & Multiservices</p>
+                    <p class="subtitle">Your Trusted Travel Partner</p>
+                </div>
+            </div>
+            <div class="document-info">
+                <h2>INVOICE</h2>
+                <p><strong>Invoice #:</strong> INV-593250</p>
+                <p><strong>Date:</strong> 28/11/2025</p>
+                <p><strong>Due:</strong> 28/12/2025</p>
+            </div>
+        </div>
+
+        <!-- From and Bill To -->
+        <div class="parties">
+            <div class="party">
+                <h3>From:</h3>
+                <p><strong>KIMU Transport & Multiservices</strong></p>
+                <p>Gisozi, KG 9 780 St, Kigali, Rwanda</p>
+                <p>Email: kimutransport5@gmail.com</p>
+                <p>Phone: +250 788 284 312</p>
+                <p>Phone: +250 788 447 574</p>
+            </div>
+            <div class="party">
+                <h3>Bill To:</h3>
+                <p><strong>Eric Ndayambaje</strong></p>
+                <p>valery.ossoh@gmail.com</p>
+            </div>
+        </div>
+
+        <!-- Service Description -->
+        <div class="service-description">
+            <h3>Service Description:</h3>
+            <p>BYD</p>
+        </div>
+
+        <!-- Items -->
+        <div class="items-section">
+            <h3>Items:</h3>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Qty</th>
+                        <th>Unit Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>BYD</td>
+                        <td>1</td>
+                        <td>5,000,000 RWF</td>
+                        <td>5,000,000 RWF</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Totals -->
+        <div class="totals">
+            <div class="totals-table">
+                <div class="totals-row subtotal">
+                    <span>Subtotal:</span>
+                    <span>5,000,000 RWF</span>
+                </div>
+                <div class="totals-row tax">
+                    <span>Tax (18%):</span>
+                    <span>900,000 RWF</span>
+                </div>
+                <div class="totals-row total">
+                    <span>Total Amount:</span>
+                    <span>5,900,000 RWF</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status and Thank You -->
+        <div class="status-footer">
+            <div class="status">
+                <span class="status-badge">PENDING</span>
+            </div>
+            <div class="thank-you">
+                <p>Thank you for choosing KIMU!</p>
+                <p>For inquiries, contact us at kimutransport5@gmail.com</p>
+            </div>
+        </div>
+
+        <!-- Payment Information -->
+        <div class="payment-info">
+            <h3>Payment Information:</h3>
+            <div class="payment-methods">
+                <div class="payment-method">
+                    <h4>COPEDU Bank:</h4>
+                    <p>Account: KIMU Transport & Multiservices Ltd</p>
+                    <p>Account #: 10110/2016/4888</p>
+                </div>
+                <div class="payment-method">
+                    <h4>Equity Bank:</h4>
+                    <p>Account: KIMU Transport Multiservices Ltd</p>
+                    <p>Account #: 4019201113204</p>
+                </div>
+                <div class="payment-method">
+                    <h4>BK Bank:</h4>
+                    <p>Account: KIMU Transport Multiservices Ltd</p>
+                    <p>Account #: 100 1953 787 26</p>
+                </div>
+                <div class="payment-method mobile-money">
+                    <h4>Mobile Money:</h4>
+                    <p><strong>MOMO PAY:</strong> 627939 - Kimu Transport</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Terms and Conditions -->
+        <div class="terms">
+            <h3>Terms and Conditions:</h3>
+            <ul>
+                <li>Payment is due within 30 days from the invoice date unless otherwise agreed.</li>
+                <li>Late payments may incur additional charges as per our company policy.</li>
+                <li>All services are subject to availability and confirmation.</li>
+                <li>Cancellations must be made at least 24 hours in advance for a full refund.</li>
+                <li>KIMU Transport & Multiservices reserves the right to modify terms with prior notice.</li>
+                <li>For any disputes, the laws of Rwanda shall apply.</li>
+            </ul>
+        </div>
+    </div>
+</body>
+
+</html>

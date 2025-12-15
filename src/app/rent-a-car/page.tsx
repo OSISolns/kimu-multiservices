@@ -22,7 +22,7 @@ interface FormData {
 const getVehicleColor = (vehicleName: string, vehicleType: string) => {
   const name = vehicleName.toLowerCase();
   const type = vehicleType.toLowerCase();
-  
+
   // Color by vehicle type
   if (type.includes('suv') || type.includes('4x4')) {
     return {
@@ -32,7 +32,7 @@ const getVehicleColor = (vehicleName: string, vehicleType: string) => {
       shadow: 'shadow-red-200'
     };
   }
-  
+
   if (type.includes('sedan') || type.includes('saloon')) {
     return {
       bg: 'bg-blue-800',
@@ -41,7 +41,7 @@ const getVehicleColor = (vehicleName: string, vehicleType: string) => {
       shadow: 'shadow-blue-200'
     };
   }
-  
+
   if (type.includes('hatchback')) {
     return {
       bg: 'bg-gray-600',
@@ -50,7 +50,7 @@ const getVehicleColor = (vehicleName: string, vehicleType: string) => {
       shadow: 'shadow-gray-200'
     };
   }
-  
+
   if (type.includes('minivan') || type.includes('mpv')) {
     return {
       bg: 'bg-gray-400',
@@ -59,7 +59,7 @@ const getVehicleColor = (vehicleName: string, vehicleType: string) => {
       shadow: 'shadow-gray-200'
     };
   }
-  
+
   if (type.includes('pickup') || type.includes('truck')) {
     return {
       bg: 'bg-black',
@@ -68,7 +68,7 @@ const getVehicleColor = (vehicleName: string, vehicleType: string) => {
       shadow: 'shadow-gray-300'
     };
   }
-  
+
   // Color by specific vehicle model
   if (name.includes('toyota')) {
     if (name.includes('levin') || name.includes('corolla')) {
@@ -120,7 +120,7 @@ const getVehicleColor = (vehicleName: string, vehicleType: string) => {
       };
     }
   }
-  
+
   if (name.includes('kia')) {
     if (name.includes('sorento')) {
       return {
@@ -147,7 +147,7 @@ const getVehicleColor = (vehicleName: string, vehicleType: string) => {
       };
     }
   }
-  
+
   // Default color for unknown vehicles
   return {
     bg: 'bg-gray-600',
@@ -219,20 +219,20 @@ export default function RentCarForm() {
       .then(res => res.json())
       .then(data => {
         setVehicles(data);
-        
+
         // Check if there's a vehicle query parameter
         const urlParams = new URLSearchParams(window.location.search);
         const vehicleId = urlParams.get('vehicle');
         const brandParam = urlParams.get('brand');
-        
+
         if (brandParam) {
           // Filter vehicles by brand
-          const brandVehicles = data.filter((v: any) => 
+          const brandVehicles = data.filter((v: any) =>
             v.name?.toLowerCase().startsWith(brandParam.toLowerCase())
           );
           setFilteredVehicles(brandVehicles);
           setSelectedBrand(brandParam);
-          
+
           if (brandVehicles.length > 0) {
             // Auto-select first vehicle from brand
             const firstVehicle = brandVehicles[0];
@@ -338,10 +338,10 @@ export default function RentCarForm() {
         <div className="absolute top-20 left-10 w-40 h-40 bg-gradient-to-br from-blue-200/20 to-indigo-200/20 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute top-40 right-20 w-32 h-32 bg-gradient-to-br from-purple-200/20 to-pink-200/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
         <div className="absolute bottom-40 left-1/4 w-48 h-48 bg-gradient-to-br from-emerald-200/20 to-teal-200/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div>
-        
+
         {/* Subtle Grid Pattern */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
-        
+
         {/* Floating Elements */}
         <div className="absolute top-1/4 right-1/4 w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
         <div className="absolute top-1/3 left-1/3 w-1 h-1 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: '1s' }}></div>
@@ -358,11 +358,11 @@ export default function RentCarForm() {
               <div className="relative bg-white/80 backdrop-blur-md p-6 rounded-2xl shadow-xl border border-white/40 hover:shadow-2xl transition-all duration-500 transform hover:scale-105 overflow-hidden">
                 {/* Logo Shimmer Effect */}
                 <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out bg-gradient-to-r from-transparent via-white/30 to-transparent rounded-2xl"></div>
-                <Image src="/logo.png" alt="KIMU Transport" width={60} height={60} className="w-16 h-16 opacity-90 relative z-10" />
+                <Image src="/logo.png" alt="KIMU Transport" width={60} height={60} className="w-16 h-16 opacity-90 relative z-10" unoptimized />
               </div>
             </div>
           </div>
-          
+
           {/* Enhanced Title with Typography */}
           <div className="text-center mb-12 sm:mb-16">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-800 mb-6 tracking-tight leading-tight">
@@ -375,7 +375,7 @@ export default function RentCarForm() {
               Experience luxury and comfort with our premium fleet of vehicles. Book your perfect ride today.
             </p>
           </div>
-          
+
           {/* Enhanced Stats Cards with Sophisticated Design */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-4xl mx-auto">
             {[
@@ -387,7 +387,7 @@ export default function RentCarForm() {
               <div key={stat.label} className="group relative overflow-hidden bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-lg border border-white/50 hover:shadow-xl transition-all duration-500 transform hover:-translate-y-1 animate-fade-in" style={{ animationDelay: `${index * 200}ms` }}>
                 {/* Card Shimmer Effect */}
                 <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out bg-gradient-to-r from-transparent via-white/30 to-transparent rounded-2xl"></div>
-                
+
                 <div className="relative z-10 text-center">
                   <div className={`w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-3 bg-gradient-to-r ${stat.color} rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                     <stat.icon className="text-white text-lg sm:text-xl" />
@@ -420,7 +420,7 @@ export default function RentCarForm() {
             </div>
           </div>
         )}
-                  </div>
+      </div>
 
       {/* Enhanced Form Section */}
       <div className="relative z-10 pb-16 sm:pb-20 lg:pb-24">
@@ -538,7 +538,7 @@ export default function RentCarForm() {
                       </div>
                     </div>
                   ))}
-                  
+
                   {/* Brand Selection */}
                   <div className="group animate-fade-in" style={{ animationDelay: '900ms' }}>
                     <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
@@ -553,7 +553,7 @@ export default function RentCarForm() {
                           const brand = e.target.value;
                           setSelectedBrand(brand);
                           if (brand) {
-                            const brandVehicles = vehicles.filter((v: any) => 
+                            const brandVehicles = vehicles.filter((v: any) =>
                               v.name?.toLowerCase().startsWith(brand.toLowerCase())
                             );
                             setFilteredVehicles(brandVehicles);
@@ -611,24 +611,24 @@ export default function RentCarForm() {
               </div>
 
               {/* Selected Vehicle Display */}
-                {selectedVehicleDetails && (
+              {selectedVehicleDetails && (
                 <div className={`rounded-xl p-4 sm:p-6 border-2 shadow-lg ${getVehicleColor(selectedVehicleDetails.name, selectedVehicleDetails.type).border} bg-gradient-to-r from-gray-50 to-white animate-fade-in`}>
                   <div className="text-center mb-4">
                     <h3 className="text-xl font-bold text-gray-900 mb-2">Selected Vehicle</h3>
                     <p className="text-gray-600 text-sm">You have selected the following vehicle for your booking</p>
                   </div>
-                  
+
                   <div className="flex flex-col lg:flex-row items-start gap-6">
                     {/* Vehicle Image */}
                     <div className={`relative w-full lg:w-64 h-48 lg:h-64 rounded-xl overflow-hidden ${getVehicleColor(selectedVehicleDetails.name, selectedVehicleDetails.type).bg} flex items-center justify-center shadow-lg flex-shrink-0`}>
-                        <Image
-                          src={selectedVehicleDetails.image}
-                          alt={selectedVehicleDetails.name}
-                          fill
+                      <Image
+                        src={selectedVehicleDetails.image}
+                        alt={selectedVehicleDetails.name}
+                        fill
                         className="object-contain p-3"
-                        />
-                      </div>
-                      
+                      />
+                    </div>
+
                     {/* Vehicle Details */}
                     <div className="flex-1 space-y-4">
                       {/* Vehicle Name and Brand */}
@@ -640,7 +640,7 @@ export default function RentCarForm() {
                           {selectedVehicleDetails.category} • {selectedVehicleDetails.type} • {selectedVehicleDetails.year}
                         </p>
                       </div>
-                      
+
                       {/* Key Specifications */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <div className="bg-white rounded-lg p-3 text-center border border-gray-200 shadow-sm">
@@ -660,11 +660,11 @@ export default function RentCarForm() {
                           <div className="text-xs text-gray-600">Year</div>
                         </div>
                       </div>
-                      
+
                       {/* Pricing and License Plate */}
                       <div className="flex flex-wrap gap-3 items-center">
                         <div className={`inline-block px-4 py-2 rounded-full text-base font-bold ${getVehicleColor(selectedVehicleDetails.name, selectedVehicleDetails.type).bg} text-white shadow-md`}>
-                          {selectedVehicleDetails.price && !isNaN(parseInt(selectedVehicleDetails.price)) 
+                          {selectedVehicleDetails.price && !isNaN(parseInt(selectedVehicleDetails.price))
                             ? `${(parseInt(selectedVehicleDetails.price) * 1000).toLocaleString()} RWF/day`
                             : 'Contact for pricing'
                           }
@@ -675,7 +675,7 @@ export default function RentCarForm() {
                           </div>
                         )}
                       </div>
-                      
+
                       {/* Features */}
                       {selectedVehicleDetails.features && selectedVehicleDetails.features.length > 0 && (
                         <div>
@@ -689,7 +689,7 @@ export default function RentCarForm() {
                           </div>
                         </div>
                       )}
-                      
+
                       {/* Description */}
                       {selectedVehicleDetails.description && (
                         <div>
@@ -705,26 +705,26 @@ export default function RentCarForm() {
               {/* Terms Agreement */}
               <div className="animate-fade-in" style={{ animationDelay: '900ms' }}>
                 <label className="flex items-start group cursor-pointer">
-                    <input
-                      name="agreeToTerms"
-                      type="checkbox"
-                      checked={form.agreeToTerms}
-                      onChange={handleChange}
+                  <input
+                    name="agreeToTerms"
+                    type="checkbox"
+                    checked={form.agreeToTerms}
+                    onChange={handleChange}
                     className="w-4 h-4 text-blue-600 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 mt-1 group-hover:border-blue-400 transition-colors duration-200"
-                      required
-                    />
+                    required
+                  />
                   <span className="ml-3 text-sm text-gray-700 leading-relaxed group-hover:text-gray-800 transition-colors duration-200">
                     I agree to the <a href="/terms-and-conditions" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 font-medium hover:underline transition-colors duration-200">Terms and Conditions</a> and <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 font-medium hover:underline transition-colors duration-200">Privacy Policy</a> <span className="text-rose-500">*</span>
-                    </span>
-                  </label>
-                </div>
+                  </span>
+                </label>
+              </div>
 
               {/* Error Message */}
-            {errorMessage && (
+              {errorMessage && (
                 <div className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-xl text-center font-semibold text-sm animate-fade-in">
-                {errorMessage}
-              </div>
-            )}
+                  {errorMessage}
+                </div>
+              )}
 
               {/* Submit Button Section */}
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center pt-6 sm:pt-8 animate-fade-in" style={{ animationDelay: '1000ms' }}>
@@ -741,10 +741,10 @@ export default function RentCarForm() {
                     <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out bg-gradient-to-r from-transparent via-gray-200/50 to-transparent rounded-xl"></div>
                   </div>
                 )}
-                                <div className="relative overflow-hidden rounded-2xl">
-                <button
-                  type="submit"
-                disabled={loading}
+                <div className="relative overflow-hidden rounded-2xl">
+                  <button
+                    type="submit"
+                    disabled={loading}
                     className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-8 sm:px-12 py-4 rounded-2xl font-bold text-lg hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 transition-all duration-500 transform hover:scale-110 shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed border-2 border-transparent hover:border-white/20 relative z-10 w-full"
                   >
                     {loading ? (
@@ -755,26 +755,26 @@ export default function RentCarForm() {
                     ) : (
                       'Book Your Car'
                     )}
-                </button>
+                  </button>
                   {/* Button Shimmer Effect */}
                   <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-2xl"></div>
                 </div>
-            </div>
-          </form>
+              </div>
+            </form>
           </div>
         </div>
       </div>
 
       {/* Hotel Prompt Modal */}
-          {showHotelPrompt && (
-            <HotelPromptModal
-              onProceed={() => {
-                setShowHotelPrompt(false);
-                router.push('/offers?showHotel=true');
-              }}
-              onClose={() => setShowHotelPrompt(false)}
-            />
-          )}
+      {showHotelPrompt && (
+        <HotelPromptModal
+          onProceed={() => {
+            setShowHotelPrompt(false);
+            router.push('/offers?showHotel=true');
+          }}
+          onClose={() => setShowHotelPrompt(false)}
+        />
+      )}
     </div>
   );
 } 

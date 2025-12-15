@@ -15,7 +15,8 @@ const createUserSchema = z.object({
 export const POST = withValidation(createUserSchema, async (req: NextRequest, body) => {
   const adminUsername = req.headers.get('x-username');
   const admin = adminUsername ? await prisma.user.findUnique({ where: { username: adminUsername } }) : null;
-  if (!admin || admin.role !== 'admin') {
+
+  if (!admin || (admin.role !== 'admin' && admin.role !== 'accountant')) {
     return jsonError('Not authorized', 403);
   }
 
