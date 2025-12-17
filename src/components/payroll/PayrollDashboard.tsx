@@ -332,6 +332,8 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
         method: 'DELETE',
         headers: {
           'x-username': user.username,
+          'x-user-email': user.email || '',
+          'x-user-id': user.id?.toString() || '',
         },
       });
 
