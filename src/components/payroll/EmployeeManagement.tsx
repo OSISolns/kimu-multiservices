@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { FaEye, FaEdit, FaToggleOn, FaToggleOff, FaTrash } from 'react-icons/fa';
 import { Employee, CreateEmployeeData, UpdateEmployeeData } from '@/types/payroll';
 
 interface EmployeeManagementProps {
@@ -12,6 +13,8 @@ export default function EmployeeManagement({ user }: EmployeeManagementProps) {
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewingEmployee, setViewingEmployee] = useState<Employee | null>(null);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [isNewUser, setIsNewUser] = useState(false);
   const [formData, setFormData] = useState<CreateEmployeeData>({
@@ -169,6 +172,36 @@ export default function EmployeeManagement({ user }: EmployeeManagementProps) {
     }
   };
 
+  const handleView = (employee: Employee) => {
+    setViewingEmployee(employee);
+    setShowViewModal(true);
+  };
+
+  const handleToggleStatus = async (employee: Employee) => {
+    const newStatus = employee.status === 'active' ? 'inactive' : 'active';
+
+    try {
+      const response = await fetch(`/api/payroll/employees?id=${employee.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-username': user.username,
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        await fetchEmployees();
+      } else {
+        alert(data.error || 'Failed to update employee status');
+      }
+    } catch (error) {
+      console.error('Error updating employee status:', error);
+      alert('Failed to update employee status');
+    }
+  };
+
   const resetForm = () => {
     setIsNewUser(false);
     setFormData({
@@ -279,18 +312,39 @@ export default function EmployeeManagement({ user }: EmployeeManagementProps) {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button
-                    onClick={() => handleEdit(employee)}
-                    className="text-blue-600 hover:text-blue-900 mr-3"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(employee.id)}
-                    className="text-red-600 hover:text-red-900"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleView(employee)}
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="View Details"
+                    >
+                      <FaEye />
+                    </button>
+                    <button
+                      onClick={() => handleEdit(employee)}
+                      className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                      title="Edit"
+                    >
+                      <FaEdit />
+                    </button>
+                    <button
+                      onClick={() => handleToggleStatus(employee)}
+                      className={`p-2 rounded-lg transition-colors ${employee.status === 'active'
+                          ? 'text-green-600 hover:bg-green-50'
+                          : 'text-gray-600 hover:bg-gray-50'
+                        }`}
+                      title={employee.status === 'active' ? 'Deactivate' : 'Activate'}
+                    >
+                      {employee.status === 'active' ? <FaToggleOn /> : <FaToggleOff />}
+                    </button>
+                    <button
+                      onClick={() => handleDelete(employee.id)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete"
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -502,6 +556,139 @@ export default function EmployeeManagement({ user }: EmployeeManagementProps) {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Modal */}
+      {showViewModal && viewingEmployee && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Employee Details</h3>
+                <button
+                  onClick={() => {
+                    setShowViewModal(false);
+                    setViewingEmployee(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Employee ID</label>
+                    <p className="mt-1 text-sm text-gray-900">{viewingEmployee.employeeId}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Status</label>
+                    <span className={`mt-1 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${viewingEmployee.status === 'active'
+                        ? 'bg-green-100 text-green-800'
+                        : viewingEmployee.status === 'inactive'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                      {viewingEmployee.status}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                    <p className="mt-1 text-sm text-gray-900">
+                      {viewingEmployee.user?.fullName || viewingEmployee.user?.username || `${viewingEmployee.firstName} ${viewingEmployee.lastName}`}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Email</label>
+                    <p className="mt-1 text-sm text-gray-900">{viewingEmployee.user?.email || viewingEmployee.email}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Phone</label>
+                    <p className="mt-1 text-sm text-gray-900">{viewingEmployee.user?.phone || viewingEmployee.phone || '-'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Position</label>
+                    <p className="mt-1 text-sm text-gray-900">{viewingEmployee.position}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Department</label>
+                    <p className="mt-1 text-sm text-gray-900">{viewingEmployee.department}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Employment Type</label>
+                    <p className="mt-1 text-sm text-gray-900">{viewingEmployee.employmentType}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Hire Date</label>
+                    <p className="mt-1 text-sm text-gray-900">{new Date(viewingEmployee.hireDate).toLocaleDateString()}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Salary</label>
+                    <p className="mt-1 text-sm text-gray-900">{formatCurrency(viewingEmployee.salary)}</p>
+                  </div>
+                </div>
+
+                {viewingEmployee.bankName && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Bank Name</label>
+                      <p className="mt-1 text-sm text-gray-900">{viewingEmployee.bankName}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Bank Account</label>
+                      <p className="mt-1 text-sm text-gray-900">{viewingEmployee.bankAccount || '-'}</p>
+                    </div>
+                  </div>
+                )}
+
+                {viewingEmployee.taxId && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Tax ID</label>
+                      <p className="mt-1 text-sm text-gray-900">{viewingEmployee.taxId}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Social Security ID</label>
+                      <p className="mt-1 text-sm text-gray-900">{viewingEmployee.socialSecurityId || '-'}</p>
+                    </div>
+                  </div>
+                )}
+
+                {viewingEmployee.notes && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Notes</label>
+                    <p className="mt-1 text-sm text-gray-900">{viewingEmployee.notes}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end pt-4 mt-4 border-t">
+                <button
+                  onClick={() => {
+                    setShowViewModal(false);
+                    setViewingEmployee(null);
+                  }}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
