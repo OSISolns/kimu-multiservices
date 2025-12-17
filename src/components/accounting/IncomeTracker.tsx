@@ -446,7 +446,7 @@ export default function IncomeTracker({ onIncomeAdded }: IncomeTrackerProps) {
                       required
                       value={formData.category}
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-50 border-2border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all hover:border-gray-300"
+                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all hover:border-gray-300"
                     >
                       <option value="">Select Category</option>
                       {categories.map(cat => (
@@ -568,4 +568,5 @@ export default function IncomeTracker({ onIncomeAdded }: IncomeTrackerProps) {
     </div>
   );
 }
+
 
