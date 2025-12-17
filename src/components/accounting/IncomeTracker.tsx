@@ -421,7 +421,7 @@ export default function IncomeTracker({ onIncomeAdded }: IncomeTrackerProps) {
                         step="0.01"
                         required
                         value={formData.amount}
-                        onChange={(e) => setFormData({ ...formData.amount: e.target.value })}
+                        onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                       className="w-full pl-12 pr-16 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all font-semibold text-gray-900 hover:border-gray-300"
                       placeholder="0.00"
                       />
@@ -568,3 +568,4 @@ export default function IncomeTracker({ onIncomeAdded }: IncomeTrackerProps) {
     </div>
   );
 }
+
