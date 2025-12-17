@@ -497,7 +497,7 @@ export async function DELETE(req: NextRequest) {
       return jsonError('Not authenticated', 401);
     }
 
-    if (admin.role !== 'admin') {
+    if (admin.role !== 'admin' && admin.role !== 'accountant') {
       return jsonError('Not authorized', 403);
     }
 
