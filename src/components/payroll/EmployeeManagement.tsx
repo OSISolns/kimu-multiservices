@@ -88,13 +88,19 @@ export default function EmployeeManagement({ user }: EmployeeManagementProps) {
       }
 
       console.log('🔍 EmployeeManagement - User object:', user);
-      console.log('🔍 EmployeeManagement - User username:', user?.username);
+
+      if (!user?.username && !user?.email) {
+        alert('User session data is missing (no username or email). Please log out and log in again.');
+        return;
+      }
 
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
           'x-username': user?.username || '',
+          'x-user-email': user?.email || '',
+          'x-user-id': user?.id?.toString() || '',
         },
         body: JSON.stringify(payload),
       });

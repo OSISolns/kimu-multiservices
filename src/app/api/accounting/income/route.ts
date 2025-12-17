@@ -7,7 +7,7 @@ const incomeSchema = z.object({
   description: z.string().min(1, 'Description is required'),
   amount: z.number().positive('Amount must be positive'),
   category: z.enum(['car_rental', 'taxi_service', 'airport_transfer', 'hotel', 'car_sales', 'other']),
-  paymentMethod: z.enum(['MTN Momo', 'Equity Bank', 'BK Bank', 'Cash']),
+  paymentMethod: z.enum(['MTN Momo', 'Equity Bank', 'BK Bank', 'Bank of Africa', 'Access Bank', 'COPEDU', 'Cash']),
   date: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: "Invalid date format"
   }),

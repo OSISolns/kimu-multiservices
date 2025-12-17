@@ -24,6 +24,7 @@ const nextConfig = {
   experimental: {
     optimizeCss: true,
   },
+  transpilePackages: ['jspdf'],
   async rewrites() {
     return [
       {
@@ -31,6 +32,11 @@ const nextConfig = {
         destination: '/api/static/:path*',
       },
     ];
+  },
+  webpack: (config) => {
+    config.resolve.alias.canvas = false;
+    config.resolve.alias.jspdf = 'jspdf/dist/jspdf.umd.min.js';
+    return config;
   },
 }
 

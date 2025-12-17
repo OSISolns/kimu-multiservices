@@ -101,9 +101,13 @@ export const POST = withValidation(createEmployeeSchema, async (req: NextRequest
     // Get user from JWT token in cookies OR x-username header
     const token = req.cookies.get('auth-token')?.value;
     const usernameHeader = req.headers.get('x-username');
+    const userIdHeader = req.headers.get('x-user-id');
+    const emailHeader = req.headers.get('x-user-email');
 
     console.log('🔍 Payroll Employee Creation - Auth token present:', !!token);
     console.log('🔍 Payroll Employee Creation - Username header:', usernameHeader);
+    console.log('🔍 Payroll Employee Creation - Email header:', emailHeader);
+    console.log('🔍 Payroll Employee Creation - User ID header:', userIdHeader);
 
     let admin;
 
@@ -131,19 +135,50 @@ export const POST = withValidation(createEmployeeSchema, async (req: NextRequest
       }
     }
 
+    if (!admin && userIdHeader) {
+      console.log('⚠️ Payroll Employee Creation - Falling back to x-user-id header auth');
+      admin = await prisma.user.findUnique({
+        where: { id: parseInt(userIdHeader) },
+        select: { id: true, username: true, role: true }
+      });
+    }
+
     if (!admin && usernameHeader) {
       console.log('⚠️ Payroll Employee Creation - Falling back to x-username header auth');
+      // Try exact match first
       admin = await prisma.user.findUnique({
         where: { username: usernameHeader },
+        select: { id: true, username: true, role: true }
+      });
+
+      // If not found, try case-insensitive match
+      if (!admin) {
+        admin = await prisma.user.findFirst({
+          where: { username: { equals: usernameHeader } },
+          select: { id: true, username: true, role: true }
+        });
+      }
+    }
+
+    if (!admin && emailHeader) {
+      console.log('⚠️ Payroll Employee Creation - Falling back to x-user-email header auth');
+      admin = await prisma.user.findFirst({
+        where: { email: emailHeader },
         select: { id: true, username: true, role: true }
       });
     }
 
     console.log('🔍 Payroll Employee Creation - User found:', admin ? { username: admin.username, role: admin.role } : 'null');
 
-    if (!admin || (admin.role !== 'admin' && admin.role !== 'accountant')) {
-      console.log('❌ Payroll Employee Creation - Authorization failed. Role:', admin?.role || 'no user');
-      return jsonError('Not authorized', 403);
+    if (!admin) {
+      console.log('❌ Payroll Employee Creation - Authentication failed.');
+      return jsonError(`Not authenticated. Debug: u='${usernameHeader}', e='${emailHeader}', id='${userIdHeader}', t=${!!token}`, 401);
+    }
+
+    if (admin.role !== 'admin' && admin.role !== 'accountant') {
+      console.log('❌ Payroll Employee Creation - Authorization failed.');
+      console.log('   User found:', `${admin.username} (${admin.role})`);
+      return jsonError(`Not authorized. User: ${admin.username}, Role: ${admin.role}`, 403);
     }
     console.log('✅ Payroll Employee Creation - Authorization passed');
 
@@ -169,9 +204,13 @@ export const POST = withValidation(createEmployeeSchema, async (req: NextRequest
       }
     }
 
+    // Exclude fields that don't exist in the Employee model
+    const { workingHours, hourlyRate, userId, ...employeeData } = data;
+
     const employee = await prisma.employee.create({
       data: {
-        ...data,
+        ...employeeData,
+        userId: userId ?? null,
         salaryStructures: {
           create: {
             baseSalary: data.salary,
@@ -208,6 +247,7 @@ export async function PUT(req: NextRequest) {
     // Get user from JWT token in cookies OR x-username header
     const token = req.cookies.get('auth-token')?.value;
     const usernameHeader = req.headers.get('x-username');
+    const emailHeader = req.headers.get('x-user-email');
 
     let admin;
 
@@ -234,8 +274,24 @@ export async function PUT(req: NextRequest) {
     }
 
     if (!admin && usernameHeader) {
+      // Try exact match first
       admin = await prisma.user.findUnique({
         where: { username: usernameHeader },
+        select: { id: true, username: true, role: true }
+      });
+
+      // If not found, try case-insensitive match
+      if (!admin) {
+        admin = await prisma.user.findFirst({
+          where: { username: { equals: usernameHeader } },
+          select: { id: true, username: true, role: true }
+        });
+      }
+    }
+
+    if (!admin && emailHeader) {
+      admin = await prisma.user.findFirst({
+        where: { email: emailHeader },
         select: { id: true, username: true, role: true }
       });
     }
@@ -244,7 +300,7 @@ export async function PUT(req: NextRequest) {
       return jsonError('Not authenticated', 401);
     }
 
-    if (!admin || (admin.role !== 'admin' && admin.role !== 'accountant')) {
+    if (admin.role !== 'admin' && admin.role !== 'accountant') {
       return jsonError('Not authorized', 403);
     }
 
@@ -287,6 +343,7 @@ export async function DELETE(req: NextRequest) {
     // Get user from JWT token in cookies OR x-username header
     const token = req.cookies.get('auth-token')?.value;
     const usernameHeader = req.headers.get('x-username');
+    const emailHeader = req.headers.get('x-user-email');
 
     let admin;
 
@@ -313,8 +370,24 @@ export async function DELETE(req: NextRequest) {
     }
 
     if (!admin && usernameHeader) {
+      // Try exact match first
       admin = await prisma.user.findUnique({
         where: { username: usernameHeader },
+        select: { id: true, username: true, role: true }
+      });
+
+      // If not found, try case-insensitive match
+      if (!admin) {
+        admin = await prisma.user.findFirst({
+          where: { username: { equals: usernameHeader } },
+          select: { id: true, username: true, role: true }
+        });
+      }
+    }
+
+    if (!admin && emailHeader) {
+      admin = await prisma.user.findFirst({
+        where: { email: emailHeader },
         select: { id: true, username: true, role: true }
       });
     }
@@ -323,7 +396,7 @@ export async function DELETE(req: NextRequest) {
       return jsonError('Not authenticated', 401);
     }
 
-    if (!admin || admin.role !== 'admin') {
+    if (admin.role !== 'admin') {
       return jsonError('Not authorized', 403);
     }
 
