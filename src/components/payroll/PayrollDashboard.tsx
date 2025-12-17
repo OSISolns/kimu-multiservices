@@ -581,13 +581,6 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
                               <FaEye />
                             </button>
                             <button
-                              onClick={() => handleEditEmployee(employee)}
-                              className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                              title="Edit"
-                            >
-                              <FaEdit />
-                            </button>
-                            <button
                               onClick={() => handleToggleEmployeeStatus(employee)}
                               className={`p-2 rounded-lg transition-colors ${employee.status === 'active'
                                 ? 'text-green-600 hover:bg-green-50'
@@ -1093,6 +1086,144 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* View Employee Modal */}
+      {showViewEmployeeModal && viewingEmployee && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Employee Details</h3>
+                <button
+                  onClick={() => {
+                    setShowViewEmployeeModal(false);
+                    setViewingEmployee(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Employee ID</label>
+                    <p className="mt-1 text-sm text-gray-900">{viewingEmployee.employeeId}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Status</label>
+                    <span className={`mt-1 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${viewingEmployee.status === 'active'
+                      ? 'bg-green-100 text-green-800'
+                      : viewingEmployee.status === 'inactive'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-red-100 text-red-800'
+                      }`}>
+                      {viewingEmployee.status}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                    <p className="mt-1 text-sm text-gray-900">
+                      {viewingEmployee.user?.fullName || viewingEmployee.user?.username || `${viewingEmployee.firstName} ${viewingEmployee.lastName}`}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Email</label>
+                    <p className="mt-1 text-sm text-gray-900">{viewingEmployee.user?.email || viewingEmployee.email}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Phone</label>
+                    <p className="mt-1 text-sm text-gray-900">{viewingEmployee.user?.phone || viewingEmployee.phone || '-'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Position</label>
+                    <p className="mt-1 text-sm text-gray-900">{viewingEmployee.position}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Department</label>
+                    <p className="mt-1 text-sm text-gray-900">{viewingEmployee.department}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Employment Type</label>
+                    <p className="mt-1 text-sm text-gray-900">{viewingEmployee.employmentType}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Hire Date</label>
+                    <p className="mt-1 text-sm text-gray-900">{new Date(viewingEmployee.hireDate).toLocaleDateString()}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Salary</label>
+                    <p className="mt-1 text-sm text-gray-900">{formatCurrency(viewingEmployee.salary)}</p>
+                  </div>
+                </div>
+
+                {viewingEmployee.bankName && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Bank Name</label>
+                      <p className="mt-1 text-sm text-gray-900">{viewingEmployee.bankName}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Bank Account</label>
+                      <p className="mt-1 text-sm text-gray-900">{viewingEmployee.bankAccount || '-'}</p>
+                    </div>
+                  </div>
+                )}
+
+                {viewingEmployee.socialSecurityId && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Social Security ID</label>
+                      <p className="mt-1 text-sm text-gray-900">{viewingEmployee.socialSecurityId}</p>
+                    </div>
+                  </div>
+                )}
+
+                {viewingEmployee.notes && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Notes</label>
+                    <p className="mt-1 text-sm text-gray-900">{viewingEmployee.notes}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-between pt-4 mt-4 border-t">
+                <button
+                  onClick={() => {
+                    setShowViewEmployeeModal(false);
+                    handleEditEmployee(viewingEmployee);
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
+                >
+                  <FaEdit /> Edit
+                </button>
+                <button
+                  onClick={() => {
+                    setShowViewEmployeeModal(false);
+                    setViewingEmployee(null);
+                  }}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
