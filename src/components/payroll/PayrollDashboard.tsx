@@ -736,220 +736,259 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
 
       {/* Add Employee Modal */}
       {showAddEmployeeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
-              <h3 className="text-lg font-bold text-gray-900">
-                {editingEmployee ? 'Edit Employee' : 'Add New Employee'}
-              </h3>
-              <button
-                onClick={() => setShowAddEmployeeModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <FaTimes />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateEmployee} className="p-6 space-y-4">
-
-              {/* User Selection Toggle */}
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-medium text-gray-700">Link System User?</span>
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm p-4 pt-12 animate-fadeIn overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all scale-100 my-8">
+            {/* Header with Gradient */}
+            <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-indigo-600">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                    <FaUserPlus className="text-white text-lg" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">
+                      {editingEmployee ? 'Edit Employee' : 'Add New Employee'}
+                    </h3>
+                    <p className="text-sm text-blue-100 mt-0.5">
+                      {editingEmployee ? 'Update employee information' : 'Register a new member to the payroll'}
+                    </p>
+                  </div>
+                </div>
                 <button
                   type="button"
-                  onClick={() => setIsNewUser(!isNewUser)}
-                  disabled={!!editingEmployee}
-                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${!isNewUser ? 'bg-blue-600' : 'bg-gray-200'
-                    } ${editingEmployee ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  onClick={() => setShowAddEmployeeModal(false)}
+                  className="text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-2 transition-all"
                 >
-                  <span
-                    aria-hidden="true"
-                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${!isNewUser ? 'translate-x-5' : 'translate-x-0'
-                      }`}
-                  />
+                  <FaTimes className="text-xl" />
                 </button>
               </div>
+            </div>
 
-              {!isNewUser ? (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Select User</label>
-                  <select
-                    required={!isNewUser}
-                    value={newEmployeeData.userId}
-                    onChange={(e) => setNewEmployeeData({ ...newEmployeeData, userId: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                  >
-                    <option value="">Select a user...</option>
-                    {usersForDropdown.map(u => (
-                      <option key={u.id} value={u.id}>
-                        {u.fullName || u.username} ({u.email})
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-gray-500 mt-1">Only users without employee records are shown.</p>
+            <form onSubmit={handleCreateEmployee} className="p-6 space-y-6">
+              {/* User Selection Section */}
+              <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                    <span className="text-sm font-bold text-blue-900 uppercase tracking-wider">System Integration</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-blue-800">Link System User?</span>
+                    <button
+                      type="button"
+                      onClick={() => setIsNewUser(!isNewUser)}
+                      disabled={!!editingEmployee}
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${!isNewUser ? 'bg-blue-600' : 'bg-gray-200'
+                        } ${editingEmployee ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${!isNewUser ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                      />
+                    </button>
+                  </div>
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                {!isNewUser ? (
+                  <div className="animate-fadeIn">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Select User Account</label>
+                    <select
+                      required={!isNewUser}
+                      value={newEmployeeData.userId}
+                      onChange={(e) => setNewEmployeeData({ ...newEmployeeData, userId: e.target.value })}
+                      className="w-full px-4 py-3 bg-white border-2 border-blue-100 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all hover:border-blue-200 shadow-sm"
+                    >
+                      <option value="">Select a user account...</option>
+                      {usersForDropdown.map(u => (
+                        <option key={u.id} value={u.id}>
+                          {u.fullName || u.username} ({u.email})
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-blue-600 mt-2 flex items-center gap-1">
+                      <FaExclamationTriangle className="text-[10px]" />
+                      Only users without existing employee records are listed.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fadeIn">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">First Name</label>
+                      <input
+                        type="text"
+                        required={isNewUser}
+                        value={newEmployeeData.firstName}
+                        onChange={(e) => setNewEmployeeData({ ...newEmployeeData, firstName: e.target.value })}
+                        className="w-full px-4 py-3 bg-white border-2 border-blue-100 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all hover:border-blue-200 shadow-sm"
+                        placeholder="First Name"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Last Name</label>
+                      <input
+                        type="text"
+                        required={isNewUser}
+                        value={newEmployeeData.lastName}
+                        onChange={(e) => setNewEmployeeData({ ...newEmployeeData, lastName: e.target.value })}
+                        className="w-full px-4 py-3 bg-white border-2 border-blue-100 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all hover:border-blue-200 shadow-sm"
+                        placeholder="Last Name"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                      <input
+                        type="email"
+                        required={isNewUser}
+                        value={newEmployeeData.email}
+                        onChange={(e) => setNewEmployeeData({ ...newEmployeeData, email: e.target.value })}
+                        className="w-full px-4 py-3 bg-white border-2 border-blue-100 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all hover:border-blue-200 shadow-sm"
+                        placeholder="email@example.com"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
+                      <input
+                        type="tel"
+                        value={newEmployeeData.phone}
+                        onChange={(e) => setNewEmployeeData({ ...newEmployeeData, phone: e.target.value })}
+                        className="w-full px-4 py-3 bg-white border-2 border-blue-100 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all hover:border-blue-200 shadow-sm"
+                        placeholder="+250 7XX XXX XXX"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Employment Details Section */}
+              <div className="space-y-4 pt-2">
+                <div className="flex items-center gap-2 text-sm font-bold text-gray-700 uppercase tracking-wider">
+                  <FaMoneyBillWave className="text-blue-600" />
+                  Employment & Payment Details
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Employee ID</label>
                     <input
                       type="text"
-                      required={isNewUser}
-                      value={newEmployeeData.firstName}
-                      onChange={(e) => setNewEmployeeData({ ...newEmployeeData, firstName: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                      required
+                      value={newEmployeeData.employeeId}
+                      readOnly
+                      className="w-full px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-xl text-gray-500 font-mono outline-none cursor-not-allowed"
+                      placeholder="KTMEMP001"
                     />
+                    <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-tight">System Generated</p>
                   </div>
+
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Position</label>
                     <input
                       type="text"
-                      required={isNewUser}
-                      value={newEmployeeData.lastName}
-                      onChange={(e) => setNewEmployeeData({ ...newEmployeeData, lastName: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                      required
+                      value={newEmployeeData.position}
+                      onChange={(e) => setNewEmployeeData({ ...newEmployeeData, position: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all hover:border-gray-300"
+                      placeholder="e.g. Senior Accountant"
                     />
                   </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Department</label>
                     <input
-                      type="email"
-                      required={isNewUser}
-                      value={newEmployeeData.email}
-                      onChange={(e) => setNewEmployeeData({ ...newEmployeeData, email: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                      type="text"
+                      required
+                      value={newEmployeeData.department}
+                      onChange={(e) => setNewEmployeeData({ ...newEmployeeData, department: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all hover:border-gray-300"
+                      placeholder="e.g. Operations"
                     />
                   </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Employment Type</label>
+                    <select
+                      required
+                      value={newEmployeeData.employmentType}
+                      onChange={(e) => setNewEmployeeData({ ...newEmployeeData, employmentType: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all hover:border-gray-300"
+                    >
+                      <option value="full-time">Full Time</option>
+                      <option value="part-time">Part Time</option>
+                      <option value="contract">Contract</option>
+                      <option value="intern">Intern</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Hire Date</label>
                     <input
-                      type="tel"
-                      value={newEmployeeData.phone}
-                      onChange={(e) => setNewEmployeeData({ ...newEmployeeData, phone: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                      type="date"
+                      required
+                      value={newEmployeeData.hireDate}
+                      onChange={(e) => setNewEmployeeData({ ...newEmployeeData, hireDate: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all hover:border-gray-300"
                     />
                   </div>
-                </div>
-              )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
-                  <input
-                    type="text"
-                    required
-                    value={newEmployeeData.employeeId}
-                    readOnly
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 text-gray-600 cursor-not-allowed outline-none"
-                    placeholder="KTMEMP001"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Auto-generated</p>
-                </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Monthly Salary (RWF)</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        required
+                        value={newEmployeeData.salary}
+                        onChange={(e) => setNewEmployeeData({ ...newEmployeeData, salary: e.target.value })}
+                        className="w-full pl-4 pr-16 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-bold text-gray-900 hover:border-gray-300"
+                        placeholder="0.00"
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-semibold">RWF</span>
+                    </div>
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
-                  <input
-                    type="text"
-                    required
-                    value={newEmployeeData.position}
-                    onChange={(e) => setNewEmployeeData({ ...newEmployeeData, position: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                    placeholder="Position"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Bank Name</label>
+                    <input
+                      type="text"
+                      value={newEmployeeData.bankName}
+                      onChange={(e) => setNewEmployeeData({ ...newEmployeeData, bankName: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all hover:border-gray-300"
+                      placeholder="e.g. Bank of Kigali"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                  <input
-                    type="text"
-                    required
-                    value={newEmployeeData.department}
-                    onChange={(e) => setNewEmployeeData({ ...newEmployeeData, department: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                    placeholder="Department"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Bank Account</label>
+                    <input
+                      type="text"
+                      value={newEmployeeData.bankAccount}
+                      onChange={(e) => setNewEmployeeData({ ...newEmployeeData, bankAccount: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all hover:border-gray-300 font-mono"
+                      placeholder="Account Number"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Employment Type</label>
-                  <select
-                    required
-                    value={newEmployeeData.employmentType}
-                    onChange={(e) => setNewEmployeeData({ ...newEmployeeData, employmentType: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                  >
-                    <option value="full-time">Full Time</option>
-                    <option value="part-time">Part Time</option>
-                    <option value="contract">Contract</option>
-                    <option value="intern">Intern</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Hire Date</label>
-                  <input
-                    type="date"
-                    required
-                    value={newEmployeeData.hireDate}
-                    onChange={(e) => setNewEmployeeData({ ...newEmployeeData, hireDate: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Salary (RWF)</label>
-                  <input
-                    type="number"
-                    required
-                    value={newEmployeeData.salary}
-                    onChange={(e) => setNewEmployeeData({ ...newEmployeeData, salary: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                    placeholder="0.00"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Bank Name <span className="text-gray-400 font-normal">(Optional)</span></label>
-                  <input
-                    type="text"
-                    value={newEmployeeData.bankName}
-                    onChange={(e) => setNewEmployeeData({ ...newEmployeeData, bankName: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                    placeholder="Bank of Kigali"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Bank Account <span className="text-gray-400 font-normal">(Optional)</span></label>
-                  <input
-                    type="text"
-                    value={newEmployeeData.bankAccount}
-                    onChange={(e) => setNewEmployeeData({ ...newEmployeeData, bankAccount: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                    placeholder="Account Number"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Social Security ID (RSSB) <span className="text-gray-400 font-normal">(Optional)</span></label>
-                  <input
-                    type="text"
-                    value={newEmployeeData.socialSecurityId}
-                    onChange={(e) => setNewEmployeeData({ ...newEmployeeData, socialSecurityId: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                    placeholder="RSSB Number"
-                  />
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Social Security ID (RSSB)</label>
+                    <input
+                      type="text"
+                      value={newEmployeeData.socialSecurityId}
+                      onChange={(e) => setNewEmployeeData({ ...newEmployeeData, socialSecurityId: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all hover:border-gray-300"
+                      placeholder="RSSB identification number"
+                    />
+                  </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Additional Notes</label>
                 <textarea
                   value={newEmployeeData.notes}
                   onChange={(e) => setNewEmployeeData({ ...newEmployeeData, notes: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                  placeholder="Additional notes..."
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all hover:border-gray-300 resize-none"
+                  placeholder="Internal notes about employment terms, etc."
                 />
               </div>
 
@@ -957,21 +996,26 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
                 <button
                   type="button"
                   onClick={() => setShowAddEmployeeModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+                  className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold transition-all active:scale-95"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:bg-gray-400 transition-colors font-medium flex items-center justify-center gap-2"
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg shadow-blue-500/30 hover:from-blue-700 hover:to-indigo-700 font-semibold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
                     <>
                       <FaSpinner className="animate-spin" />
                       {editingEmployee ? 'Updating...' : 'Adding...'}
                     </>
-                  ) : (editingEmployee ? 'Update Employee' : 'Add Employee')}
+                  ) : (
+                    <>
+                      <FaCheckCircle />
+                      {editingEmployee ? 'Update Employee' : 'Add Employee'}
+                    </>
+                  )}
                 </button>
               </div>
             </form>
@@ -981,46 +1025,63 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
 
       {/* Process Payroll Modal */}
       {showProcessPayrollModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-gray-900">Process Payroll</h3>
-              <button
-                onClick={() => setShowProcessPayrollModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <FaTimes />
-              </button>
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm p-4 pt-12 animate-fadeIn overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all scale-100 my-8">
+            {/* Header with Gradient */}
+            <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-indigo-600">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                    <FaMoneyBillWave className="text-white text-lg" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">Process Payroll</h3>
+                    <p className="text-sm text-blue-100 mt-0.5">Generate salary records for selected period</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowProcessPayrollModal(false)}
+                  className="text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-2 transition-all"
+                >
+                  <FaTimes className="text-xl" />
+                </button>
+              </div>
             </div>
 
-            <form onSubmit={handleProcessPayrollSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Payroll Period</label>
-                <input
-                  type="month"
-                  required
-                  value={processPayrollData.period}
-                  onChange={(e) => setProcessPayrollData({ ...processPayrollData, period: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                />
+            <form onSubmit={handleProcessPayrollSubmit} className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Payroll Period</label>
+                  <input
+                    type="month"
+                    required
+                    value={processPayrollData.period}
+                    onChange={(e) => setProcessPayrollData({ ...processPayrollData, period: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all hover:border-gray-300 shadow-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Working Days</label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    max="31"
+                    value={processPayrollData.workingDays}
+                    onChange={(e) => setProcessPayrollData({ ...processPayrollData, workingDays: parseInt(e.target.value) })}
+                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all hover:border-gray-300 shadow-sm"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Working Days</label>
-                <input
-                  type="number"
-                  required
-                  min="1"
-                  max="31"
-                  value={processPayrollData.workingDays}
-                  onChange={(e) => setProcessPayrollData({ ...processPayrollData, workingDays: parseInt(e.target.value) })}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="block text-sm font-medium text-gray-700">Select Employees</label>
+              <div className="space-y-3">
+                <div className="flex justify-between items-end mb-1">
+                  <div className="flex items-center gap-2 text-sm font-bold text-gray-700 uppercase tracking-wider">
+                    <FaUserPlus className="text-blue-600" />
+                    Select Employees
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
@@ -1031,54 +1092,69 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
                         selectedEmployeeIds: newSelectAll ? activeEmployees.map(e => e.id) : []
                       });
                     }}
-                    className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                    className="text-xs text-blue-600 hover:text-blue-800 font-bold bg-blue-50 px-2.5 py-1.5 rounded-lg transition-colors border border-blue-100"
                   >
                     {processPayrollData.selectAll ? 'Deselect All' : 'Select All'}
                   </button>
                 </div>
-                <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-xl p-2 space-y-1">
+
+                <div className="max-h-56 overflow-y-auto border-2 border-gray-100 rounded-2xl p-2 space-y-1 bg-gray-50/50">
                   {activeEmployees.length === 0 ? (
-                    <p className="text-sm text-gray-500 text-center py-4">No active employees found.</p>
+                    <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+                      <FaExclamationTriangle className="text-2xl mb-2" />
+                      <p className="text-sm font-medium">No active employees found.</p>
+                    </div>
                   ) : (
                     activeEmployees.map(employee => (
-                      <label key={employee.id} className="flex items-center p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={processPayrollData.selectedEmployeeIds.includes(employee.id)}
-                          onChange={(e) => {
-                            const newSelected = e.target.checked
-                              ? [...processPayrollData.selectedEmployeeIds, employee.id]
-                              : processPayrollData.selectedEmployeeIds.filter(id => id !== employee.id);
+                      <label
+                        key={employee.id}
+                        className={`flex items-center p-3 rounded-xl cursor-pointer transition-all border-2 ${processPayrollData.selectedEmployeeIds.includes(employee.id)
+                          ? 'bg-blue-50 border-blue-200'
+                          : 'bg-white border-transparent hover:border-gray-200'
+                          }`}
+                      >
+                        <div className="relative flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={processPayrollData.selectedEmployeeIds.includes(employee.id)}
+                            onChange={(e) => {
+                              const newSelected = e.target.checked
+                                ? [...processPayrollData.selectedEmployeeIds, employee.id]
+                                : processPayrollData.selectedEmployeeIds.filter(id => id !== employee.id);
 
-                            setProcessPayrollData({
-                              ...processPayrollData,
-                              selectedEmployeeIds: newSelected,
-                              selectAll: newSelected.length === activeEmployees.length
-                            });
-                          }}
-                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-gray-300"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">
-                          {employee.user?.fullName || employee.user?.username || `${employee.firstName} ${employee.lastName}`}
-                          <span className="text-xs text-gray-500 ml-1">({employee.position})</span>
-                        </span>
+                              setProcessPayrollData({
+                                ...processPayrollData,
+                                selectedEmployeeIds: newSelected,
+                                selectAll: newSelected.length === activeEmployees.length
+                              });
+                            }}
+                            className="w-5 h-5 text-blue-600 rounded-lg focus:ring-blue-500 border-gray-300 cursor-pointer"
+                          />
+                        </div>
+                        <div className="ml-3">
+                          <p className={`text-sm font-bold ${processPayrollData.selectedEmployeeIds.includes(employee.id) ? 'text-blue-900' : 'text-gray-700'}`}>
+                            {employee.user?.fullName || employee.user?.username || `${employee.firstName} ${employee.lastName}`}
+                          </p>
+                          <p className="text-xs text-gray-500 font-medium">{employee.position} • {employee.department}</p>
+                        </div>
                       </label>
                     ))
                   )}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Selected: {processPayrollData.selectedEmployeeIds.length} employees
-                </p>
+                <div className="flex justify-between items-center text-xs font-bold uppercase tracking-wider text-gray-400 px-1">
+                  <span>Selected</span>
+                  <span className="text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{processPayrollData.selectedEmployeeIds.length} employees</span>
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Internal Notes (Optional)</label>
                 <textarea
                   value={processPayrollData.notes}
                   onChange={(e) => setProcessPayrollData({ ...processPayrollData, notes: e.target.value })}
                   rows={2}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                  placeholder="Payroll notes..."
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all hover:border-gray-300 resize-none shadow-sm"
+                  placeholder="Additional information for this payroll run..."
                 />
               </div>
 
@@ -1086,16 +1162,16 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
                 <button
                   type="button"
                   onClick={() => setShowProcessPayrollModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+                  className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold transition-all active:scale-95"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting || processPayrollData.selectedEmployeeIds.length === 0}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-lg shadow-blue-500/30 transition-all active:scale-95 font-medium flex justify-center items-center gap-2"
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg shadow-blue-500/30 hover:from-blue-700 hover:to-indigo-700 font-semibold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {isSubmitting && <FaSpinner className="animate-spin" />}
+                  {isSubmitting ? <FaSpinner className="animate-spin" /> : <FaCheckCircle />}
                   Process Payroll
                 </button>
               </div>
@@ -1106,133 +1182,150 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
 
       {/* View Employee Modal */}
       {showViewEmployeeModal && viewingEmployee && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Employee Details</h3>
-                <button
-                  onClick={() => {
-                    setShowViewEmployeeModal(false);
-                    setViewingEmployee(null);
-                  }}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <FaTimes />
-                </button>
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm p-4 pt-12 animate-fadeIn overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden transform transition-all scale-100 my-8">
+            {/* Header with Gradient */}
+            <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-blue-500 to-indigo-600">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                    <FaEye className="text-white text-xl" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">Employee Profile</h3>
+                    <p className="text-sm text-blue-100 mt-0.5">Reference ID: {viewingEmployee.employeeId}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={`px-3 py-1 text-xs font-black uppercase tracking-widest rounded-full border-2 ${viewingEmployee.status === 'active'
+                      ? 'bg-green-500/20 text-white border-green-400'
+                      : 'bg-red-500/20 text-white border-red-400'
+                    }`}>
+                    {viewingEmployee.status}
+                  </span>
+                  <button
+                    onClick={() => {
+                      setShowViewEmployeeModal(false);
+                      setViewingEmployee(null);
+                    }}
+                    className="text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-2 transition-all"
+                  >
+                    <FaTimes className="text-xl" />
+                  </button>
+                </div>
               </div>
+            </div>
 
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Employee ID</label>
-                    <p className="mt-1 text-sm text-gray-900">{viewingEmployee.employeeId}</p>
+            <div className="p-6 space-y-6 bg-gray-50/30">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Personal & Contact Information */}
+                <div className="bg-white p-5 rounded-2xl border-2 border-gray-100 shadow-sm space-y-4">
+                  <div className="flex items-center gap-2 text-xs font-black text-blue-600 uppercase tracking-[0.2em]">
+                    Personal Information
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Status</label>
-                    <span className={`mt-1 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${viewingEmployee.status === 'active'
-                      ? 'bg-green-100 text-green-800'
-                      : viewingEmployee.status === 'inactive'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-red-100 text-red-800'
-                      }`}>
-                      {viewingEmployee.status}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Full Name</label>
-                    <p className="mt-1 text-sm text-gray-900">
-                      {viewingEmployee.user?.fullName || viewingEmployee.user?.username || `${viewingEmployee.firstName} ${viewingEmployee.lastName}`}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Email</label>
-                    <p className="mt-1 text-sm text-gray-900">{viewingEmployee.user?.email || viewingEmployee.email}</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Phone</label>
-                    <p className="mt-1 text-sm text-gray-900">{viewingEmployee.user?.phone || viewingEmployee.phone || '-'}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Position</label>
-                    <p className="mt-1 text-sm text-gray-900">{viewingEmployee.position}</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Department</label>
-                    <p className="mt-1 text-sm text-gray-900">{viewingEmployee.department}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Employment Type</label>
-                    <p className="mt-1 text-sm text-gray-900">{viewingEmployee.employmentType}</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Hire Date</label>
-                    <p className="mt-1 text-sm text-gray-900">{new Date(viewingEmployee.hireDate).toLocaleDateString()}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Salary</label>
-                    <p className="mt-1 text-sm text-gray-900">{formatCurrency(viewingEmployee.salary)}</p>
-                  </div>
-                </div>
-
-                {viewingEmployee.bankName && (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-4 pt-2">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Bank Name</label>
-                      <p className="mt-1 text-sm text-gray-900">{viewingEmployee.bankName}</p>
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Full Name</label>
+                      <p className="text-lg font-black text-gray-900 leading-tight">
+                        {viewingEmployee.user?.fullName || viewingEmployee.user?.username || `${viewingEmployee.firstName} ${viewingEmployee.lastName}`}
+                      </p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Bank Account</label>
-                      <p className="mt-1 text-sm text-gray-900">{viewingEmployee.bankAccount || '-'}</p>
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Email Address</label>
+                      <p className="font-bold text-gray-700">{viewingEmployee.user?.email || viewingEmployee.email}</p>
                     </div>
-                  </div>
-                )}
-
-                {viewingEmployee.socialSecurityId && (
-                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Social Security ID</label>
-                      <p className="mt-1 text-sm text-gray-900">{viewingEmployee.socialSecurityId}</p>
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Phone</label>
+                      <p className="font-bold text-gray-700">{viewingEmployee.user?.phone || viewingEmployee.phone || '-'}</p>
                     </div>
                   </div>
-                )}
+                </div>
 
+                {/* Job & Department Details */}
+                <div className="bg-white p-5 rounded-2xl border-2 border-gray-100 shadow-sm space-y-4">
+                  <div className="flex items-center gap-2 text-xs font-black text-blue-600 uppercase tracking-[0.2em]">
+                    Position Details
+                  </div>
+                  <div className="space-y-4 pt-2">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Position</label>
+                        <p className="font-bold text-gray-900">{viewingEmployee.position}</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Department</label>
+                        <p className="font-bold text-gray-900">{viewingEmployee.department}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Employment</label>
+                        <p className="text-sm font-bold text-gray-900 capitalize px-2 py-0.5 bg-gray-100 rounded inline-block">
+                          {viewingEmployee.employmentType.replace('-', ' ')}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Hire Date</label>
+                        <p className="font-bold text-gray-900">{new Date(viewingEmployee.hireDate).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Financial & Payment Information */}
+                <div className="bg-white p-5 rounded-2xl border-2 border-gray-100 shadow-sm md:col-span-2 space-y-4">
+                  <div className="flex items-center gap-2 text-xs font-black text-green-600 uppercase tracking-[0.2em]">
+                    Financial & Banking Details
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                    <div className="bg-green-50 p-4 rounded-xl border border-green-100">
+                      <label className="text-[10px] font-black text-green-700 uppercase tracking-widest block mb-1">Monthly Salary</label>
+                      <p className="text-xl font-black text-green-900">{formatCurrency(viewingEmployee.salary)}</p>
+                    </div>
+                    <div className="md:col-span-2 space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Bank Name</label>
+                          <p className="font-bold text-gray-900">{viewingEmployee.bankName || '-'}</p>
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Bank Account</label>
+                          <p className="font-mono font-bold text-gray-900">{viewingEmployee.bankAccount || '-'}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Social Security ID (RSSB)</label>
+                        <p className="font-bold text-gray-900">{viewingEmployee.socialSecurityId || '-'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Notes */}
                 {viewingEmployee.notes && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Notes</label>
-                    <p className="mt-1 text-sm text-gray-900">{viewingEmployee.notes}</p>
+                  <div className="bg-gray-50/50 p-5 rounded-2xl border-2 border-dashed border-gray-200 md:col-span-2">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] block mb-2">Employment Notes</label>
+                    <p className="text-sm text-gray-600 italic leading-relaxed">"{viewingEmployee.notes}"</p>
                   </div>
                 )}
               </div>
 
-              <div className="flex justify-between pt-4 mt-4 border-t">
+              <div className="flex gap-4 pt-4 border-t border-gray-100">
                 <button
                   onClick={() => {
                     setShowViewEmployeeModal(false);
                     handleEditEmployee(viewingEmployee);
                   }}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
+                  className="flex-1 px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl hover:from-blue-700 hover:to-indigo-700 font-black uppercase tracking-widest shadow-xl shadow-blue-500/30 transition-all active:scale-95 flex items-center justify-center gap-3"
                 >
-                  <FaEdit /> Edit
+                  <FaEdit className="text-lg" /> Edit Employee File
                 </button>
                 <button
                   onClick={() => {
                     setShowViewEmployeeModal(false);
                     setViewingEmployee(null);
                   }}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                  className="px-8 py-4 bg-white border-2 border-gray-200 text-gray-600 rounded-2xl hover:bg-gray-50 font-black uppercase tracking-widest transition-all active:scale-95"
                 >
                   Close
                 </button>

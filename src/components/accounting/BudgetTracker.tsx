@@ -395,142 +395,170 @@ export default function BudgetTracker({ onBudgetUpdated }: BudgetTrackerProps) {
 
       {/* Add/Edit Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-gray-900">
-                {editingBudget ? 'Edit Budget' : 'Add New Budget'}
-              </h3>
-              <button
-                onClick={() => {
-                  setShowAddModal(false);
-                  resetForm();
-                }}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <FaTimes />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                <select
-                  required
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                >
-                  <option value="">Select Category</option>
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>
-                      {cat.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Amount (RWF)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  required
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                  placeholder="0.00"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Period</label>
-                  <select
-                    required
-                    value={formData.period}
-                    onChange={(e) => setFormData({ ...formData, period: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                  >
-                    {periods.map(period => (
-                      <option key={period} value={period}>{period.charAt(0).toUpperCase() + period.slice(1)}</option>
-                    ))}
-                  </select>
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm p-4 pt-12 animate-fadeIn overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden transform transition-all scale-100 my-8">
+            {/* Header with Gradient */}
+            <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-indigo-600">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                    <FaChartPie className="text-white text-lg" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">
+                      {editingBudget ? 'Edit Budget' : 'Add New Budget'}
+                    </h3>
+                    <p className="text-sm text-purple-100 mt-0.5">
+                      {editingBudget ? 'Update budget allocation' : 'Create a new business budget'}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
-                  <input
-                    type="number"
-                    required
-                    value={formData.year}
-                    onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                  />
-                </div>
-              </div>
-
-              {(formData.period === 'monthly' || formData.period === 'quarterly') && (
-                <div>
-                  {formData.period === 'monthly' ? (
-                    <>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Month</label>
-                      <select
-                        value={formData.month}
-                        onChange={(e) => setFormData({ ...formData, month: parseInt(e.target.value) })}
-                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                      >
-                        {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
-                          <option key={month} value={month}>
-                            {new Date(0, month - 1).toLocaleString('default', { month: 'long' })}
-                          </option>
-                        ))}
-                      </select>
-                    </>
-                  ) : (
-                    <>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Quarter</label>
-                      <select
-                        value={formData.quarter}
-                        onChange={(e) => setFormData({ ...formData, quarter: parseInt(e.target.value) })}
-                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                      >
-                        {Array.from({ length: 4 }, (_, i) => i + 1).map(quarter => (
-                          <option key={quarter} value={quarter}>Q{quarter}</option>
-                        ))}
-                      </select>
-                    </>
-                  )}
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                  placeholder="Add a note..."
-                />
-              </div>
-
-              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => {
                     setShowAddModal(false);
                     resetForm();
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+                  className="text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-2 transition-all"
+                >
+                  <FaTimes className="text-xl" />
+                </button>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                  <FaChartPie className="text-purple-600" />
+                  Budget Configuration
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Category</label>
+                    <select
+                      required
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all hover:border-gray-300 shadow-sm"
+                    >
+                      <option value="">Select Category</option>
+                      {categories.map(cat => (
+                        <option key={cat} value={cat}>
+                          {cat.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Budget Amount (RWF)</label>
+                    <div className="relative">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+                        <FaChartPie className="w-5 h-5" />
+                      </div>
+                      <input
+                        type="number"
+                        step="0.01"
+                        required
+                        value={formData.amount}
+                        onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                        className="w-full pl-12 pr-16 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all font-semibold text-gray-900 hover:border-gray-300"
+                        placeholder="0.00"
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-semibold">RWF</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Period</label>
+                    <select
+                      required
+                      value={formData.period}
+                      onChange={(e) => setFormData({ ...formData, period: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all hover:border-gray-300 shadow-sm"
+                    >
+                      {periods.map(period => (
+                        <option key={period} value={period}>{period.charAt(0).toUpperCase() + period.slice(1)}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Year</label>
+                    <input
+                      type="number"
+                      required
+                      value={formData.year}
+                      onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
+                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all hover:border-gray-300 shadow-sm"
+                    />
+                  </div>
+
+                  {(formData.period === 'monthly' || formData.period === 'quarterly') && (
+                    <div className="col-span-2">
+                      {formData.period === 'monthly' ? (
+                        <>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">Month</label>
+                          <select
+                            value={formData.month}
+                            onChange={(e) => setFormData({ ...formData, month: parseInt(e.target.value) })}
+                            className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all hover:border-gray-300 shadow-sm"
+                          >
+                            {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
+                              <option key={month} value={month}>
+                                {new Date(0, month - 1).toLocaleString('default', { month: 'long' })}
+                              </option>
+                            ))}
+                          </select>
+                        </>
+                      ) : (
+                        <>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">Quarter</label>
+                          <select
+                            value={formData.quarter}
+                            onChange={(e) => setFormData({ ...formData, quarter: parseInt(e.target.value) })}
+                            className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all hover:border-gray-300 shadow-sm"
+                          >
+                            {Array.from({ length: 4 }, (_, i) => i + 1).map(quarter => (
+                              <option key={quarter} value={quarter}>Q{quarter}</option>
+                            ))}
+                          </select>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Description (Optional)</label>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      rows={3}
+                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all resize-none hover:border-gray-300"
+                      placeholder="Add a note..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddModal(false);
+                    resetForm();
+                  }}
+                  className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold transition-all active:scale-95"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-lg shadow-blue-500/30 transition-all active:scale-95 font-medium flex justify-center items-center gap-2"
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 font-semibold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-purple-500/30"
                 >
-                  {isSubmitting && <FaSpinner className="animate-spin" />}
+                  {isSubmitting ? <FaSpinner className="animate-spin" /> : <FaCheckCircle />}
                   {editingBudget ? 'Update Budget' : 'Add Budget'}
                 </button>
               </div>
@@ -541,33 +569,55 @@ export default function BudgetTracker({ onBudgetUpdated }: BudgetTrackerProps) {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && deletingBudget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
-            <div className="p-6 text-center">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FaTrash className="text-red-600 text-2xl" />
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm p-4 pt-32 animate-fadeIn overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
+            <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-red-500 to-red-600 shadow-lg">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <FaTrash className="text-white text-xl" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Delete Budget</h3>
+                  <p className="text-red-100 text-sm">This action cannot be undone</p>
+                </div>
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Budget?</h3>
-              <p className="text-gray-500 text-sm mb-6">
-                Are you sure you want to delete the budget for <span className="font-medium text-gray-900">{deletingBudget.category}</span>? This action cannot be undone.
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div className="bg-gray-50 rounded-2xl p-5 border-2 border-gray-100 space-y-3">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500 font-medium uppercase tracking-wider text-xs">Category</span>
+                  <span className="font-bold text-gray-900">{deletingBudget.category.replace('_', ' ')}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm pt-2 border-t border-gray-200/50">
+                  <span className="text-gray-500 font-medium uppercase tracking-wider text-xs">Budgeted</span>
+                  <span className="font-black text-lg text-gray-900">
+                    {deletingBudget.amount.toLocaleString()} RWF
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-600 leading-relaxed text-center px-4">
+                Are you sure you want to delete the budget for <span className="font-bold text-gray-900">{deletingBudget.category}</span>? This will affect your budget tracking and variance reports.
               </p>
 
-              <div className="flex gap-3">
+              <div className="flex gap-3 pt-2">
                 <button
                   onClick={() => {
                     setShowDeleteModal(false);
                     setDeletingBudget(null);
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+                  className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold transition-all active:scale-95"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDelete}
                   disabled={isSubmitting}
-                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 shadow-lg shadow-red-500/30 transition-all active:scale-95 font-medium flex justify-center items-center gap-2"
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white rounded-xl shadow-lg shadow-red-500/30 transition-all transform active:scale-95 font-semibold flex items-center justify-center gap-2"
                 >
-                  {isSubmitting ? <FaSpinner className="animate-spin" /> : 'Delete'}
+                  {isSubmitting ? <FaSpinner className="animate-spin" /> : <FaTrash />}
+                  Delete
                 </button>
               </div>
             </div>

@@ -569,40 +569,40 @@ export default function UpgradedAccountantDashboard() {
                   <h3 className="text-lg font-bold text-gray-900 mb-6">Quick Actions</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <button
-                      onClick={() => setActiveTab('income')}
-                      className="flex flex-col items-center justify-center p-4 rounded-xl border border-gray-100 bg-white hover:border-green-200 hover:bg-green-50 hover:shadow-md transition-all duration-300 group"
+                      onClick={() => setActiveTab('expenses')}
+                      className="flex flex-col items-center justify-center p-6 rounded-3xl border-2 border-transparent bg-white hover:border-orange-200 hover:bg-orange-50 hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300 group"
                     >
-                      <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <FaPlus className="text-green-600 text-lg" />
+                      <div className="w-14 h-14 rounded-2xl bg-orange-100 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-sm">
+                        <FaMinus className="text-orange-600 text-xl" />
                       </div>
-                      <span className="text-sm font-semibold text-gray-700 group-hover:text-green-700">Add Income</span>
+                      <span className="text-xs font-black text-gray-700 uppercase tracking-widest group-hover:text-orange-700">Record Expense</span>
                     </button>
                     <button
-                      onClick={() => setActiveTab('expenses')}
-                      className="flex flex-col items-center justify-center p-4 rounded-xl border border-gray-100 bg-white hover:border-red-200 hover:bg-red-50 hover:shadow-md transition-all duration-300 group"
+                      onClick={() => setActiveTab('income')}
+                      className="flex flex-col items-center justify-center p-6 rounded-3xl border-2 border-transparent bg-white hover:border-emerald-200 hover:bg-emerald-50 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300 group"
                     >
-                      <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <FaMinus className="text-red-600 text-lg" />
+                      <div className="w-14 h-14 rounded-2xl bg-emerald-100 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-500 shadow-sm">
+                        <FaPlus className="text-emerald-600 text-xl" />
                       </div>
-                      <span className="text-sm font-semibold text-gray-700 group-hover:text-red-700">Add Expense</span>
+                      <span className="text-xs font-black text-gray-700 uppercase tracking-widest group-hover:text-emerald-700">Add Income</span>
                     </button>
                     <button
                       onClick={() => setActiveTab('invoices')}
-                      className="flex flex-col items-center justify-center p-4 rounded-xl border border-gray-100 bg-white hover:border-blue-200 hover:bg-blue-50 hover:shadow-md transition-all duration-300 group"
+                      className="flex flex-col items-center justify-center p-6 rounded-3xl border-2 border-transparent bg-white hover:border-blue-200 hover:bg-blue-50 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 group"
                     >
-                      <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <FaFileInvoiceDollar className="text-blue-600 text-lg" />
+                      <div className="w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-sm">
+                        <FaFileInvoiceDollar className="text-blue-600 text-xl" />
                       </div>
-                      <span className="text-sm font-semibold text-gray-700 group-hover:text-blue-700">New Invoice</span>
+                      <span className="text-xs font-black text-gray-700 uppercase tracking-widest group-hover:text-blue-700">New Invoice</span>
                     </button>
                     <button
                       onClick={() => setActiveTab('reports')}
-                      className="flex flex-col items-center justify-center p-4 rounded-xl border border-gray-100 bg-white hover:border-purple-200 hover:bg-purple-50 hover:shadow-md transition-all duration-300 group"
+                      className="flex flex-col items-center justify-center p-6 rounded-3xl border-2 border-transparent bg-white hover:border-purple-200 hover:bg-purple-50 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 group"
                     >
-                      <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <FaChartBar className="text-purple-600 text-lg" />
+                      <div className="w-14 h-14 rounded-2xl bg-purple-100 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-500 shadow-sm">
+                        <FaChartBar className="text-purple-600 text-xl" />
                       </div>
-                      <span className="text-sm font-semibold text-gray-700 group-hover:text-purple-700">View Reports</span>
+                      <span className="text-xs font-black text-gray-700 uppercase tracking-widest group-hover:text-purple-700">Reports</span>
                     </button>
                   </div>
                 </div>

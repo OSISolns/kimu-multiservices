@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/app/UserContext'
-import { FaCar, FaChartBar, FaDownload, FaFilter, FaCalendar, FaUsers, FaRoad, FaGasPump } from 'react-icons/fa'
+import { FaCar, FaChartBar, FaDownload, FaFilter, FaCalendar, FaUsers, FaRoad, FaGasPump, FaSpinner, FaTools, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 interface TransportReport {
   totalVehicles: number
@@ -71,7 +72,7 @@ export default function TransportReportsPage() {
       <html>
       <head>
         <meta charset="UTF-8">
-        <title>Transport Report - KIMU Multi-Services</title>
+        <title>Transport report - KIMU Multi-Services</title>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { font-family: Arial, sans-serif; padding: 40px; background: #fff; }
@@ -200,14 +201,7 @@ export default function TransportReportsPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading transport report...</p>
-        </div>
-      </div>
-    )
+    return <LoadingSpinner />;
   }
 
   if (!user || !['admin', 'transport-officer'].includes(user.role)) {
@@ -215,203 +209,237 @@ export default function TransportReportsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-8 px-4">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <FaChartBar className="text-blue-600 text-xl" />
+    <div className="min-h-screen bg-gray-50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed">
+      {/* Header with Glassmorphism */}
+      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-white/20 shadow-sm print:hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-r from-orange-600 to-amber-600 rounded-xl shadow-lg shadow-orange-500/30">
+                <FaCar className="text-white text-xl" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Transport Reports</h1>
-                <p className="text-gray-600">Vehicle fleet analytics and insights</p>
+                <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase">Transport Logistics</h1>
+                <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest opacity-60">Fleet Analytics & Intelligence</p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center space-x-3">
               <button
                 onClick={exportReport}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-2xl hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg shadow-emerald-500/30 text-xs font-black uppercase tracking-widest active:scale-95"
               >
                 <FaDownload />
-                Export Report
+                Export Data
               </button>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <FaFilter className="text-gray-500" />
-              <span className="font-medium text-gray-700">Filters:</span>
-            </div>
+      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        {/* Filters and Search Bar Container */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-[32px] shadow-sm border border-white/50 p-6 mb-8 flex flex-wrap items-center gap-6">
+          <div className="flex items-center gap-3 px-4 py-2 bg-gray-100/50 rounded-2xl border border-gray-100">
+            <FaFilter className="text-orange-500 text-xs" />
+            <span className="text-xs font-black text-gray-700 uppercase tracking-widest">Configuration</span>
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Time Period</label>
-              <select
-                value={dateRange}
-                onChange={(e) => setDateRange(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="7">Last 7 days</option>
-                <option value="30">Last 30 days</option>
-                <option value="90">Last 90 days</option>
-                <option value="365">Last year</option>
-              </select>
-            </div>
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Observational Period</label>
+            <select
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value)}
+              className="w-full px-4 py-2.5 bg-white border-2 border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all outline-none"
+            >
+              <option value="7">Last 7 Calendar Days</option>
+              <option value="30">Last 30 Calendar Days</option>
+              <option value="90">Fiscal Quarter View</option>
+              <option value="365">Annual Fleet Review</option>
+            </select>
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Report Type</label>
-              <select
-                value={reportType}
-                onChange={(e) => setReportType(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="overview">Overview</option>
-                <option value="maintenance">Maintenance</option>
-                <option value="utilization">Utilization</option>
-                <option value="performance">Performance</option>
-              </select>
-            </div>
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Analysis Perspective</label>
+            <select
+              value={reportType}
+              onChange={(e) => setReportType(e.target.value)}
+              className="w-full px-4 py-2.5 bg-white border-2 border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all outline-none"
+            >
+              <option value="overview">Executive Overview</option>
+              <option value="maintenance">Maintenance Health</option>
+              <option value="utilization">Operational Utilization</option>
+              <option value="performance">Engine Performance</option>
+            </select>
           </div>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <p className="text-red-600">{error}</p>
+          <div className="bg-rose-50 border-2 border-rose-100 rounded-2xl p-6 mb-8 animate-shake">
+            <div className="flex items-center gap-3">
+              <FaExclamationTriangle className="text-rose-600 text-xl" />
+              <p className="text-rose-700 font-bold uppercase tracking-tight">{error}</p>
+            </div>
           </div>
         )}
 
         {loading ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+          <div className="bg-white/80 backdrop-blur-sm rounded-[40px] shadow-sm border border-white/50 p-20">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Generating report...</p>
+              <FaSpinner className="animate-spin h-12 w-12 text-orange-600 mx-auto mb-6" />
+              <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight">Extracting Fleet Data</h3>
+              <p className="text-gray-500 font-medium">Please wait while we synthesize your report...</p>
             </div>
           </div>
         ) : reportData ? (
-          <div className="space-y-8">
-            {/* Key Metrics */}
+          <div className="space-y-8 animate-fadeIn">
+            {/* Key Fleet Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Vehicles</p>
-                    <p className="text-3xl font-bold text-gray-900">{reportData.totalVehicles}</p>
-                  </div>
-                  <div className="p-3 bg-blue-100 rounded-lg">
-                    <FaCar className="text-blue-600 text-xl" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Available</p>
-                    <p className="text-3xl font-bold text-green-600">{reportData.availableVehicles}</p>
-                  </div>
-                  <div className="p-3 bg-green-100 rounded-lg">
-                    <FaRoad className="text-green-600 text-xl" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">In Use</p>
-                    <p className="text-3xl font-bold text-orange-600">{reportData.inUseVehicles}</p>
-                  </div>
-                  <div className="p-3 bg-orange-100 rounded-lg">
-                    <FaUsers className="text-orange-600 text-xl" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Maintenance</p>
-                    <p className="text-3xl font-bold text-red-600">{reportData.maintenanceVehicles}</p>
-                  </div>
-                  <div className="p-3 bg-red-100 rounded-lg">
-                    <FaGasPump className="text-red-600 text-xl" />
-                  </div>
-                </div>
-              </div>
+              <MetricCard
+                label="Total Assets"
+                value={reportData.totalVehicles}
+                icon={FaCar}
+                color="blue"
+                subtitle="Active Fleet"
+              />
+              <MetricCard
+                label="Ready Status"
+                value={reportData.availableVehicles}
+                icon={FaCheckCircle}
+                color="emerald"
+                subtitle="Immediate Dispatch"
+              />
+              <MetricCard
+                label="Active Missions"
+                value={reportData.inUseVehicles}
+                icon={FaRoad}
+                color="orange"
+                subtitle="Field Operations"
+              />
+              <MetricCard
+                label="Grounded Assets"
+                value={reportData.maintenanceVehicles}
+                icon={FaTools}
+                color="rose"
+                subtitle="In Maintenance"
+              />
             </div>
 
-            {/* Performance Metrics */}
+            {/* In-depth Analytics */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Fleet Performance</h3>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Total Mileage</span>
-                    <span className="font-semibold">{reportData.totalMileage.toLocaleString()} km</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Avg Fuel Efficiency</span>
-                    <span className="font-semibold">{reportData.averageFuelEfficiency} L/100km</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Most Used Vehicle</span>
-                    <span className="font-semibold">{reportData.mostUsedVehicle}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Least Used Vehicle</span>
-                    <span className="font-semibold">{reportData.leastUsedVehicle}</span>
-                  </div>
+              {/* Fleet Performance Analytics */}
+              <div className="bg-white/80 backdrop-blur-sm rounded-[32px] shadow-sm border border-white/50 p-8 hover:shadow-lg transition-all">
+                <div className="flex items-center justify-between mb-8">
+                  <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Fleet Efficiency</h3>
+                  <div className="p-2 bg-blue-50 rounded-xl"><FaChartLine className="text-blue-600" /></div>
+                </div>
+                <div className="space-y-6">
+                  <DetailRow label="Total Operational Mileage" value={`${reportData.totalMileage.toLocaleString()} KM`} />
+                  <DetailRow label="Avg. Fuel Consumption" value={`${reportData.averageFuelEfficiency} L/100KM`} />
+                  <DetailRow label="Highest Utilization asset" value={reportData.mostUsedVehicle} highlight />
+                  <DetailRow label="Lowest Utilization asset" value={reportData.leastUsedVehicle} />
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Maintenance Status</h3>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Due for Maintenance</span>
-                    <span className="font-semibold text-red-600">{reportData.maintenanceDue}</span>
+              {/* Maintenance & Engineering Status */}
+              <div className="bg-white/80 backdrop-blur-sm rounded-[32px] shadow-sm border border-white/50 p-8 hover:shadow-lg transition-all">
+                <div className="flex items-center justify-between mb-8">
+                  <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Technical Readiness</h3>
+                  <div className="p-2 bg-rose-50 rounded-xl"><FaTools className="text-rose-600" /></div>
+                </div>
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center bg-rose-50 p-4 rounded-2xl border border-rose-100">
+                    <span className="text-xs font-black text-rose-800 uppercase tracking-widest">Urgent Maintenance due</span>
+                    <span className="text-2xl font-black text-rose-700">{reportData.maintenanceDue}</span>
                   </div>
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-700">Upcoming Maintenance:</p>
+
+                  <div className="pt-2">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Inspection Pipeline</p>
                     {reportData.upcomingMaintenance.length > 0 ? (
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         {reportData.upcomingMaintenance.slice(0, 3).map((item, index) => (
-                          <div key={index} className="text-sm text-gray-600">
-                            <span className="font-medium">{item.vehicleName}</span> - {item.type}
-                            <br />
-                            <span className="text-xs text-gray-500">{item.maintenanceDate}</span>
+                          <div key={index} className="group p-4 bg-gray-50/50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="text-sm font-black text-gray-900 uppercase">{item.vehicleName}</p>
+                                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mt-1">{item.type}</p>
+                              </div>
+                              <div className="text-[10px] font-black text-orange-600 bg-orange-50 px-2 py-1 rounded-lg">
+                                {item.maintenanceDate}
+                              </div>
+                            </div>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-gray-500">No upcoming maintenance</p>
+                      <div className="p-10 text-center bg-gray-50/50 rounded-2xl border-2 border-dashed border-gray-100">
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">No pending inspections</p>
+                      </div>
                     )}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Vehicle Utilization Chart Placeholder */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Vehicle Utilization Trend</h3>
-              <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
-                <p className="text-gray-500">Chart visualization would go here</p>
+            {/* Graphical Visualization Placeholder */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-[40px] shadow-sm border border-white/50 p-10">
+              <div className="flex items-center justify-between mb-10">
+                <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight">Utilization Trajectory</h3>
+                <div className="px-4 py-2 bg-gray-100 rounded-2xl text-[10px] font-black text-gray-500 uppercase tracking-widest">Live Feed Integration</div>
+              </div>
+              <div className="h-80 bg-gray-50/50 rounded-[32px] border-2 border-dashed border-gray-100 flex flex-col items-center justify-center group overflow-hidden relative">
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-50/80 to-transparent pointer-events-none"></div>
+                <FaChartBar className="text-gray-200 text-6xl mb-6 group-hover:scale-110 group-hover:text-gray-300 transition-all duration-500" />
+                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Synthesizing chart visualization...</p>
               </div>
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-            <div className="text-center">
-              <p className="text-gray-600">No data available for the selected period</p>
+          <div className="bg-white/80 backdrop-blur-sm rounded-[40px] shadow-sm border border-white/50 p-20 text-center">
+            <div className="w-24 h-24 bg-orange-50 rounded-[32px] flex items-center justify-center mx-auto mb-8 border-2 border-orange-100/50 shadow-inner">
+              <FaChartBar className="h-10 w-10 text-orange-400" />
             </div>
+            <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight mb-3">Intelligence Pending</h3>
+            <p className="text-gray-500 font-medium max-w-sm mx-auto leading-relaxed">
+              Select fleet parameters above and synthesize data to view analysis.
+            </p>
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+function MetricCard({ label, value, icon: Icon, color, subtitle }: any) {
+  const colorMap: any = {
+    blue: 'bg-blue-50 text-blue-600 border-blue-100',
+    emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+    orange: 'bg-orange-50 text-orange-600 border-orange-100',
+    rose: 'bg-rose-50 text-rose-600 border-rose-100',
+  }
+
+  return (
+    <div className="bg-white/80 backdrop-blur-sm rounded-[32px] shadow-sm border-2 border-transparent hover:border-white transition-all p-8 group overflow-hidden relative">
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-6">
+          <div className={`p-4 rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-sm ${colorMap[color]}`}>
+            <Icon className="text-2xl" />
+          </div>
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{subtitle}</p>
+        </div>
+        <p className="text-xs font-black text-gray-500 uppercase tracking-widest mb-1 opacity-60">{label}</p>
+        <p className={`text-4xl font-black tracking-tighter ${color === 'rose' ? 'text-rose-600' : 'text-gray-900'}`}>{value}</p>
+      </div>
+      {/* Decorative pulse */}
+      <div className={`absolute -right-4 -bottom-4 w-24 h-24 rounded-full opacity-[0.03] group-hover:scale-150 transition-all duration-700 ${colorMap[color].split(' ')[0]}`}></div>
+    </div>
+  )
+}
+
+function DetailRow({ label, value, highlight }: any) {
+  return (
+    <div className={`flex justify-between items-center p-4 rounded-2xl border-2 transition-all ${highlight ? 'bg-blue-50 border-blue-100 shadow-sm shadow-blue-500/5' : 'bg-gray-50/30 border-transparent hover:border-gray-100'}`}>
+      <span className={`text-[10px] font-black uppercase tracking-widest ${highlight ? 'text-blue-800' : 'text-gray-500'}`}>{label}</span>
+      <span className={`text-sm font-black tracking-tight ${highlight ? 'text-blue-900' : 'text-gray-900'}`}>{value}</span>
     </div>
   )
 }

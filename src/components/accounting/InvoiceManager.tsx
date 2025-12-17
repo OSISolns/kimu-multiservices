@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from 'react';
-import { FaPlus, FaEdit, FaTrash, FaFileInvoiceDollar, FaEye, FaDownload, FaReceipt } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaFileInvoiceDollar, FaEye, FaDownload, FaReceipt, FaTimes, FaUserPlus, FaSpinner, FaCheckCircle } from 'react-icons/fa';
 import jsPDF from 'jspdf';
 import Image from 'next/image';
 
@@ -931,225 +931,313 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
 
         {/* Add/Edit Modal */}
         {showAddModal && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-10 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
-              <div className="mt-3">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  {editingInvoice ? 'Edit Invoice' : 'Create New Invoice'}
-                </h3>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Client Information */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm p-4 pt-12 animate-fadeIn overflow-y-auto">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden transform transition-all scale-100 my-8">
+              {/* Header with Gradient */}
+              <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-orange-600 to-amber-600">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                      <FaFileInvoiceDollar className="text-white text-lg" />
+                    </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Invoice Number</label>
+                      <h3 className="text-xl font-bold text-white">
+                        {editingInvoice ? 'Edit Invoice' : 'Create New Invoice'}
+                      </h3>
+                      <p className="text-sm text-orange-100 mt-0.5">
+                        {editingInvoice ? `Updating invoice ${formData.invoiceNumber}` : 'Generate a new professional invoice for your client'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddModal(false);
+                      resetForm();
+                    }}
+                    className="text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-2 transition-all"
+                  >
+                    <FaTimes className="text-xl" />
+                  </button>
+                </div>
+              </div>
+
+              <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                {/* General Information Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-sm font-bold text-orange-600 uppercase tracking-wider">
+                    <FaFileInvoiceDollar />
+                    General Information
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Invoice Number</label>
                       <input
                         type="text"
                         required
                         value={formData.invoiceNumber}
                         onChange={(e) => setFormData({ ...formData, invoiceNumber: e.target.value })}
-                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all hover:border-gray-300 font-mono"
+                        placeholder="INV-2023-001"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Due Date</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Due Date</label>
                       <input
                         type="date"
                         required
                         value={formData.dueDate}
                         onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all hover:border-gray-300"
                       />
                     </div>
                   </div>
+                </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Client Information Section */}
+                <div className="space-y-4 pt-2">
+                  <div className="flex items-center gap-2 text-sm font-bold text-orange-600 uppercase tracking-wider">
+                    <FaUserPlus />
+                    Client Information
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Client Name</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Client Name</label>
                       <input
                         type="text"
                         required
                         value={formData.clientName}
                         onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
-                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all hover:border-gray-300"
+                        placeholder="John Doe"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Client Email</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Client Email</label>
                       <input
                         type="email"
                         required
                         value={formData.clientEmail}
                         onChange={(e) => setFormData({ ...formData, clientEmail: e.target.value })}
-                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all hover:border-gray-300"
+                        placeholder="email@example.com"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Client Phone</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Client Phone</label>
                       <input
                         type="tel"
                         value={formData.clientPhone}
                         onChange={(e) => setFormData({ ...formData, clientPhone: e.target.value })}
-                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all hover:border-gray-300"
+                        placeholder="+250 7XX XXX XXX"
                       />
                     </div>
                   </div>
-
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Description</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Service Description / Project Title</label>
                     <textarea
                       required
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      rows={3}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                      rows={2}
+                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all hover:border-gray-300 resize-none"
+                      placeholder="e.g. Website Development for Q4"
                     />
                   </div>
+                </div>
 
-                  {/* Invoice Items */}
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <label className="block text-sm font-medium text-gray-700">Invoice Items</label>
-                      <button
-                        type="button"
-                        onClick={addItem}
-                        className="text-blue-600 hover:text-blue-800 text-sm"
-                      >
-                        + Add Item
-                      </button>
+                {/* Invoice Items Section */}
+                <div className="space-y-4 pt-2">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2 text-sm font-bold text-orange-600 uppercase tracking-wider">
+                      <FaReceipt />
+                      Billable Items
                     </div>
-
-                    <div className="space-y-2">
-                      {formData.items.map((item, index) => (
-                        <div key={index} className="grid grid-cols-12 gap-2 items-end">
-                          <div className="col-span-5">
-                            <input
-                              type="text"
-                              placeholder="Description"
-                              value={item.description}
-                              onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                              className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                            />
-                          </div>
-                          <div className="col-span-2">
-                            <input
-                              type="number"
-                              placeholder="Qty"
-                              value={item.quantity}
-                              onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value) || 0)}
-                              className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                            />
-                          </div>
-                          <div className="col-span-2">
-                            <input
-                              type="number"
-                              step="0.01"
-                              placeholder="Unit Price"
-                              value={item.unitPrice}
-                              onChange={(e) => handleItemChange(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                              className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                            />
-                          </div>
-                          <div className="col-span-2">
-                            <input
-                              type="text"
-                              placeholder="Total"
-                              value={item.total}
-                              readOnly
-                              className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-gray-50"
-                            />
-                          </div>
-                          <div className="col-span-1">
-                            {formData.items.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => removeItem(index)}
-                                className="text-red-600 hover:text-red-800"
-                              >
-                                <FaTrash />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Tax and Totals */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Tax Rate (%)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={formData.taxRate}
-                        onChange={(e) => setFormData({ ...formData, taxRate: parseFloat(e.target.value) || 0 })}
-                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                      />
-                    </div>
-                    <div className="bg-gray-50 p-4 rounded-md">
-                      <div className="text-sm text-gray-600">Subtotal</div>
-                      <div className="text-lg font-semibold">{totalAmount.toLocaleString()} RWF</div>
-                    </div>
-                    <div className="bg-gray-50 p-4 rounded-md">
-                      <div className="text-sm text-gray-600">Total (with tax)</div>
-                      <div className="text-lg font-semibold">{calculateTotals(formData.items, formData.taxRate).grandTotal.toLocaleString()} RWF</div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end space-x-3 pt-4">
                     <button
                       type="button"
-                      onClick={() => {
-                        setShowAddModal(false);
-                        resetForm();
-                      }}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                      onClick={addItem}
+                      className="flex items-center gap-2 px-3 py-1.5 bg-orange-50 text-orange-600 border border-orange-100 rounded-lg hover:bg-orange-100 transition-colors text-sm font-bold uppercase tracking-wider"
                     >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={isLoading}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {isLoading ? 'Saving...' : (editingInvoice ? 'Update Invoice' : 'Create Invoice')}
+                      <FaPlus className="text-xs" /> Add Item
                     </button>
                   </div>
-                </form>
-              </div>
+
+                  <div className="space-y-3">
+                    <div className="hidden md:grid grid-cols-12 gap-4 px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                      <div className="col-span-6">Description</div>
+                      <div className="col-span-1 text-center">Qty</div>
+                      <div className="col-span-2 text-right">Unit Price</div>
+                      <div className="col-span-2 text-right">Total</div>
+                      <div className="col-span-1"></div>
+                    </div>
+                    {formData.items.map((item, index) => (
+                      <div key={index} className="grid grid-cols-12 gap-3 items-start md:items-center bg-gray-50 p-3 md:p-1 rounded-2xl md:bg-transparent md:border-b md:border-gray-100 md:pb-3">
+                        <div className="col-span-12 md:col-span-6">
+                          <label className="md:hidden text-xs font-bold text-gray-400 uppercase mb-1 block">Description</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Domain Registration"
+                            value={item.description}
+                            onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+                            className="w-full px-4 py-2 bg-white border-2 border-gray-100 rounded-xl focus:border-orange-500 outline-none transition-all text-sm font-medium"
+                          />
+                        </div>
+                        <div className="col-span-4 md:col-span-1">
+                          <label className="md:hidden text-xs font-bold text-gray-400 uppercase mb-1 block">Qty</label>
+                          <input
+                            type="number"
+                            placeholder="0"
+                            value={item.quantity}
+                            onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value) || 0)}
+                            className="w-full px-2 py-2 bg-white border-2 border-gray-100 rounded-xl focus:border-orange-500 outline-none transition-all text-sm text-center font-bold"
+                          />
+                        </div>
+                        <div className="col-span-7 md:col-span-2">
+                          <label className="md:hidden text-xs font-bold text-gray-400 uppercase mb-1 block">Unit Price (RWF)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            placeholder="0.00"
+                            value={item.unitPrice}
+                            onChange={(e) => handleItemChange(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                            className="w-full px-4 py-2 bg-white border-2 border-gray-100 rounded-xl focus:border-orange-500 outline-none transition-all text-sm text-right font-bold"
+                          />
+                        </div>
+                        <div className="col-span-11 md:col-span-2">
+                          <label className="md:hidden text-xs font-bold text-gray-400 uppercase mb-1 block">Total</label>
+                          <div className="w-full px-4 py-2 bg-gray-100/50 border-2 border-transparent rounded-xl text-sm text-right font-black text-gray-700">
+                            {item.total.toLocaleString()}
+                          </div>
+                        </div>
+                        <div className="col-span-1 flex justify-center">
+                          {formData.items.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeItem(index)}
+                              className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                              title="Remove Item"
+                            >
+                              <FaTrash className="text-sm" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Totals Section */}
+                <div className="bg-orange-50/50 p-6 rounded-2xl border-2 border-orange-100/50">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+                    <div className="md:col-span-2">
+                      <label className="block text-[10px] font-black text-orange-600 uppercase tracking-[0.2em] mb-3">Invoice Summary</label>
+                      <p className="text-xs text-orange-700 font-medium leading-relaxed">
+                        Values are calculated automatically based on items and tax rate. {editingInvoice ? 'Updating this will override existing totals.' : ''}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-800 mb-2">Tax Rate (%)</label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={formData.taxRate}
+                          onChange={(e) => setFormData({ ...formData, taxRate: parseFloat(e.target.value) || 0 })}
+                          className="w-full px-4 py-3 bg-white border-2 border-orange-100 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-bold text-gray-900"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-orange-400 font-black">%</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        <span>Subtotal:</span>
+                        <span>{totalAmount.toLocaleString()} RWF</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-2 border-t border-orange-200">
+                        <span className="text-xs font-black text-orange-800 uppercase">Grand Total:</span>
+                        <span className="text-xl font-black text-orange-600">
+                          {calculateTotals(formData.items, formData.taxRate).grandTotal.toLocaleString()} <span className="text-[10px]">RWF</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 pt-4 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddModal(false);
+                      resetForm();
+                    }}
+                    className="flex-1 px-6 py-4 border-2 border-gray-300 text-gray-700 rounded-2xl hover:bg-gray-50 font-black uppercase tracking-widest transition-all active:scale-95"
+                  >
+                    Discard Changes
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="flex-[2] px-6 py-4 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-2xl shadow-xl shadow-orange-500/30 hover:from-orange-700 hover:to-amber-700 font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                  >
+                    {isLoading ? (
+                      <>
+                        <FaSpinner className="animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <FaCheckCircle className="text-lg" />
+                        {editingInvoice ? 'Update & Finalize' : 'Generate Invoice'}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
 
         {/* Invoice View Modal */}
         {selectedInvoice && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-10 mx-auto p-5 border w-11/12 max-w-5xl shadow-lg rounded-md bg-white">
-              <div className="mt-3">
-                <div className="flex justify-between items-center mb-4 no-print">
-                  <h3 className="text-lg font-medium text-gray-900">Invoice Details</h3>
-                  <div className="flex space-x-2">
+          <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm p-4 pt-12 animate-fadeIn overflow-y-auto">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden transform transition-all scale-100 my-8">
+              {/* Header with Gradient */}
+              <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-orange-600 to-amber-600 no-print">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                      <FaEye className="text-white text-lg" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white">Invoice Details</h3>
+                      <p className="text-sm text-orange-100 mt-0.5">
+                        {selectedInvoice.invoiceNumber} • {selectedInvoice.clientName}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => window.print()}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
+                      className="px-4 py-2 bg-white/20 text-white rounded-xl hover:bg-white/30 transition-all flex items-center gap-2 text-sm font-bold uppercase tracking-wider backdrop-blur-sm"
                     >
-                      <FaDownload /> Print
+                      <FaDownload className="text-xs" /> Quick Print
                     </button>
                     <button
                       onClick={() => {
                         setPreviewDocumentId(selectedInvoice.id.toString());
                         setShowDocumentPreview(true);
                       }}
-                      className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 flex items-center gap-2"
+                      className="px-4 py-2 bg-white text-orange-600 rounded-xl hover:bg-orange-50 transition-all flex items-center gap-2 text-sm font-bold uppercase tracking-wider"
                     >
-                      <FaFileInvoiceDollar /> Preview & Print
+                      <FaFileInvoiceDollar /> Advanced Preview
                     </button>
                     {selectedInvoice.status === 'paid' && (
                       <button
                         onClick={() => generateReceipt(selectedInvoice)}
-                        className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 flex items-center gap-2"
+                        className="px-4 py-2 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-all flex items-center gap-2 text-sm font-bold uppercase tracking-wider shadow-lg shadow-emerald-500/20"
                       >
-                        <FaReceipt /> Receipt
+                        <FaReceipt /> Get Receipt
                       </button>
                     )}
                     <button
@@ -1158,164 +1246,195 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
                           deleteInvoice(selectedInvoice.id);
                         }
                       }}
-                      className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center gap-2"
+                      className="p-2.5 bg-red-500/10 text-red-100 hover:bg-red-500 hover:text-white rounded-xl transition-all"
+                      title="Delete Invoice"
                     >
-                      <FaTrash /> Delete
+                      <FaTrash className="text-lg" />
                     </button>
+                    <div className="w-px h-8 bg-white/20 mx-1"></div>
                     <button
                       onClick={() => setSelectedInvoice(null)}
-                      className="text-gray-400 hover:text-gray-600"
+                      className="text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-2 transition-all"
                     >
-                      ×
+                      <FaTimes className="text-xl" />
                     </button>
                   </div>
                 </div>
+              </div>
 
+              <div className="p-8">
                 {/* Branded Invoice Template */}
-                <div id="invoice-template" className="bg-white border-2 border-gray-200 p-8 rounded-lg">
+                <div id="invoice-template" className="bg-white border-2 border-gray-100 p-8 rounded-3xl shadow-sm">
                   {/* Header with Branding */}
-                  <div className="flex justify-between items-start mb-8 pb-6 border-b-2 border-orange-500">
-                    <div className="flex items-center space-x-4">
-                      <Image src="/logo.png" alt="KIMU Logo" width={64} height={64} className="w-16 h-16" unoptimized />
+                  <div className="flex justify-between items-start mb-10 pb-8 border-b-4 border-orange-500">
+                    <div className="flex items-center space-x-6">
+                      <div className="p-4 bg-orange-50 rounded-2xl">
+                        <Image src="/logo.png" alt="KIMU Logo" width={80} height={80} className="w-20 h-20 object-contain" unoptimized />
+                      </div>
                       <div>
-                        <h1 className="text-3xl font-bold text-orange-600">KIMU</h1>
-                        <p className="text-lg text-gray-600">Transport & Multiservices</p>
-                        <p className="text-sm text-gray-500">Your Trusted Travel Partner</p>
+                        <h1 className="text-4xl font-extrabold text-orange-600 tracking-tight">KIMU</h1>
+                        <p className="text-xl font-bold text-gray-700">Transport & Multiservices</p>
+                        <p className="text-sm font-medium text-gray-400 mt-1 uppercase tracking-[0.2em]">Your Trusted Travel Partner</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <h2 className="text-2xl font-bold text-gray-800 mb-2">INVOICE</h2>
-                      <p className="text-sm text-gray-600">Invoice #: {selectedInvoice.invoiceNumber}</p>
-                      <p className="text-sm text-gray-600">Date: {new Date(selectedInvoice.createdAt).toLocaleDateString()}</p>
-                      <p className="text-sm text-gray-600">Due: {new Date(selectedInvoice.dueDate).toLocaleDateString()}</p>
+                      <div className="inline-block px-4 py-1 bg-orange-600 text-white rounded-full text-xs font-black uppercase tracking-widest mb-4">
+                        OFFICIAL INVOICE
+                      </div>
+                      <h2 className="text-2xl font-black text-gray-800 mb-1">{selectedInvoice.invoiceNumber}</h2>
+                      <div className="space-y-1">
+                        <p className="text-sm text-gray-400 font-bold uppercase tracking-wider">Date: <span className="text-gray-900 ml-2">{new Date(selectedInvoice.createdAt).toLocaleDateString()}</span></p>
+                        <p className="text-sm text-gray-400 font-bold uppercase tracking-wider">Due: <span className="text-orange-600 ml-2">{new Date(selectedInvoice.dueDate).toLocaleDateString()}</span></p>
+                      </div>
                     </div>
                   </div>
 
                   {/* Company Information */}
-                  <div className="grid grid-cols-2 gap-8 mb-8">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-800 mb-3">From:</h3>
+                  <div className="grid grid-cols-2 gap-12 mb-10">
+                    <div className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
+                      <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Issued By:</h3>
                       <div className="text-gray-700">
-                        <p className="font-semibold text-lg">KIMU Transport & Multiservices</p>
-                        <p>Gisozi, KG 780 St, Kigali, Rwanda</p>
-                        <p>Email: kimutransport6@gmail.com</p>
-                        <p>Phone: +250 798 284 312</p>
-                        <p>Phone: +250 788 447 574</p>
+                        <p className="font-extrabold text-xl mb-1">KIMU Transport & Multiservices</p>
+                        <div className="space-y-1 text-sm font-medium">
+                          <p className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-orange-400 rounded-full"></span> Gisozi, KG 780 St, Kigali, Rwanda</p>
+                          <p className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-orange-400 rounded-full"></span> kimutransport6@gmail.com</p>
+                          <p className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-orange-400 rounded-full"></span> +250 798 284 312 / +250 788 447 574</p>
+                        </div>
                       </div>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-800 mb-3">Bill To:</h3>
+                    <div className="bg-orange-50/30 p-6 rounded-2xl border border-orange-100">
+                      <h3 className="text-xs font-black text-orange-400 uppercase tracking-widest mb-4">Issued To:</h3>
                       <div className="text-gray-700">
-                        <p className="font-semibold">{selectedInvoice.clientName}</p>
-                        <p>{selectedInvoice.clientEmail}</p>
-                        {selectedInvoice.clientPhone && <p>{selectedInvoice.clientPhone}</p>}
+                        <p className="font-extrabold text-xl mb-1">{selectedInvoice.clientName}</p>
+                        <div className="space-y-1 text-sm font-medium">
+                          <p className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-orange-400 rounded-full"></span> {selectedInvoice.clientEmail}</p>
+                          {selectedInvoice.clientPhone && (
+                            <p className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-orange-400 rounded-full"></span> {selectedInvoice.clientPhone}</p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Service Description */}
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Service Description:</h3>
-                    <p className="text-gray-700 bg-gray-50 p-3 rounded">{selectedInvoice.description}</p>
+                  <div className="mb-10">
+                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Service Overview:</h3>
+                    <div className="text-gray-800 bg-gray-50 p-5 rounded-2xl border-l-4 border-orange-500 font-medium leading-relaxed italic">
+                      "{selectedInvoice.description}"
+                    </div>
                   </div>
 
                   {/* Items Table */}
-                  <div className="mb-8">
-                    <table className="w-full border-collapse border border-gray-300">
+                  <div className="mb-10 overflow-hidden rounded-2xl border border-gray-100">
+                    <table className="w-full border-collapse">
                       <thead>
-                        <tr className="bg-orange-50">
-                          <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-800">Description</th>
-                          <th className="border border-gray-300 px-4 py-3 text-center font-semibold text-gray-800">Qty</th>
-                          <th className="border border-gray-300 px-4 py-3 text-right font-semibold text-gray-800">Unit Price</th>
-                          <th className="border border-gray-300 px-4 py-3 text-right font-semibold text-gray-800">Total</th>
+                        <tr className="bg-orange-600">
+                          <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-widest">Description</th>
+                          <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase tracking-widest">Qty</th>
+                          <th className="px-6 py-4 text-right text-xs font-bold text-white uppercase tracking-widest">Unit Price</th>
+                          <th className="px-6 py-4 text-right text-xs font-bold text-white uppercase tracking-widest">Total</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="divide-y divide-gray-100">
                         {selectedInvoice.items.map((item: any, index: number) => (
-                          <tr key={index} className="hover:bg-gray-50">
-                            <td className="border border-gray-300 px-4 py-3 text-gray-700">{item.description}</td>
-                            <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">{item.quantity}</td>
-                            <td className="border border-gray-300 px-4 py-3 text-right text-gray-700">{item.unitPrice.toLocaleString()} RWF</td>
-                            <td className="border border-gray-300 px-4 py-3 text-right text-gray-700 font-semibold">{item.total.toLocaleString()} RWF</td>
+                          <tr key={index} className="hover:bg-orange-50/30 transition-colors">
+                            <td className="px-6 py-4 text-sm font-bold text-gray-700">{item.description}</td>
+                            <td className="px-6 py-4 text-center text-sm font-black text-gray-500">{item.quantity}</td>
+                            <td className="px-6 py-4 text-right text-sm font-bold text-gray-700">{item.unitPrice.toLocaleString()} <span className="text-[10px]">RWF</span></td>
+                            <td className="px-6 py-4 text-right text-sm font-black text-orange-600">{item.total.toLocaleString()} <span className="text-[10px]">RWF</span></td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
 
-                  {/* Totals */}
-                  <div className="flex justify-end mb-8">
-                    <div className="w-80">
-                      <div className="space-y-2">
-                        <div className="flex justify-between py-2 border-b border-gray-200">
-                          <span className="text-gray-700">Subtotal:</span>
-                          <span className="text-gray-700 font-semibold">{selectedInvoice.totalAmount.toLocaleString()} RWF</span>
+                  {/* Totals and Summary */}
+                  <div className="flex flex-col md:flex-row justify-between items-start gap-8 mb-10">
+                    <div className="w-full md:flex-1">
+                      <div className="bg-orange-50/50 p-6 rounded-2xl border border-orange-100">
+                        <h4 className="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-4">Status & Notes</h4>
+                        <div className="flex items-center gap-4 mb-4">
+                          <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest ${selectedInvoice.status === 'paid' ? 'bg-emerald-100 text-emerald-700' :
+                            selectedInvoice.status === 'outstanding' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+                            }`}>
+                            {selectedInvoice.status}
+                          </span>
                         </div>
-                        <div className="flex justify-between py-2 border-b border-gray-200">
-                          <span className="text-gray-700">Tax ({selectedInvoice.taxRate}%):</span>
-                          <span className="text-gray-700 font-semibold">{selectedInvoice.taxAmount.toLocaleString()} RWF</span>
-                        </div>
-                        <div className="flex justify-between py-3 bg-orange-50 px-4 rounded">
-                          <span className="text-lg font-bold text-gray-800">Total Amount:</span>
-                          <span className="text-lg font-bold text-orange-600">{selectedInvoice.grandTotal.toLocaleString()} RWF</span>
-                        </div>
+                        <p className="text-xs text-gray-500 font-medium leading-relaxed">
+                          Please include the invoice number <span className="font-bold text-gray-800">{selectedInvoice.invoiceNumber}</span> in your payment reference. Payment is due within the specified period.
+                        </p>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Status and Footer */}
-                  <div className="flex justify-between items-center pt-6 border-t-2 border-gray-200">
-                    <div>
-                      <span className="text-sm text-gray-600">Status: </span>
-                      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusColors[selectedInvoice.status as keyof typeof statusColors]}`}>
-                        {selectedInvoice.status.toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="text-right text-sm text-gray-600">
-                      <p>Thank you for choosing KIMU!</p>
-                      <p>For inquiries, contact us at kimutransport6@gmail.com</p>
+                    <div className="w-full md:w-80">
+                      <div className="space-y-3 p-2">
+                        <div className="flex justify-between items-center text-sm font-bold text-gray-500 py-1 uppercase tracking-wider">
+                          <span>Subtotal:</span>
+                          <span>{selectedInvoice.totalAmount.toLocaleString()} RWF</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm font-bold text-gray-500 py-1 uppercase tracking-wider">
+                          <span>Tax ({selectedInvoice.taxRate}%):</span>
+                          <span>{selectedInvoice.taxAmount.toLocaleString()} RWF</span>
+                        </div>
+                        <div className="flex justify-between items-center py-5 px-6 bg-orange-600 text-white rounded-2xl shadow-xl shadow-orange-600/20 mt-4">
+                          <span className="text-sm font-black uppercase tracking-[0.2em]">Grand Total:</span>
+                          <span className="text-2xl font-black">{selectedInvoice.grandTotal.toLocaleString()} <span className="text-xs">RWF</span></span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
                   {/* Payment Information */}
-                  <div className="mt-6 bg-gray-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-gray-800 mb-2">Payment Information:</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-700">
-                      <div>
-                        <p><strong>COPEDU Bank:</strong></p>
-                        <small>Account: <b>KIMU Transport & Multiservices Ltd</b></small>
-                        <p>Account #: 1011020164888</p>
+                  <div className="bg-gray-900 text-white p-8 rounded-3xl overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-orange-600/20 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+                    <h4 className="text-[10px] font-black text-orange-500 uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
+                      <FaReceipt /> Official Banking Details
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                      <div className="space-y-1">
+                        <p className="text-orange-400 text-xs font-black uppercase tracking-wider">COPEDU Bank</p>
+                        <p className="text-sm font-bold truncate">KIMU Transport & Multiservices Ltd</p>
+                        <p className="font-mono text-lg text-white/90 font-black">1011020164888</p>
                       </div>
-                      <div>
-                        <p><strong>Equity Bank:</strong></p>
-                        <small> Account: <b>KIMU Transport Multiservices Ltd</b></small>
-                        <p>Account #: 4019201132304</p>
+                      <div className="space-y-1">
+                        <p className="text-orange-400 text-xs font-black uppercase tracking-wider">Equity Bank</p>
+                        <p className="text-sm font-bold truncate">KIMU Transport Multiservices Ltd</p>
+                        <p className="font-mono text-lg text-white/90 font-black">4019201132304</p>
                       </div>
-                      <div>
-                        <p><strong>BK Bank:</strong></p>
-                        <small> Account: <b>KIMU Transport Multiservices Ltd</b></small>
-                        <p>Account #: 100185378726</p>
+                      <div className="space-y-1">
+                        <p className="text-orange-400 text-xs font-black uppercase tracking-wider">BK Bank</p>
+                        <p className="text-sm font-bold truncate">KIMU Transport Multiservices Ltd</p>
+                        <p className="font-mono text-lg text-white/90 font-black">100185378726</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-orange-400 text-xs font-black uppercase tracking-wider">BANK OF AFRICA</p>
+                        <p className="text-sm font-bold truncate">KIMU Transport & Multiservices Ltd</p>
+                        <p className="font-mono text-lg text-white/90 font-black">1002100203435401</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-orange-400 text-xs font-black uppercase tracking-wider">Access BANK</p>
+                        <p className="text-sm font-bold truncate">KIMU Transport & Multiservices Ltd</p>
+                        <p className="font-mono text-lg text-white/90 font-black">01766750009</p>
+                      </div>
+                      <div className="space-y-1 bg-white/5 p-4 rounded-xl">
+                        <p className="text-emerald-400 text-xs font-black uppercase tracking-wider">Mobile Money</p>
+                        <div className="flex justify-between items-center pt-1">
+                          <div>
+                            <p className="text-[10px] text-white/50 uppercase">Momo Pay</p>
+                            <p className="font-black text-xl">627309</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[10px] text-white/50 uppercase">Merchant</p>
+                            <p className="font-bold text-xs">Kimu Transport</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-700 mt-4">
-                      <div>
-                        <p><strong>BANK OF AFRICA:</strong></p>
-                        <small>Account: <b>KIMU Transport & Multiservices Ltd</b></small>
-                        <p>Account #: 1002100203435401</p>
-                      </div>
-                      <div>
-                        <p><strong>Access BANK:</strong></p>
-                        <small>Account: <b>KIMU Transport & Multiservices Ltd</b></small>
-                        <p>Account #: 01766750009</p>
-                      </div>
-                    </div>
-                    <div className="mt-4 pt-4 border-t border-gray-300">
-                      <p><strong>Mobile Money:</strong></p>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                        <p><strong>MOMO PAY:</strong> 627309</p>
-                        <p><b>Kimu Transport</b></p>
-                      </div>
-                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="mt-10 pt-8 border-t border-gray-100 flex justify-between items-center text-gray-400 font-bold uppercase tracking-widest text-[10px]">
+                    <p>Generated by KIMU Management System</p>
+                    <p>© {new Date().getFullYear()} KIMU Multiservices Ltd</p>
                   </div>
                 </div>
               </div>
