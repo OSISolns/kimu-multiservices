@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Employee, Payroll, PayrollSummary, PayrollStats } from '@/types/payroll';
-import { FaTimes, FaSpinner, FaUserPlus, FaMoneyBillWave, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
+import { FaTimes, FaSpinner, FaUserPlus, FaMoneyBillWave, FaCheckCircle, FaExclamationTriangle, FaEye, FaEdit, FaToggleOn, FaToggleOff, FaTrash } from 'react-icons/fa';
 
 interface PayrollDashboardProps {
   user: any;
@@ -26,6 +26,8 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
   const [selectedPeriod, setSelectedPeriod] = useState(
     new Date().toISOString().slice(0, 7)
   );
+  const [showViewEmployeeModal, setShowViewEmployeeModal] = useState(false);
+  const [viewingEmployee, setViewingEmployee] = useState<Employee | null>(null);
 
   // Add Employee Modal State
   const [showAddEmployeeModal, setShowAddEmployeeModal] = useState(false);
@@ -244,6 +246,64 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
       alert('Failed to process payroll. Please try again.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleViewEmployee = (employee: Employee) => {
+    setViewingEmployee(employee);
+    setShowViewEmployeeModal(true);
+  };
+
+  const handleEditEmployee = (employee: Employee) => {
+    alert('Edit functionality - navigate to Edit Employee page or open edit modal');
+  };
+
+  const handleToggleEmployeeStatus = async (employee: Employee) => {
+    const newStatus = employee.status === 'active' ? 'inactive' : 'active';
+
+    try {
+      const response = await fetch(`/api/payroll/employees?id=${employee.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-username': user.username,
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (response.ok) {
+        await fetchPayrollData();
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.error || 'Failed to update employee status'}`);
+      }
+    } catch (error) {
+      console.error('Error updating employee status:', error);
+      alert('Failed to update employee status. Please try again.');
+    }
+  };
+
+  const handleDeleteEmployee = async (employee: Employee) => {
+    if (!confirm(`Are you sure you want to delete ${employee.user?.fullName || employee.firstName + ' ' + employee.lastName}?`)) return;
+
+    try {
+      const response = await fetch(`/api/payroll/employees?id=${employee.id}`, {
+        method: 'DELETE',
+        headers: {
+          'x-username': user.username,
+        },
+      });
+
+      if (response.ok) {
+        await fetchPayrollData();
+        alert('Employee deleted successfully');
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.error || 'Failed to delete employee'}`);
+      }
+    } catch (error) {
+      console.error('Error deleting employee:', error);
+      alert('Failed to delete employee. Please try again.');
     }
   };
 
@@ -472,6 +532,41 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
                             }`}>
                             {employee.status}
                           </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleViewEmployee(employee)}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="View Details"
+                            >
+                              <FaEye />
+                            </button>
+                            <button
+                              onClick={() => handleEditEmployee(employee)}
+                              className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                              title="Edit"
+                            >
+                              <FaEdit />
+                            </button>
+                            <button
+                              onClick={() => handleToggleEmployeeStatus(employee)}
+                              className={`p-2 rounded-lg transition-colors ${employee.status === 'active'
+                                  ? 'text-green-600 hover:bg-green-50'
+                                  : 'text-gray-600 hover:bg-gray-50'
+                                }`}
+                              title={employee.status === 'active' ? 'Deactivate' : 'Activate'}
+                            >
+                              {employee.status === 'active' ? <FaToggleOn /> : <FaToggleOff />}
+                            </button>
+                            <button
+                              onClick={() => handleDeleteEmployee(employee)}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Delete"
+                            >
+                              <FaTrash />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
