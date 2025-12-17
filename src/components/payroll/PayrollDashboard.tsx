@@ -272,13 +272,18 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
 
   const handleEditEmployee = (employee: Employee) => {
     setEditingEmployee(employee);
-    setIsNewUser(!employee.userId);
+
+    // Determine if this employee is linked to a user or standalone
+    const hasUser = !!employee.userId;
+    setIsNewUser(!hasUser);
+
+    // Populate the form with employee data
     setNewEmployeeData({
       userId: employee.userId?.toString() || '',
-      firstName: employee.firstName || '',
-      lastName: employee.lastName || '',
-      email: employee.email || '',
-      phone: employee.phone || '',
+      firstName: employee.firstName || (hasUser ? '' : ''),
+      lastName: employee.lastName || (hasUser ? '' : ''),
+      email: employee.email || employee.user?.email || '',
+      phone: employee.phone || employee.user?.phone || '',
       employeeId: employee.employeeId,
       position: employee.position,
       department: employee.department,
@@ -290,6 +295,7 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
       socialSecurityId: employee.socialSecurityId || '',
       notes: employee.notes || ''
     });
+
     setShowAddEmployeeModal(true);
   };
 
@@ -344,6 +350,11 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
 
   // Filter users who are not yet employees
   const availableUsers = users.filter(u => !employees.some(e => e.userId === u.id));
+
+  // When editing, include the employee's current user in the list (if they have one)
+  const usersForDropdown = editingEmployee && editingEmployee.user
+    ? [...availableUsers, editingEmployee.user]
+    : availableUsers;
 
   // Active employees for payroll processing
   const activeEmployees = employees.filter(e => e.status === 'active');
@@ -745,8 +756,9 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
                 <button
                   type="button"
                   onClick={() => setIsNewUser(!isNewUser)}
+                  disabled={!!editingEmployee}
                   className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${!isNewUser ? 'bg-blue-600' : 'bg-gray-200'
-                    }`}
+                    } ${editingEmployee ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <span
                     aria-hidden="true"
@@ -766,7 +778,7 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
                     className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                   >
                     <option value="">Select a user...</option>
-                    {availableUsers.map(u => (
+                    {usersForDropdown.map(u => (
                       <option key={u.id} value={u.id}>
                         {u.fullName || u.username} ({u.email})
                       </option>
