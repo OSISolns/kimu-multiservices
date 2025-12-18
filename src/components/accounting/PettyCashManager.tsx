@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import {
     FaPlus, FaMinus, FaHistory, FaFileInvoiceDollar, FaSearch,
     FaFilter, FaDownload, FaEllipsisV, FaCheckCircle, FaTimesCircle,
-    FaMoneyBillWave, FaCoins, FaEdit, FaTrash
+    FaMoneyBillWave, FaCoins, FaEdit, FaTrash, FaSpinner
 } from 'react-icons/fa';
 
 type PettyCashTransaction = {

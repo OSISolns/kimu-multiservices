@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from 'react';
-import { FaPlus, FaEdit, FaTrash, FaReceipt, FaFilter, FaDownload } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaReceipt, FaFilter, FaDownload, FaSpinner, FaCheckCircle } from 'react-icons/fa';
 
 interface Expense {
   id: number;
