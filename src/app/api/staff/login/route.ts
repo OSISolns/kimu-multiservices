@@ -279,7 +279,8 @@ export async function POST(req: NextRequest) {
         emailNotifications: user.emailNotifications,
         whatsappNotifications: user.whatsappNotifications
       },
-      requiresEmailAuth: true
+      requiresEmailAuth: true,
+      devCode: process.env.NODE_ENV === 'development' ? emailCode : undefined
     });
 
     // Reset failure counter on success

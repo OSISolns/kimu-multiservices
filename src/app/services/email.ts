@@ -14,14 +14,21 @@ export async function sendEmail({
   attachments?: any[];
 }) {
   try {
+    // In development logic: Mock email if no SMTP_HOST is set
+    if (process.env.NODE_ENV === 'development' && !process.env.SMTP_HOST) {
+      console.log(`[Email Service] Dev Mode: Mocking email to ${to}`);
+      console.log(`[Email Content]: ${text || html}`);
+      return { id: `mock-${Date.now()}`, success: true };
+    }
+
     // Configure SMTP transporter using Brevo (formerly Sendinblue)
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
       port: parseInt(process.env.SMTP_PORT || '587'),
       secure: false, // true for 465, false for other ports
       auth: {
-        user: process.env.SMTP_USER || '9c4ca5001@smtp-brevo.com',
-        pass: process.env.SMTP_PASSWORD || 'xsmtpsib-fea4c8ccc4e301e73030a9c6874c140e27e57337a1fa936b0748e869243e04c0-Cf7gtDZCP2moDrDG',
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
       },
     });
 

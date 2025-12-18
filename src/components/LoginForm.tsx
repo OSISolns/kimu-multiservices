@@ -34,6 +34,7 @@ export default function LoginForm() {
   const [trustDevice, setTrustDevice] = useState(false);
   const [isFirstTimeDevice, setIsFirstTimeDevice] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [devCode, setDevCode] = useState<string | null>(null);
   const router = useRouter();
   const { loginUser } = useUser();
 
@@ -70,6 +71,7 @@ export default function LoginForm() {
       // Check for either requiresTotp OR requiresEmailAuth
       if (data.requiresTotp || data.requiresEmailAuth) {
         setStaff(data.staff);
+        if (data.devCode) setDevCode(data.devCode);
         setStep('totp');
 
         // Check if device is trusted (skip TOTP if trusted)
@@ -354,6 +356,15 @@ export default function LoginForm() {
           {/* Step 2: TOTP */}
           {step === 'totp' && staff && (
             <div className="space-y-6">
+              {/* Dev Hint */}
+              {devCode && (
+                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl flex items-center justify-center gap-3 animate-pulse">
+                  <FaExclamationTriangle className="text-yellow-500" />
+                  <p className="text-yellow-800 text-sm font-bold">
+                    Dev Code: <code className="bg-yellow-100 px-2 py-1 rounded text-lg tracking-widest">{devCode}</code>
+                  </p>
+                </div>
+              )}
               <div className="text-center">
                 <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-blue-500 rounded-full mx-auto mb-4 flex items-center justify-center">
                   <FaEnvelope className="text-white text-xl" />
