@@ -1,16 +1,19 @@
 'use client'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import Image from 'next/image'
-import { 
-  FaCar, 
-  FaPlus, 
-  FaEdit, 
-  FaTrash, 
-  FaSearch, 
-  FaFilter, 
-  FaEye, 
-  FaCheckCircle, 
-  FaTimesCircle, 
+import { useRouter } from 'next/navigation'
+import { useUser } from '../../UserContext'
+import LoadingSpinner from '@/components/LoadingSpinner'
+import {
+  FaCar,
+  FaPlus,
+  FaEdit,
+  FaTrash,
+  FaSearch,
+  FaFilter,
+  FaEye,
+  FaCheckCircle,
+  FaTimesCircle,
   FaTools,
   FaGasPump,
   FaCog,
@@ -50,6 +53,8 @@ interface Vehicle {
 }
 
 export default function VehiclesPage() {
+  const { user, isLoading: userLoading } = useUser()
+  const router = useRouter()
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -68,10 +73,19 @@ export default function VehiclesPage() {
   const [uploading, setUploading] = useState(false)
   const [editingVehicle, setEditingVehicle] = useState<Partial<Vehicle>>({})
 
+  // Auth Check
+  useEffect(() => {
+    if (!userLoading && (!user || !['admin', 'manager', 'transport-officer'].includes(user.role))) {
+      router.push('/staff/sales-dashboard')
+    }
+  }, [user, userLoading, router])
+
   // Fetch vehicles
   useEffect(() => {
-    fetchVehicles()
-  }, [])
+    if (user && ['admin', 'manager', 'transport-officer'].includes(user.role)) {
+      fetchVehicles()
+    }
+  }, [user])
 
   const fetchVehicles = async () => {
     try {
@@ -98,7 +112,7 @@ export default function VehiclesPage() {
     let filtered = vehicles || []
 
     if (searchTerm) {
-      filtered = filtered.filter(v => 
+      filtered = filtered.filter(v =>
         v.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         v.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (v.licensePlate && v.licensePlate.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -112,7 +126,7 @@ export default function VehiclesPage() {
     filtered.sort((a, b) => {
       let aValue, bValue
       switch (sortBy) {
-        case 'price': 
+        case 'price':
           aValue = parseInt(a.price.replace(/[^\d]/g, '')) || 0
           bValue = parseInt(b.price.replace(/[^\d]/g, '')) || 0
           break
@@ -150,10 +164,10 @@ export default function VehiclesPage() {
   const isFirstVehicleOfBrand = (vehicle: Vehicle): boolean => {
     // Find the first vehicle with the same brand name (assuming brand is in the name)
     const brandName = vehicle.name.split(' ')[0] // Extract brand from vehicle name
-    const firstVehicleOfBrand = vehicles.find(v => 
+    const firstVehicleOfBrand = vehicles.find(v =>
       v.name.startsWith(brandName) && v.id !== vehicle.id
     )
-    
+
     // If no other vehicle with same brand exists, or this one has a lower ID, it's the first
     return !firstVehicleOfBrand || vehicle.id <= firstVehicleOfBrand.id
   }
@@ -161,7 +175,7 @@ export default function VehiclesPage() {
   // Validate Rwandan license plate format
   const validateLicensePlate = (plate: string): boolean => {
     if (!plate) return false // Empty is not valid (required field)
-    
+
     // Rwandan format: RA + Alphabet + 3 digits + Alphabet
     // Examples: RAI 123 C, RAH 456 A, RAK 789 B
     const plateRegex = /^RA[A-Z]\s?\d{3}\s?[A-Z]$/
@@ -235,13 +249,13 @@ export default function VehiclesPage() {
         alert('Please select a valid image file (JPG, PNG, etc.)')
         return
       }
-      
+
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         alert('Image file size must be less than 5MB')
         return
       }
-      
+
       setImageFile(file)
       const reader = new FileReader()
       reader.onload = (e) => {
@@ -254,35 +268,35 @@ export default function VehiclesPage() {
   const uploadImage = async (file: File): Promise<string> => {
     const formData = new FormData()
     formData.append('image', file)
-    
+
     // Debug: Log what's being sent
     console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type)
     console.log('FormData entries:')
     Array.from(formData.entries()).forEach(([key, value]) => {
       console.log(key, value)
     })
-    
+
     try {
       const response = await fetch('/api/vehicles/upload', {
         method: 'POST',
         body: formData,
       })
-      
+
       console.log('Upload response status:', response.status)
-      
+
       if (!response.ok) {
         const errorData = await response.json()
         console.error('Upload error response:', errorData)
         throw new Error(errorData.error || `Upload failed with status: ${response.status}`)
       }
-      
+
       const data = await response.json()
       console.log('Upload success response:', data)
-      
+
       if (!data.imageUrl) {
         throw new Error('No image URL returned from server')
       }
-      
+
       return data.imageUrl
     } catch (error) {
       console.error('Error uploading image:', error)
@@ -294,17 +308,17 @@ export default function VehiclesPage() {
     if (!confirm(`Are you sure you want to delete "${vehicle.name}"? This action cannot be undone.`)) {
       return
     }
-    
+
     try {
       const response = await fetch(`/api/vehicles/${vehicle.id}`, {
         method: 'DELETE',
       })
-      
+
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || 'Failed to delete vehicle')
       }
-      
+
       // Remove vehicle from local state
       setVehicles(prev => prev.filter(v => v.id !== vehicle.id))
       alert('Vehicle deleted successfully!')
@@ -316,35 +330,35 @@ export default function VehiclesPage() {
 
   const handleSave = async () => {
     if (modalType === 'edit' && !selectedVehicle) return
-    
+
     // Validate required fields for add mode
     if (modalType === 'add') {
       const requiredFields = ['name', 'category', 'price', 'year', 'transmission', 'fuel', 'licensePlate']
       const missingFields = requiredFields.filter(field => !editingVehicle[field as keyof typeof editingVehicle])
-      
+
       if (missingFields.length > 0) {
         alert(`Please fill in all required fields: ${missingFields.join(', ')}`)
         return
       }
-      
+
       // Validate license plate format
       if (!validateLicensePlate(editingVehicle.licensePlate || '')) {
         alert('Invalid license plate format. Please use Rwandan format: RA + Alphabet + 3 digits + Alphabet (e.g., RAI 123 C)')
         return
       }
     }
-    
+
     try {
       setUploading(true)
       let imageUrl = '/vehicles/land-cruiser.jpg' // Use an existing image as default
-      
+
       // Upload new image if one was selected (but not for first vehicle of brand)
       if (imageFile && (!selectedVehicle || !isFirstVehicleOfBrand(selectedVehicle))) {
         imageUrl = await uploadImage(imageFile)
       } else if (modalType === 'edit' && selectedVehicle) {
         imageUrl = selectedVehicle.image
       }
-      
+
       if (modalType === 'add') {
         // Create new vehicle
         const createData = {
@@ -361,9 +375,9 @@ export default function VehiclesPage() {
           fuel: editingVehicle.fuel || 'Petrol',
           customPlateNumber: editingVehicle.licensePlate, // License plate is required
         }
-        
+
         console.log('Sending vehicle creation data:', createData)
-        
+
         const response = await fetch('/api/vehicles/create', {
           method: 'POST',
           headers: {
@@ -371,24 +385,24 @@ export default function VehiclesPage() {
           },
           body: JSON.stringify(createData),
         })
-        
+
         console.log('Vehicle creation response status:', response.status)
-        
+
         if (!response.ok) {
           const errorData = await response.json()
           console.error('Vehicle creation error response:', errorData)
           throw new Error(errorData.error || 'Failed to create vehicle')
         }
-        
+
         const result = await response.json()
         console.log('Vehicle creation success response:', result)
-        
+
         // Add new vehicle to local state
         setVehicles(prev => [result.vehicle, ...prev])
-        
+
         // Refresh the vehicle list to ensure UI is up to date
         await fetchVehicles()
-        
+
         alert('Vehicle created successfully!')
       } else {
         // Update existing vehicle
@@ -396,10 +410,10 @@ export default function VehiclesPage() {
           ...editingVehicle,
           image: imageUrl,
         }
-        
+
         console.log('Sending vehicle update data:', updateData)
         console.log('Selected vehicle ID:', selectedVehicle!.id)
-        
+
         const response = await fetch(`/api/vehicles/${selectedVehicle!.id}`, {
           method: 'PUT',
           headers: {
@@ -407,31 +421,31 @@ export default function VehiclesPage() {
           },
           body: JSON.stringify(updateData),
         })
-        
+
         console.log('Vehicle update response status:', response.status)
-        
+
         if (!response.ok) {
           const errorData = await response.json()
           console.error('Vehicle update error response:', errorData)
           throw new Error(errorData.error || 'Failed to update vehicle')
         }
-        
+
         const result = await response.json()
         console.log('Vehicle update success response:', result)
-        
+
         // Update local state with the response from the API
         setVehicles(prev => {
           const updated = prev.map(v => v.id === selectedVehicle!.id ? result.vehicle : v)
           console.log('Updated vehicles state:', updated)
           return updated
         })
-        
+
         // Refresh the vehicle list to ensure UI is up to date
         await fetchVehicles()
-        
+
         alert('Vehicle updated successfully!')
       }
-      
+
       closeModal()
     } catch (error) {
       console.error('Error saving vehicle:', error)
@@ -441,22 +455,15 @@ export default function VehiclesPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading vehicles...</p>
-        </div>
-      </div>
-    )
+  if (userLoading || loading || !user || !['admin', 'manager', 'transport-officer'].includes(user.role)) {
+    return <LoadingSpinner />
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed">
       <style jsx>{`
         .image-container img {
-          object-fit: cover !important;
+          object-fit: contain !important;
           object-position: center !important;
           width: 100% !important;
           height: 100% !important;
@@ -468,19 +475,26 @@ export default function VehiclesPage() {
         }
       `}</style>
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 shadow-soft border-b border-blue-100">
+      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-white/20 shadow-sm transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            <div className="animate-slide-down">
-              <h1 className="text-4xl font-bold text-gradient mb-1">Vehicle Management</h1>
-              <p className="text-lg text-gray-600">Manage your fleet of vehicles with style</p>
+          <div className="flex items-center justify-between h-24">
+            <div className="animate-fade-in-up">
+              <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase mb-1">
+                Fleet Command
+              </h1>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest opacity-80">
+                Vehicle Inventory & Management System
+              </p>
             </div>
             <button
               onClick={() => openModal(null, 'add')}
-              className="btn-primary hover-lift animate-bounce-gentle"
+              className="group relative px-8 py-3 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg hover:shadow-orange-500/30 transition-all duration-300 hover:scale-105 active:scale-95 overflow-hidden"
             >
-              <FaPlus className="text-sm" />
-              Add Vehicle
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+              <div className="relative flex items-center gap-2">
+                <FaPlus className="text-sm" />
+                <span>Add Unit</span>
+              </div>
             </button>
           </div>
         </div>
@@ -489,58 +503,54 @@ export default function VehiclesPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="card card-hover animate-slide-up animation-delay-200">
-            <div className="flex items-center">
-              <div className="p-3 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl shadow-soft">
-                <FaCar className="text-blue-600 text-2xl" />
+          <div className="group bg-white/80 backdrop-blur-sm p-6 rounded-3xl border border-white/50 shadow-sm hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-orange-100 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <FaCar className="text-orange-600 text-xl" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Vehicles</p>
-                <p className="text-3xl font-bold text-gradient">{vehicles.length}</p>
-              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-orange-600 bg-orange-50 px-2 py-1 rounded-lg">Total</span>
             </div>
+            <p className="text-3xl font-black text-gray-900 tracking-tight">{vehicles.length}</p>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mt-1">Fleet Size</p>
           </div>
 
-          <div className="card card-hover animate-slide-up animation-delay-400">
-            <div className="flex items-center">
-              <div className="p-3 bg-gradient-to-br from-green-100 to-green-200 rounded-2xl shadow-soft">
-                <FaCheckCircle className="text-green-600 text-2xl" />
+          <div className="group bg-white/80 backdrop-blur-sm p-6 rounded-3xl border border-white/50 shadow-sm hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-emerald-100 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <FaCheckCircle className="text-emerald-600 text-xl" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Available</p>
-                <p className="text-3xl font-bold text-gradient">
-                  {vehicles.filter(v => v.isAvailable).length}
-                </p>
-              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">Active</span>
             </div>
+            <p className="text-3xl font-black text-gray-900 tracking-tight">
+              {vehicles.filter(v => v.isAvailable).length}
+            </p>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mt-1">Ready for Rent</p>
           </div>
 
-          <div className="card card-hover animate-slide-up animation-delay-2000">
-            <div className="flex items-center">
-              <div className="p-3 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-2xl shadow-soft">
-                <FaTools className="text-yellow-600 text-2xl" />
+          <div className="group bg-white/80 backdrop-blur-sm p-6 rounded-3xl border border-white/50 shadow-sm hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-amber-100 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <FaTools className="text-amber-600 text-xl" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">In Maintenance</p>
-                <p className="text-3xl font-bold text-gradient">
-                  {vehicles.filter(v => v.status === 'Maintenance').length}
-                </p>
-              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-amber-600 bg-amber-50 px-2 py-1 rounded-lg">Status</span>
             </div>
+            <p className="text-3xl font-black text-gray-900 tracking-tight">
+              {vehicles.filter(v => v.status === 'Maintenance').length}
+            </p>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mt-1">In Workshop</p>
           </div>
 
-          <div className="card card-hover animate-slide-up animation-delay-4000">
-            <div className="flex items-center">
-              <div className="p-3 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl shadow-soft">
-                <FaCar className="text-blue-600 text-2xl" />
+          <div className="group bg-white/80 backdrop-blur-sm p-6 rounded-3xl border border-white/50 shadow-sm hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-blue-100 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <FaCar className="text-blue-600 text-xl" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Currently Rented</p>
-                <p className="text-3xl font-bold text-gradient">
-                  {vehicles.filter(v => v.status === 'Rented').length}
-                </p>
-              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">Active</span>
             </div>
+            <p className="text-3xl font-black text-gray-900 tracking-tight">
+              {vehicles.filter(v => v.status === 'Rented').length}
+            </p>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mt-1">On Road</p>
           </div>
         </div>
 
@@ -557,7 +567,7 @@ export default function VehiclesPage() {
                   <FaFilter className="text-sm" />
                   {showFilters ? 'Hide' : 'Show'} Filters
                 </button>
-                
+
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
@@ -569,7 +579,7 @@ export default function VehiclesPage() {
                   <option value="mileage">Mileage</option>
                   <option value="quantity">Quantity</option>
                 </select>
-                
+
                 <button
                   onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
                   className="p-3 text-gray-400 hover:text-blue-600 hover:scale-110 transition-all duration-300 rounded-2xl hover:bg-blue-50"
@@ -581,7 +591,7 @@ export default function VehiclesPage() {
 
             {/* Search */}
             <div className="relative mb-6">
-              <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-500 text-lg" />
+              <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-orange-500 text-lg" />
               <input
                 type="text"
                 placeholder="Search vehicles by name, description, or license plate..."
@@ -593,7 +603,7 @@ export default function VehiclesPage() {
 
             {/* Filters */}
             {showFilters && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-3xl border border-blue-100 animate-scale-in">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-6 bg-white/50 backdrop-blur-md rounded-3xl border border-white/60 animate-scale-in shadow-lg">
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
@@ -651,8 +661,8 @@ export default function VehiclesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
             {currentVehicles.map((vehicle, index) => (
-              <div 
-                key={vehicle.id} 
+              <div
+                key={vehicle.id}
                 className="card card-hover animate-slide-up"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
@@ -691,7 +701,7 @@ export default function VehiclesPage() {
 
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-gradient mb-3 line-clamp-1 hover:scale-105 transition-transform duration-300">{vehicle.name}</h3>
-                  
+
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-2xl font-bold text-gradient">{vehicle.price}</span>
                     <span className="text-sm text-gray-500 font-medium">per day</span>
@@ -722,27 +732,24 @@ export default function VehiclesPage() {
                     </div>
                   )}
 
-                  <div className="flex gap-3">
+                  <div className="flex gap-2.5">
                     <button
                       onClick={() => openModal(vehicle, 'view')}
-                      className="flex-1 btn-secondary hover-lift text-sm py-3"
+                      className="flex-1 py-2.5 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-95"
                     >
-                      <FaEye className="text-sm" />
-                      View
+                      <FaEye /> View
                     </button>
                     <button
                       onClick={() => openModal(vehicle, 'edit')}
-                      className="flex-1 btn-primary hover-lift text-sm py-3"
+                      className="flex-1 py-2.5 bg-orange-50 text-orange-600 rounded-xl hover:bg-orange-100 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-95"
                     >
-                      <FaEdit className="text-sm" />
-                      Edit
+                      <FaEdit /> Edit
                     </button>
                     <button
                       onClick={() => handleDelete(vehicle)}
-                      className="flex-1 btn-danger hover-lift text-sm py-3"
+                      className="flex-1 py-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-95"
                     >
-                      <FaTrash className="text-sm" />
-                      Delete
+                      <FaTrash /> Delete
                     </button>
                   </div>
                 </div>
@@ -761,21 +768,20 @@ export default function VehiclesPage() {
             >
               Previous
             </button>
-            
+
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <button
                 key={page}
                 onClick={() => setCurrentPage(page)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium ${
-                  currentPage === page
-                    ? 'bg-blue-600 text-white'
-                    : 'border border-gray-300 hover:bg-gray-50'
-                }`}
+                className={`px-3 py-2 rounded-lg text-sm font-medium ${currentPage === page
+                  ? 'bg-blue-600 text-white'
+                  : 'border border-gray-300 hover:bg-gray-50'
+                  }`}
               >
                 {page}
               </button>
             ))}
-            
+
             <button
               onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
@@ -789,24 +795,24 @@ export default function VehiclesPage() {
 
       {/* Vehicle Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[95vh] overflow-y-auto border border-gray-100">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl max-w-4xl w-full max-h-[95vh] overflow-y-auto border border-white/50 animate-scale-in">
             {/* Header */}
-            <div className="sticky top-0 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 p-6 rounded-t-3xl">
+            <div className="sticky top-0 z-10 bg-gradient-to-r from-orange-50/90 to-amber-50/90 backdrop-blur-md border-b border-orange-100 p-6 rounded-t-3xl">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <FaCar className="text-2xl text-blue-600" />
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/20">
+                    <FaCar className="text-2xl text-white" />
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900">
-                      {modalType === 'add' ? 'Add New Vehicle' : 
-                       modalType === 'edit' ? 'Edit Vehicle' : 'Vehicle Details'}
+                      {modalType === 'add' ? 'Add New Vehicle' :
+                        modalType === 'edit' ? 'Edit Vehicle' : 'Vehicle Details'}
                     </h2>
                     <p className="text-sm text-gray-600 mt-1">
                       {modalType === 'add' ? 'Fill in the details below to add a new vehicle to your fleet' :
-                       modalType === 'edit' ? 'Update the vehicle information below' :
-                       'View detailed information about this vehicle'}
+                        modalType === 'edit' ? 'Update the vehicle information below' :
+                          'View detailed information about this vehicle'}
                     </p>
                     {modalType === 'edit' && selectedVehicle && isFirstVehicleOfBrand(selectedVehicle) && (
                       <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded-lg">
@@ -843,7 +849,7 @@ export default function VehiclesPage() {
                         fill
                         className="object-cover w-full h-full"
                         sizes="192px"
-                        style={{ 
+                        style={{
                           objectPosition: 'center',
                           maxWidth: '100%',
                           maxHeight: '100%'
@@ -862,7 +868,7 @@ export default function VehiclesPage() {
                         fill
                         className="object-cover w-full h-full"
                         sizes="192px"
-                        style={{ 
+                        style={{
                           objectPosition: 'center',
                           maxWidth: '100%',
                           maxHeight: '100%'
@@ -880,7 +886,7 @@ export default function VehiclesPage() {
                         <p className="text-sm font-medium">No Image</p>
                       </div>
                     )}
-                    
+
                     {/* Fallback icon for when images fail to load */}
                     {((imagePreview && !imagePreview.startsWith('data:')) || (selectedVehicle?.image && !selectedVehicle.image.startsWith('data:'))) && (
                       <div className="absolute inset-0 flex items-center justify-center bg-gray-100 opacity-0 hover:opacity-100 transition-opacity">
@@ -888,7 +894,7 @@ export default function VehiclesPage() {
                       </div>
                     )}
                     {modalType !== 'view' && !isFirstVehicleOfBrand(selectedVehicle!) && (
-                      <div 
+                      <div
                         className="absolute inset-0 bg-black bg-opacity-60 opacity-0 hover:opacity-100 transition-all duration-300 flex items-center justify-center cursor-pointer rounded-2xl"
                         onClick={() => document.getElementById('image-upload')?.click()}
                       >
@@ -898,7 +904,7 @@ export default function VehiclesPage() {
                         </div>
                       </div>
                     )}
-                    
+
                     {/* Show lock overlay for first vehicle of brand */}
                     {modalType !== 'view' && isFirstVehicleOfBrand(selectedVehicle!) && (
                       <div className="absolute inset-0 bg-yellow-500 bg-opacity-80 flex items-center justify-center rounded-2xl">
@@ -910,7 +916,7 @@ export default function VehiclesPage() {
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Image Upload Controls */}
                   {modalType !== 'view' && !isFirstVehicleOfBrand(selectedVehicle!) && (
                     <div className="flex-1">
@@ -969,7 +975,7 @@ export default function VehiclesPage() {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Protected Image Message for First Vehicle of Brand */}
                   {modalType !== 'view' && isFirstVehicleOfBrand(selectedVehicle!) && (
                     <div className="flex-1">
@@ -1206,22 +1212,20 @@ export default function VehiclesPage() {
                     onChange={(e) => setEditingVehicle(prev => ({ ...prev, licensePlate: e.target.value.toUpperCase() }))}
                     readOnly={modalType === 'view'}
                     placeholder="e.g., RAI 123 C"
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                      editingVehicle.licensePlate 
-                        ? validateLicensePlate(editingVehicle.licensePlate)
-                          ? 'border-green-400 bg-green-50'
-                          : 'border-red-400 bg-red-50'
-                        : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                  />
-                  <p className={`text-xs mt-2 font-medium ${
-                    editingVehicle.licensePlate 
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${editingVehicle.licensePlate
                       ? validateLicensePlate(editingVehicle.licensePlate)
-                        ? 'text-green-600'
-                        : 'text-red-600'
-                      : 'text-gray-500'
-                  }`}>
-                    {editingVehicle.licensePlate 
+                        ? 'border-green-400 bg-green-50'
+                        : 'border-red-400 bg-red-50'
+                      : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                  />
+                  <p className={`text-xs mt-2 font-medium ${editingVehicle.licensePlate
+                    ? validateLicensePlate(editingVehicle.licensePlate)
+                      ? 'text-green-600'
+                      : 'text-red-600'
+                    : 'text-gray-500'
+                    }`}>
+                    {editingVehicle.licensePlate
                       ? validateLicensePlate(editingVehicle.licensePlate)
                         ? '✓ Valid Rwandan format'
                         : '✗ Invalid format. Use: RA + Alphabet + 3 digits + Alphabet'
@@ -1257,7 +1261,7 @@ export default function VehiclesPage() {
                   <button
                     onClick={handleSave}
                     disabled={uploading}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="flex-1 bg-gradient-to-r from-orange-600 to-amber-600 text-white px-6 py-3 rounded-xl hover:from-orange-700 hover:to-amber-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 font-bold uppercase tracking-wide shadow-lg hover:shadow-orange-500/30 transform hover:scale-105"
                   >
                     {uploading ? (
                       <>
