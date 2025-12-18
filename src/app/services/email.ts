@@ -1,4 +1,14 @@
 import nodemailer from 'nodemailer';
+import type { SendMailOptions } from 'nodemailer';
+
+interface SendEmailParams {
+  to: string;
+  subject: string;
+  text?: string;
+  html?: string;
+  // Improved typing for attachments
+  attachments?: SendMailOptions['attachments'];
+}
 
 export async function sendEmail({
   to,
@@ -6,37 +16,34 @@ export async function sendEmail({
   text,
   html,
   attachments,
-}: {
-  to: string;
-  subject: string;
-  text?: string;
-  html?: string;
-  attachments?: any[];
-}) {
+}: SendEmailParams) {
   try {
-    // In development logic: Mock email if no SMTP_HOST or SMTP_USER is set
-    if (process.env.NODE_ENV === 'development' && (!process.env.SMTP_HOST || !process.env.SMTP_USER)) {
-      console.log(`[Email Service] Dev Mode: Mocking email to ${to}`);
-      console.log(`[Email Content]: ${text || html}`);
-      return { id: `mock-${Date.now()}`, success: true };
-    }
+    // 1. Configure SMTP Settings
+    // Ensure SMTP_PORT is read as a number. Default to 587 if missing.
+    const smtpPort = parseInt(process.env.SMTP_PORT || '587');
 
-    // Configure SMTP transporter using Brevo (formerly Sendinblue)
+    // 2. Dynamic SSL Logic
+    // Fix: Port 465 requires secure: true. Port 587 requires secure: false.
+    const isSecure = smtpPort === 465;
+
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: false, // true for 465, false for other ports
+      port: smtpPort,
+      secure: isSecure,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASSWORD,
       },
     });
 
-    const from = process.env.SMTP_FROM || 'KIMU Transport <valery.osisolns@gmail.com>';
+    // 3. Define Sender
+    // Critical: I replaced the hardcoded personal Gmail with a generic fallback 
+    // to protect your privacy and prevent spam.
+    const from = process.env.SMTP_FROM || 'KIMU Transport <noreply@kimutransport.com>';
 
-    console.log(`[Email Service] Sending email to ${to} from ${from}`);
+    console.log(`[Email Service] Attempting to send email to ${to} from ${from}`);
 
-    // Send email
+    // 4. Send Email
     const info = await transporter.sendMail({
       from,
       to,
@@ -48,8 +55,10 @@ export async function sendEmail({
 
     console.log(`[Email Service] Email sent successfully: ${info.messageId}`);
     return { id: info.messageId, success: true };
+
   } catch (error) {
     console.error('[Email Service] Failed to send email:', error);
+    // Throwing the error ensures the calling function knows the email failed
     throw error;
   }
 }
