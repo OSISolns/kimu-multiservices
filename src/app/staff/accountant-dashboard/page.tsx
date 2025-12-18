@@ -193,8 +193,7 @@ export default function UpgradedAccountantDashboard() {
     { id: 'budget', name: 'Budget', icon: FaChartPie },
     { id: 'pettycash', name: 'Petty Cash', icon: FaPiggyBank },
     { id: 'ledger', name: 'General Ledger', icon: FaBalanceScale },
-    { id: 'payroll', name: 'Payroll', icon: FaUsers },
-    { id: 'reports', name: 'Reports', icon: FaChartBar }
+    { id: 'payroll', name: 'Payroll', icon: FaUsers }
   ];
 
   if (isLoading) {
@@ -595,15 +594,7 @@ export default function UpgradedAccountantDashboard() {
                       </div>
                       <span className="text-xs font-black text-gray-700 uppercase tracking-widest group-hover:text-blue-700">New Invoice</span>
                     </button>
-                    <button
-                      onClick={() => setActiveTab('reports')}
-                      className="flex flex-col items-center justify-center p-6 rounded-3xl border-2 border-transparent bg-white hover:border-purple-200 hover:bg-purple-50 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 group"
-                    >
-                      <div className="w-14 h-14 rounded-2xl bg-purple-100 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-500 shadow-sm">
-                        <FaChartBar className="text-purple-600 text-xl" />
-                      </div>
-                      <span className="text-xs font-black text-gray-700 uppercase tracking-widest group-hover:text-purple-700">Reports</span>
-                    </button>
+
                   </div>
                 </div>
               </div>
