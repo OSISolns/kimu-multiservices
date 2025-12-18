@@ -171,8 +171,13 @@ export default function UpgradedAccountantDashboard() {
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/staff/login');
-    } else if (!isLoading && user && user.role !== 'accountant' && user.role !== 'admin') {
-      router.push('/staff/sales-dashboard');
+    } else if (!isLoading && user && user.role !== 'accountant') {
+      // Strict separation: Only accountants allowed
+      if (user.role === 'admin') {
+        router.push('/staff/admin-dashboard');
+      } else {
+        router.push('/staff/sales-dashboard'); // Default fallback
+      }
     } else if (!isLoading && user) {
       fetchFinancialData();
       fetchPayrollData();

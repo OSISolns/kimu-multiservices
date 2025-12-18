@@ -6,16 +6,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 const sidebarLinks = [
-  { href: '/staff/admin-dashboard', label: 'Dashboard', icon: <FaTachometerAlt />, roles: ['admin'] },
-  { href: '/staff/manager-dashboard', label: 'Dashboard', icon: <FaTachometerAlt />, roles: ['manager'] },
-  { href: '/staff/sales-dashboard', label: 'Dashboard', icon: <FaCar />, roles: ['staff', 'sales'] },
-  { href: '/staff/transport_officer-dashboard', label: 'Transport Officer', icon: <FaMapMarkedAlt />, roles: ['transport-officer'] },
+  { href: '/staff/admin-dashboard', label: 'Admin Dashboard', icon: <FaTachometerAlt />, roles: ['admin'] },
+  { href: '/staff/manager-dashboard', label: 'Manager Dashboard', icon: <FaTachometerAlt />, roles: ['manager'] },
+  { href: '/staff/sales-dashboard', label: 'Sales Dashboard', icon: <FaCar />, roles: ['staff', 'sales'] },
+  { href: '/staff/transport_officer-dashboard', label: 'Transport Dashboard', icon: <FaMapMarkedAlt />, roles: ['transport-officer'] },
   { href: '/staff/accountant-dashboard', label: 'Finance Dashboard', icon: <FaMoneyBillWave />, roles: ['accountant'] },
-  { href: '/staff/bookings', label: 'Bookings', icon: <FaCalendarAlt />, roles: ['admin', 'manager', 'staff', 'transport-officer'] },
-  { href: '/staff/vehicles', label: 'Vehicles', icon: <FaCar />, roles: ['admin', 'manager', 'transport-officer', 'staff'] },
-  { href: '/staff/sales-dashboard', label: 'Sales Management', icon: <FaUsers />, roles: ['admin', 'manager', 'staff', 'sales'] },
-  { href: '/staff/reports', label: 'Reports', icon: <FaFileAlt />, roles: ['admin', 'manager', 'accountant'] },
-  { href: '/staff/users', label: 'Users', icon: <FaInbox />, roles: ['admin', 'manager'] },
 ];
 
 export default function StaffSidebar() {
