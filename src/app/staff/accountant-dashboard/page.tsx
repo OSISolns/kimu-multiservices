@@ -193,7 +193,8 @@ export default function UpgradedAccountantDashboard() {
     { id: 'budget', name: 'Budget', icon: FaChartPie },
     { id: 'pettycash', name: 'Petty Cash', icon: FaPiggyBank },
     { id: 'ledger', name: 'General Ledger', icon: FaBalanceScale },
-    { id: 'payroll', name: 'Payroll', icon: FaUsers }
+    { id: 'payroll', name: 'Payroll', icon: FaUsers },
+    { id: 'reports', name: 'Reports', icon: FaChartBar }
   ];
 
   if (isLoading) {
@@ -705,6 +706,83 @@ export default function UpgradedAccountantDashboard() {
           {activeTab === 'payroll' && (
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/50 p-6">
               <PayrollDashboard user={user} />
+            </div>
+          )}
+
+          {activeTab === 'reports' && (
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/50 p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-gray-900">Financial Reports</h3>
+                <a
+                  href="/staff/financial-reports"
+                  className="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-4 py-2 rounded-xl hover:from-orange-700 hover:to-amber-700 flex items-center gap-2 shadow-lg shadow-orange-500/30 transition-all active:scale-95 text-xs font-black uppercase tracking-widest"
+                >
+                  <FaFileAlt />
+                  View All Reports
+                </a>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <a
+                  href="/staff/financial-reports?type=income-statement"
+                  className="p-6 border-2 border-gray-100 rounded-2xl bg-white hover:border-blue-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
+                >
+                  <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-100 transition-colors">
+                    <FaChartBar className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div className="font-bold text-lg text-gray-900 mb-1">Income Statement</div>
+                  <div className="text-sm text-gray-500">Revenue and expenses report</div>
+                </a>
+                <a
+                  href="/staff/financial-reports?type=balance-sheet"
+                  className="p-6 border-2 border-gray-100 rounded-2xl bg-white hover:border-green-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
+                >
+                  <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-green-100 transition-colors">
+                    <FaBalanceScale className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div className="font-bold text-lg text-gray-900 mb-1">Balance Sheet</div>
+                  <div className="text-sm text-gray-500">Assets, liabilities, and equity</div>
+                </a>
+                <a
+                  href="/staff/financial-reports?type=cash-flow"
+                  className="p-6 border-2 border-gray-100 rounded-2xl bg-white hover:border-orange-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
+                >
+                  <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-orange-100 transition-colors">
+                    <FaChartLine className="h-6 w-6 text-orange-600" />
+                  </div>
+                  <div className="font-bold text-lg text-gray-900 mb-1">Cash Flow</div>
+                  <div className="text-sm text-gray-500">Cash inflows and outflows</div>
+                </a>
+                <a
+                  href="/staff/financial-reports?type=expense-breakdown"
+                  className="p-6 border-2 border-gray-100 rounded-2xl bg-white hover:border-red-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
+                >
+                  <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-red-100 transition-colors">
+                    <FaReceipt className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div className="font-bold text-lg text-gray-900 mb-1">Expense Report</div>
+                  <div className="text-sm text-gray-500">Detailed expense breakdown</div>
+                </a>
+                <a
+                  href="/staff/financial-reports?type=revenue-analysis"
+                  className="p-6 border-2 border-gray-100 rounded-2xl bg-white hover:border-yellow-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
+                >
+                  <div className="w-12 h-12 bg-yellow-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-yellow-100 transition-colors">
+                    <FaFileInvoiceDollar className="h-6 w-6 text-yellow-600" />
+                  </div>
+                  <div className="font-bold text-lg text-gray-900 mb-1">Revenue Analysis</div>
+                  <div className="text-sm text-gray-500">Revenue trends and analysis</div>
+                </a>
+                <a
+                  href="/staff/financial-reports?type=summary"
+                  className="p-6 border-2 border-gray-100 rounded-2xl bg-white hover:border-indigo-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
+                >
+                  <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-indigo-100 transition-colors">
+                    <FaChartPie className="h-6 w-6 text-indigo-600" />
+                  </div>
+                  <div className="font-bold text-lg text-gray-900 mb-1">Financial Summary</div>
+                  <div className="text-sm text-gray-500">Complete overview report</div>
+                </a>
+              </div>
             </div>
           )}
 
