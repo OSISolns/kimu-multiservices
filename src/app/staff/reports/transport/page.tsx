@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/app/UserContext'
-import { FaCar, FaChartBar, FaDownload, FaFilter, FaCalendar, FaUsers, FaRoad, FaGasPump, FaSpinner, FaTools, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa'
+import { FaCar, FaChartBar, FaDownload, FaFilter, FaCalendar, FaUsers, FaRoad, FaGasPump, FaSpinner, FaTools, FaCheckCircle, FaExclamationTriangle, FaChartLine } from 'react-icons/fa'
 import LoadingSpinner from '@/components/LoadingSpinner'
 
 interface TransportReport {
