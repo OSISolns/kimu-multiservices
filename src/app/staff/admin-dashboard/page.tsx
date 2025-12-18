@@ -51,9 +51,20 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     if (isLoading) return;
 
-    if (!user || user.role !== "admin") {
-      // If not admin, redirect to login or appropriate dashboard
-      // But since this page is protected, we might just return
+    if (!user) {
+      router.push('/staff/login');
+      return;
+    }
+
+    if (user.role !== "admin") {
+      // Redirect non-admin users to their appropriate dashboard
+      if (user.role === 'accountant') {
+        router.push('/staff/accountant-dashboard');
+      } else if (user.role === 'sales') {
+        router.push('/staff/sales-dashboard');
+      } else {
+        router.push('/staff/sales-dashboard');
+      }
       return;
     }
 
@@ -613,22 +624,13 @@ export default function AdminDashboardPage() {
       {/* Advanced Management Tools */}
       <div className="bg-white rounded-2xl p-6 shadow">
         <h3 className="text-lg font-bold mb-6 flex items-center gap-2"><FaDatabase className="text-gray-600" /> Advanced Management</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Link href="/staff/system-logs" className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
             <div className="flex items-center gap-3">
               <FaDatabase className="text-gray-600" />
               <div>
                 <div className="font-medium">System Logs</div>
                 <div className="text-sm text-gray-500">{systemLogs.length} entries</div>
-              </div>
-            </div>
-          </Link>
-          <Link href="/staff/reports" className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-            <div className="flex items-center gap-3">
-              <FaFileAlt className="text-gray-600" />
-              <div>
-                <div className="font-medium">Reports</div>
-                <div className="text-sm text-gray-500">Analytics & Reports</div>
               </div>
             </div>
           </Link>
@@ -647,15 +649,6 @@ export default function AdminDashboardPage() {
               <div>
                 <div className="font-medium">User Management</div>
                 <div className="text-sm text-gray-500">{users.length} users</div>
-              </div>
-            </div>
-          </Link>
-          <Link href="/staff/sales-dashboard" className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-            <div className="flex items-center gap-3">
-              <FaFileAlt className="text-indigo-600" />
-              <div>
-                <div className="font-medium">Quotes & Leads</div>
-                <div className="text-sm text-gray-500">{quotes.length} quotes, {leads.length} leads</div>
               </div>
             </div>
           </Link>
