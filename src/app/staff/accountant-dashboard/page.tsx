@@ -185,7 +185,7 @@ export default function UpgradedAccountantDashboard() {
     fetchPayrollData();
   };
 
-  const tabs = [
+  const allTabs = [
     { id: 'overview', name: 'Overview', icon: FaTachometerAlt },
     { id: 'income', name: 'Income', icon: FaMoneyBillWave },
     { id: 'expenses', name: 'Expenses', icon: FaReceipt },
@@ -196,6 +196,11 @@ export default function UpgradedAccountantDashboard() {
     { id: 'payroll', name: 'Payroll', icon: FaUsers },
     { id: 'reports', name: 'Reports', icon: FaChartBar }
   ];
+
+  // Filter tabs based on user role - hide Reports from admin
+  const tabs = user?.role === 'admin'
+    ? allTabs.filter(tab => tab.id !== 'reports')
+    : allTabs;
 
   if (isLoading) {
     return <LoadingSpinner />;
