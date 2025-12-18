@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { FaHistory, FaFilter, FaDownload, FaSearch, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useUser } from '../../UserContext';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
@@ -23,6 +24,7 @@ interface Pagination {
 }
 
 export default function ActivityLogsPage() {
+  const router = useRouter();
   const { user } = useUser();
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,7 +40,13 @@ export default function ActivityLogsPage() {
   const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
 
   useEffect(() => {
+    if (user && user.role !== 'admin') {
+      router.push('/staff/sales-dashboard'); // Redirect non-admins
+      return;
+    }
+
     const fetchActivityLogs = async () => {
+      // ... existing fetch logic ...
       setLoading(true);
       try {
         const params = new URLSearchParams();
@@ -64,8 +72,10 @@ export default function ActivityLogsPage() {
       }
     };
 
-    fetchActivityLogs();
-  }, [filters, user?.username]);
+    if (user && user.role === 'admin') {
+      fetchActivityLogs();
+    }
+  }, [filters, user, router]); // Added user, router dependencies
 
   const handleFilterChange = (key: string, value: string | number) => {
     setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
@@ -142,11 +152,16 @@ export default function ActivityLogsPage() {
     window.URL.revokeObjectURL(url);
   };
 
+  // Authorization Render Check
+  if (user && user.role !== 'admin') {
+    return <div className="min-h-screen flex items-center justify-center text-red-600 font-bold">Not Authorized</div>;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4">
         <div className="mb-4">
-          <Link href="/staff/sales-dashboard" className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">&larr; Back to Dashboard</Link>
+          <Link href="/staff/admin-dashboard" className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">&larr; Back to Dashboard</Link>
         </div>
         <div className="bg-white rounded-2xl shadow-lg p-8">
           <div className="flex items-center gap-3 mb-8">
