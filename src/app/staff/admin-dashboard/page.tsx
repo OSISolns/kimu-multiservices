@@ -26,6 +26,7 @@ import {
   FaPlus,
   FaDownload,
   FaSync,
+  FaArrowUp,
 } from "react-icons/fa";
 
 type Booking = any;
@@ -291,377 +292,444 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header with refresh button */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600">Last updated: {lastRefresh.toLocaleString()}</p>
-        </div>
-        <button
-          onClick={refreshData}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-        >
-          <FaSync /> Refresh Data
-        </button>
-      </div>
-
-      {/* Enhanced stats grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
-        <div className="glass-stat group overflow-hidden relative p-6">
-          <div className="absolute inset-0 gradient-blue opacity-5 group-hover:opacity-10 transition-opacity"></div>
-          <div className="relative flex items-center gap-4">
-            <div className="p-3 gradient-blue rounded-xl shadow-lg"><FaUsers className="text-white text-xl" /></div>
-            <div>
-              <div className="text-sm font-medium text-gray-600">Total Users</div>
-              <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">{users.length}</div>
-              <div className="text-xs text-gray-500">✓ Active: {users.filter((u: any) => u.status === 'active').length}</div>
+    <div className="min-h-screen bg-gray-50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed">
+      {/* Sticky Header with Glassmorphism */}
+      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-white/20 shadow-sm print:hidden mb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-r from-orange-600 to-amber-600 rounded-xl shadow-lg shadow-orange-500/30">
+                <FaShieldAlt className="text-white text-xl" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase">Admin Dashboard</h1>
+                <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest opacity-60">System Overview & Management</p>
+              </div>
             </div>
-          </div>
-        </div>
-        <div className="glass-stat group overflow-hidden relative p-6">
-          <div className="absolute inset-0 gradient-green opacity-5 group-hover:opacity-10 transition-opacity"></div>
-          <div className="relative flex items-center gap-4">
-            <div className="p-3 gradient-green rounded-xl shadow-lg"><FaMoneyBillWave className="text-white text-xl" /></div>
-            <div>
-              <div className="text-sm font-medium text-gray-600">Total Revenue</div>
-              <div className="text-2xl font-bold bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent">{totalRevenue.toLocaleString()} RWF</div>
-              <div className="text-xs text-gray-500">✓ {payments.filter((p: any) => p.status === 'completed').length} completed</div>
-            </div>
-          </div>
-        </div>
-        <div className="glass-stat group overflow-hidden relative p-6">
-          <div className="absolute inset-0 gradient-purple opacity-5 group-hover:opacity-10 transition-opacity"></div>
-          <div className="relative flex items-center gap-4">
-            <div className="p-3 gradient-purple rounded-xl shadow-lg"><FaCalendarAlt className="text-white text-xl" /></div>
-            <div>
-              <div className="text-sm font-medium text-gray-600">Total Bookings</div>
-              <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">{bookings.length}</div>
-              <div className="text-xs text-gray-500">⏳ Pending: {pendingBookings}</div>
-            </div>
-          </div>
-        </div>
-        <div className="glass-stat group overflow-hidden relative p-6">
-          <div className="absolute inset-0 gradient-orange opacity-5 group-hover:opacity-10 transition-opacity"></div>
-          <div className="relative flex items-center gap-4">
-            <div className="p-3 gradient-orange rounded-xl shadow-lg"><FaCar className="text-white text-xl" /></div>
-            <div>
-              <div className="text-sm font-medium text-gray-600">Available Vehicles</div>
-              <div className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-800 bg-clip-text text-transparent">{availableVehicles}</div>
-              <div className="text-xs text-gray-500">🚗 Total: {vehicles.length}</div>
-            </div>
-          </div>
-        </div>
-        <div className="glass-stat group overflow-hidden relative p-6">
-          <div className="absolute inset-0 gradient-indigo opacity-5 group-hover:opacity-10 transition-opacity"></div>
-          <div className="relative flex items-center gap-4">
-            <div className="p-3 gradient-indigo rounded-xl shadow-lg"><FaFileAlt className="text-white text-xl" /></div>
-            <div>
-              <div className="text-sm font-medium text-gray-600">Total Quotes</div>
-              <div className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-indigo-800 bg-clip-text text-transparent">{totalQuotes}</div>
-              <div className="text-xs text-gray-500">📋 Pending: {pendingQuotes}</div>
-            </div>
-          </div>
-        </div>
-        <div className="glass-stat group overflow-hidden relative p-6">
-          <div className="absolute inset-0 gradient-pink opacity-5 group-hover:opacity-10 transition-opacity"></div>
-          <div className="relative flex items-center gap-4">
-            <div className="p-3 gradient-pink rounded-xl shadow-lg"><FaChartLine className="text-white text-xl" /></div>
-            <div>
-              <div className="text-sm font-medium text-gray-600">Total Leads</div>
-              <div className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-pink-800 bg-clip-text text-transparent">{totalLeads}</div>
-              <div className="text-xs text-gray-500">🎯 Active: {activeLeads}</div>
+            <div className="flex items-center gap-4">
+              <span className="hidden md:block text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                Last updated: {lastRefresh.toLocaleTimeString()}
+              </span>
+              <button
+                onClick={refreshData}
+                className="bg-white border-2 border-gray-100 text-gray-600 px-4 py-2 rounded-xl hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200 transition-all flex items-center gap-2 shadow-sm font-bold text-xs uppercase tracking-wider active:scale-95"
+              >
+                <FaSync className={loading ? "animate-spin" : ""} /> Refresh
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* System Health and Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* System Health */}
-        <div className="bg-white rounded-2xl p-6 shadow">
-          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-            <FaShieldAlt className={`text-${systemHealth.status === 'healthy' ? 'green' : systemHealth.status === 'warning' ? 'yellow' : 'red'}-500`} />
-            System Health
-          </h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Overall Status</span>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${systemHealth.status === 'healthy' ? 'bg-green-100 text-green-800' :
-                systemHealth.status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-red-100 text-red-800'
-                }`}>
-                {systemHealth.status.toUpperCase()}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 space-y-8">
+
+        {/* Modern Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+          {/* Users Stat */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 border border-white/50 shadow-sm hover:shadow-md transition-all group">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <FaUsers className="text-xl" />
+              </div>
+              <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">
+                +{users.filter((u: any) => u.status === 'active').length} Active
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className={`h-2 rounded-full ${systemHealth.status === 'healthy' ? 'bg-green-500' :
-                  systemHealth.status === 'warning' ? 'bg-yellow-500' :
-                    'bg-red-500'
-                  }`}
-                style={{ width: `${systemHealth.percentage}%` }}
-              />
-            </div>
-            <div className="text-xs text-gray-500">{systemHealth.percentage}% operational</div>
+            <div className="text-3xl font-black text-gray-900 tracking-tight mb-1">{users.length}</div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Users</div>
           </div>
-        </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white rounded-2xl p-6 shadow">
-          <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><FaCog className="text-blue-500" /> Quick Actions</h3>
-          <div className="space-y-2">
-            <Link href="/staff/users" className="block w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
-              <FaUsers /> Manage Users
-            </Link>
-            <Link href="/staff/vehicles" className="block w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
-              <FaCar /> Manage Vehicles
-            </Link>
-            <Link href="/staff/bookings" className="block w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2">
-              <FaCalendarAlt /> View Bookings
-            </Link>
-          </div>
-        </div>
-
-        {/* Booking Types Breakdown */}
-        <div className="bg-white rounded-2xl p-6 shadow">
-          <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><FaChartLine className="text-indigo-500" /> Booking Types</h3>
-          <div className="space-y-2">
-            {Object.entries(bookingTypes).map(([type, count]) => (
-              <div key={type} className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">{type}</span>
-                <span className="font-bold">{count as number}</span>
+          {/* Revenue Stat */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 border border-white/50 shadow-sm hover:shadow-md transition-all group">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <FaMoneyBillWave className="text-xl" />
               </div>
-            ))}
+              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">
+                {payments.filter((p: any) => p.status === 'completed').length} Paid
+              </span>
+            </div>
+            <div className="text-3xl font-black text-gray-900 tracking-tight mb-1">{totalRevenue.toLocaleString()}</div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Revenue (RWF)</div>
+          </div>
+
+          {/* Bookings Stat */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 border border-white/50 shadow-sm hover:shadow-md transition-all group">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <FaCalendarAlt className="text-xl" />
+              </div>
+              <span className="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-1 rounded-lg">
+                {pendingBookings} Pending
+              </span>
+            </div>
+            <div className="text-3xl font-black text-gray-900 tracking-tight mb-1">{bookings.length}</div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Bookings</div>
+          </div>
+
+          {/* Vehicles Stat */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 border border-white/50 shadow-sm hover:shadow-md transition-all group">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-orange-50 text-orange-600 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <FaCar className="text-xl" />
+              </div>
+              <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-lg">
+                {availableVehicles} Ready
+              </span>
+            </div>
+            <div className="text-3xl font-black text-gray-900 tracking-tight mb-1">{vehicles.length}</div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Fleet Size</div>
+          </div>
+
+          {/* Quotes Stat */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 border border-white/50 shadow-sm hover:shadow-md transition-all group">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <FaFileAlt className="text-xl" />
+              </div>
+              <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg">
+                {pendingQuotes} Open
+              </span>
+            </div>
+            <div className="text-3xl font-black text-gray-900 tracking-tight mb-1">{totalQuotes}</div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Quotes</div>
+          </div>
+
+          {/* Leads Stat */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 border border-white/50 shadow-sm hover:shadow-md transition-all group">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-rose-50 text-rose-600 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <FaChartLine className="text-xl" />
+              </div>
+              <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-lg">
+                {activeLeads} Active
+              </span>
+            </div>
+            <div className="text-3xl font-black text-gray-900 tracking-tight mb-1">{totalLeads}</div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Leads</div>
           </div>
         </div>
-      </div>
 
-      {/* Recent Activity and System Logs */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activity */}
-        <div className="bg-white rounded-2xl p-6 shadow">
-          <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><FaClock className="text-blue-500" /> Recent Activity</h3>
-          {recentActivity.length === 0 ? (
-            <div className="text-gray-500 text-sm">No recent activity</div>
-          ) : (
-            <div className="space-y-3 max-h-64 overflow-y-auto">
-              {recentActivity.map((activity: any) => (
-                <div key={activity.id} className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
-                  <div className="w-2 h-2 rounded-full mt-2 bg-blue-500"></div>
-                  <div className="flex-1">
-                    <div className="text-sm text-gray-800">{activity.action}</div>
-                    <div className="text-xs text-gray-500">{activity.details}</div>
-                    <div className="text-xs text-gray-400">{new Date(activity.createdAt).toLocaleString()}</div>
+        {/* System Health and Quick Actions */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* System Health */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-[32px] p-8 border border-white/50 shadow-sm">
+            <div className="flex items-center gap-3 mb-6">
+              <div className={`p-2 rounded-xl ${systemHealth.status === 'healthy' ? 'bg-green-100 text-green-600' : systemHealth.status === 'warning' ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600'}`}>
+                <FaShieldAlt className="text-lg" />
+              </div>
+              <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">System Health</h3>
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex justify-between items-end">
+                <div>
+                  <div className="text-4xl font-black text-gray-900 tracking-tighter">{systemHealth.percentage}%</div>
+                  <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Operational</div>
+                </div>
+                <span className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider ${systemHealth.status === 'healthy' ? 'bg-green-100 text-green-700' :
+                  systemHealth.status === 'warning' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-red-100 text-red-700'
+                  }`}>
+                  {systemHealth.status}
+                </span>
+              </div>
+
+              <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-1000 ease-out ${systemHealth.status === 'healthy' ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+                    systemHealth.status === 'warning' ? 'bg-gradient-to-r from-yellow-400 to-orange-500' :
+                      'bg-gradient-to-r from-red-500 to-rose-600'
+                    }`}
+                  style={{ width: `${systemHealth.percentage}%` }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-[32px] p-8 border border-white/50 shadow-sm">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-blue-100 text-blue-600 rounded-xl">
+                <FaCog className="text-lg" />
+              </div>
+              <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Quick Actions</h3>
+            </div>
+            <div className="space-y-3">
+              <Link href="/staff/users" className="group flex items-center justify-between p-4 bg-white border-2 border-transparent hover:border-blue-100 hover:shadow-lg hover:shadow-blue-500/10 rounded-2xl transition-all duration-300">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    <FaUsers />
+                  </div>
+                  <span className="font-bold text-gray-700 group-hover:text-blue-700">Manage Users</span>
+                </div>
+                <FaArrowUp className="text-gray-300 rotate-45 group-hover:rotate-90 group-hover:text-blue-500 transition-all" />
+              </Link>
+              <Link href="/staff/vehicles" className="group flex items-center justify-between p-4 bg-white border-2 border-transparent hover:border-orange-100 hover:shadow-lg hover:shadow-orange-500/10 rounded-2xl transition-all duration-300">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-orange-50 text-orange-600 rounded-xl group-hover:bg-orange-600 group-hover:text-white transition-colors">
+                    <FaCar />
+                  </div>
+                  <span className="font-bold text-gray-700 group-hover:text-orange-700">Manage Vehicles</span>
+                </div>
+                <FaArrowUp className="text-gray-300 rotate-45 group-hover:rotate-90 group-hover:text-orange-500 transition-all" />
+              </Link>
+              <Link href="/staff/bookings" className="group flex items-center justify-between p-4 bg-white border-2 border-transparent hover:border-purple-100 hover:shadow-lg hover:shadow-purple-500/10 rounded-2xl transition-all duration-300">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-50 text-purple-600 rounded-xl group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                    <FaCalendarAlt />
+                  </div>
+                  <span className="font-bold text-gray-700 group-hover:text-purple-700">View Bookings</span>
+                </div>
+                <FaArrowUp className="text-gray-300 rotate-45 group-hover:rotate-90 group-hover:text-purple-500 transition-all" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Booking Types Breakdown */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-[32px] p-8 border border-white/50 shadow-sm">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-indigo-100 text-indigo-600 rounded-xl">
+                <FaChartLine className="text-lg" />
+              </div>
+              <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Booking Types</h3>
+            </div>
+            <div className="space-y-4">
+              {Object.entries(bookingTypes).map(([type, count]) => (
+                <div key={type} className="group">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-bold text-gray-600 group-hover:text-indigo-600 transition-colors">{type}</span>
+                    <span className="text-sm font-black text-gray-900">{count as number}</span>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full group-hover:from-indigo-400 group-hover:to-blue-400 transition-all"
+                      style={{ width: `${((count as number) / bookings.length) * 100}%` }}
+                    />
                   </div>
                 </div>
               ))}
             </div>
-          )}
+          </div>
         </div>
 
-        {/* System Alerts */}
-        <div className="bg-white rounded-2xl p-6 shadow">
-          <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><FaExclamationTriangle className="text-orange-500" /> System Alerts</h3>
-          {systemLogs.length === 0 ? (
-            <div className="text-gray-500 text-sm">No system alerts</div>
-          ) : (
-            <div className="space-y-3 max-h-64 overflow-y-auto">
-              {Array.isArray(systemLogs) ? systemLogs.slice(0, 5).map((log: any) => (
-                <div key={log.id} className={`p-3 rounded-lg ${log.action.includes('error') ? 'bg-red-50 border-l-4 border-red-400' :
-                  log.action.includes('warning') ? 'bg-yellow-50 border-l-4 border-yellow-400' :
-                    'bg-green-50 border-l-4 border-green-400'
-                  }`}>
-                  <div className="text-sm font-medium">{log.action}</div>
-                  <div className="text-xs text-gray-600 mt-1">{log.details}</div>
-                  <div className="text-xs text-gray-400 mt-1">{new Date(log.createdAt).toLocaleString()}</div>
-                </div>
-              )) : []}
+        {/* Recent Activity and System Logs */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Recent Activity */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-[32px] p-8 border border-white/50 shadow-sm">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-blue-100 text-blue-600 rounded-xl">
+                <FaClock className="text-lg" />
+              </div>
+              <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Recent Activity</h3>
             </div>
-          )}
-        </div>
-      </div>
 
-      {/* Enhanced Notifications and Latest Bookings */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl p-6 shadow">
-          <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><FaBell className="text-blue-500" /> Recent Notifications</h3>
-          {notifications.length === 0 ? (
-            <div className="text-gray-500 text-sm">No notifications</div>
-          ) : (
-            <ul className="space-y-3 max-h-64 overflow-y-auto">
-              {Array.isArray(notifications) ? notifications.slice(0, 6).map((n: any) => (
-                <li key={n.id} className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded">
-                  <span className="w-2 h-2 rounded-full mt-2 bg-blue-500"></span>
-                  <div className="flex-1">
-                    <div className="text-sm text-gray-800">{n.message}</div>
-                    <div className="text-xs text-gray-500">{n.type}</div>
-                    <div className="text-xs text-gray-400">{new Date(n.createdAt).toLocaleString()}</div>
+            {recentActivity.length === 0 ? (
+              <div className="text-center py-12 text-gray-400 font-medium bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
+                No recent activity
+              </div>
+            ) : (
+              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                {recentActivity.map((activity: any) => (
+                  <div key={activity.id} className="group flex items-start gap-4 p-4 bg-white border border-gray-100 rounded-2xl hover:border-blue-200 hover:shadow-md transition-all">
+                    <div className="w-2 h-2 rounded-full mt-2.5 bg-blue-400 group-hover:scale-150 transition-transform"></div>
+                    <div className="flex-1">
+                      <div className="font-bold text-gray-800 text-sm">{activity.action}</div>
+                      <div className="text-xs font-medium text-gray-500 mt-0.5">{activity.details}</div>
+                      <div className="text-[10px] font-bold text-blue-400 mt-2 uppercase tracking-wide">
+                        {new Date(activity.createdAt).toLocaleString()}
+                      </div>
+                    </div>
                   </div>
-                </li>
-              )) : []}
-            </ul>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* System Alerts */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-[32px] p-8 border border-white/50 shadow-sm">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-orange-100 text-orange-600 rounded-xl">
+                <FaExclamationTriangle className="text-lg" />
+              </div>
+              <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">System Alerts</h3>
+            </div>
+
+            {systemLogs.length === 0 ? (
+              <div className="text-center py-12 text-gray-400 font-medium bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
+                System is healthy. No alerts.
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                {Array.isArray(systemLogs) ? systemLogs.slice(0, 10).map((log: any) => (
+                  <div key={log.id} className={`p-4 rounded-2xl border transition-all ${log.action.includes('error') ? 'bg-red-50 border-red-100 hover:border-red-300' :
+                    log.action.includes('warning') ? 'bg-yellow-50 border-yellow-100 hover:border-yellow-300' :
+                      'bg-green-50 border-green-100 hover:border-green-300'
+                    }`}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className={`text-xs font-black uppercase tracking-wider ${log.action.includes('error') ? 'text-red-700' :
+                        log.action.includes('warning') ? 'text-yellow-700' :
+                          'text-green-700'
+                        }`}>{log.action}</span>
+                      <span className="text-[10px] font-bold opacity-60">{new Date(log.createdAt).toLocaleTimeString()}</span>
+                    </div>
+                    <div className="text-xs font-medium text-gray-600">{log.details}</div>
+                  </div>
+                )) : []}
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 shadow">
-          <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><FaCalendarAlt className="text-green-600" /> Latest Bookings</h3>
-          {bookings.length === 0 ? (
-            <div className="text-gray-500 text-sm">No bookings</div>
-          ) : (
-            <div className="overflow-x-auto max-h-64">
-              <table className="min-w-full text-sm">
-                <thead className="sticky top-0 bg-gray-50">
-                  <tr className="text-gray-500 text-left">
-                    <th className="py-2 px-4">Type</th>
-                    <th className="py-2 px-4">Client</th>
-                    <th className="py-2 px-4">Date</th>
-                    <th className="py-2 px-4">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Array.isArray(bookings) ? bookings.slice(0, 8).map((b: any) => (
-                    <tr key={b.id} className="border-b last:border-0 hover:bg-gray-50">
-                      <td className="py-2 px-4">
-                        <span className={`px-2 py-1 rounded-full text-xs ${b.type === 'Car Rental' ? 'bg-blue-100 text-blue-800' :
-                          b.type === 'Airport Transfer' ? 'bg-green-100 text-green-800' :
-                            'bg-purple-100 text-purple-800'
-                          }`}>
-                          {b.type}
-                        </span>
-                      </td>
-                      <td className="py-2 px-4">{b.name || b.guestName || "-"}</td>
-                      <td className="py-2 px-4">{new Date(b.createdAt).toLocaleDateString()}</td>
-                      <td className="py-2 px-4">
-                        <span className={`px-2 py-1 rounded-full text-xs ${b.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                          b.status === 'Active' ? 'bg-blue-100 text-blue-800' :
-                            'bg-yellow-100 text-yellow-800'
-                          }`}>
-                          {b.status || (b.returnConfirmed ? "Completed" : "Pending")}
-                        </span>
-                      </td>
+        {/* Enhanced Notifications and Latest Bookings */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Notifications */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-[32px] p-8 border border-white/50 shadow-sm">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-blue-100 text-blue-600 rounded-xl">
+                <FaBell className="text-lg" />
+              </div>
+              <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Notifications</h3>
+            </div>
+
+            {notifications.length === 0 ? (
+              <div className="text-center py-12 text-gray-400 font-medium bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
+                No notifications
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                {Array.isArray(notifications) ? notifications.slice(0, 6).map((n: any) => (
+                  <div key={n.id} className="flex items-start gap-4 p-4 bg-white border border-gray-100 rounded-2xl hover:border-blue-200 transition-all">
+                    <span className="w-2 h-2 rounded-full mt-2 bg-blue-500 shrink-0"></span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-gray-800 break-words">{n.message}</p>
+                      <div className="flex items-center gap-3 mt-2">
+                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider bg-gray-100 px-2 py-0.5 rounded-lg">{n.type}</span>
+                        <span className="text-[10px] text-gray-400">{new Date(n.createdAt).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                )) : []}
+              </div>
+            )}
+          </div>
+
+          {/* Bookings Table */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-[32px] p-8 border border-white/50 shadow-sm">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-purple-100 text-purple-600 rounded-xl">
+                <FaCalendarAlt className="text-lg" />
+              </div>
+              <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Latest Bookings</h3>
+            </div>
+
+            {bookings.length === 0 ? (
+              <div className="text-center py-12 text-gray-400 font-medium bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
+                No bookings found
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-2xl border border-gray-100">
+                <table className="min-w-full">
+                  <thead className="bg-gray-50/50">
+                    <tr>
+                      <th className="py-3 px-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Type</th>
+                      <th className="py-3 px-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Client</th>
+                      <th className="py-3 px-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
                     </tr>
-                  )) : []}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 bg-white">
+                    {Array.isArray(bookings) ? bookings.slice(0, 6).map((b: any) => (
+                      <tr key={b.id} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="py-3 px-4">
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide ${b.type === 'Car Rental' ? 'bg-blue-50 text-blue-700' :
+                            b.type === 'Airport Transfer' ? 'bg-green-50 text-green-700' :
+                              'bg-purple-50 text-purple-700'
+                            }`}>
+                            {b.type === 'Car Rental' ? <FaCar /> : b.type === 'Airport Transfer' ? <FaPlane /> : <FaHotel />}
+                            {b.type.split(' ')[0]}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="text-xs font-bold text-gray-900">{b.name || b.guestName || "-"}</div>
+                          <div className="text-[10px] text-gray-400">{new Date(b.createdAt).toLocaleDateString()}</div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide ${b.status === 'Completed' ? 'bg-emerald-50 text-emerald-700' :
+                            b.status === 'Active' ? 'bg-blue-50 text-blue-700' :
+                              'bg-amber-50 text-amber-700'
+                            }`}>
+                            {b.status || (b.returnConfirmed ? "Completed" : "Pending")}
+                          </span>
+                        </td>
+                      </tr>
+                    )) : []}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Recent Quotes and Leads */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl p-6 shadow">
-          <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><FaFileAlt className="text-indigo-500" /> Recent Quotes</h3>
-          {quotes.length === 0 ? (
-            <div className="text-gray-500 text-sm">No quotes available</div>
-          ) : (
-            <div className="space-y-3 max-h-64 overflow-y-auto">
-              {Array.isArray(quotes) ? quotes.slice(0, 6).map((quote: any) => (
-                <div key={quote.id} className="p-3 border rounded-lg hover:bg-gray-50">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="font-medium text-sm">{quote.customer?.name || 'Unknown Customer'}</div>
-                      <div className="text-xs text-gray-500">{quote.serviceType}</div>
-                      <div className="text-xs text-gray-400">{quote.customer?.company || ''}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-sm">{quote.amount?.toLocaleString()} {quote.currency || 'RWF'}</div>
-                      <span className={`px-2 py-1 rounded-full text-xs ${quote.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                        quote.status === 'sent' ? 'bg-blue-100 text-blue-800' :
-                          quote.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                            'bg-yellow-100 text-yellow-800'
-                        }`}>
-                        {quote.status}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-400 mt-1">
-                    Valid until: {new Date(quote.validUntil).toLocaleDateString()}
-                  </div>
+        {/* Advanced Management Tools */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-[32px] p-8 border border-white/50 shadow-sm mb-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-gray-900 text-white rounded-xl">
+              <FaDatabase className="text-lg" />
+            </div>
+            <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Advanced Management</h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Link href="/staff/system-logs" className="group rounded-2xl border-2 border-gray-100 hover:border-gray-900 p-6 transition-all duration-300 bg-white hover:shadow-lg">
+              <div className="flex flex-col gap-4">
+                <div className="self-start p-3 bg-gray-100 text-gray-600 rounded-xl group-hover:bg-gray-900 group-hover:text-white transition-colors">
+                  <FaDatabase className="text-xl" />
                 </div>
-              )) : []}
-            </div>
-          )}
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 shadow">
-          <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><FaChartLine className="text-pink-500" /> Recent Leads</h3>
-          {leads.length === 0 ? (
-            <div className="text-gray-500 text-sm">No leads available</div>
-          ) : (
-            <div className="space-y-3 max-h-64 overflow-y-auto">
-              {Array.isArray(leads) ? leads.slice(0, 6).map((lead: any) => (
-                <div key={lead.id} className="p-3 border rounded-lg hover:bg-gray-50">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="font-medium text-sm">{lead.name}</div>
-                      <div className="text-xs text-gray-500">{lead.company}</div>
-                      <div className="text-xs text-gray-400">{lead.email || lead.contact || ''}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-sm">{lead.value?.toLocaleString()} RWF</div>
-                      <span className={`px-2 py-1 rounded-full text-xs ${lead.stage === 'Contacted' ? 'bg-blue-100 text-blue-800' :
-                        lead.stage === 'Qualified' ? 'bg-green-100 text-green-800' :
-                          lead.stage === 'Proposal' ? 'bg-yellow-100 text-yellow-800' :
-                            lead.stage === 'Closed' ? 'bg-gray-100 text-gray-800' :
-                              'bg-purple-100 text-purple-800'
-                        }`}>
-                        {lead.stage}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-400 mt-1">
-                    Last contact: {new Date(lead.lastContact).toLocaleDateString()}
-                  </div>
+                <div>
+                  <h4 className="border-l-2 border-transparent group-hover:border-gray-900 pl-0 group-hover:pl-3 font-bold text-gray-900 transition-all">System Logs</h4>
+                  <p className="text-xs font-medium text-gray-500 mt-1">{systemLogs.length} entries recorded</p>
                 </div>
-              )) : []}
-            </div>
-          )}
-        </div>
-      </div>
+              </div>
+            </Link>
 
-      {/* Advanced Management Tools */}
-      <div className="bg-white rounded-2xl p-6 shadow">
-        <h3 className="text-lg font-bold mb-6 flex items-center gap-2"><FaDatabase className="text-gray-600" /> Advanced Management</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Link href="/staff/system-logs" className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-            <div className="flex items-center gap-3">
-              <FaDatabase className="text-gray-600" />
-              <div>
-                <div className="font-medium">System Logs</div>
-                <div className="text-sm text-gray-500">{systemLogs.length} entries</div>
+            <Link href="/staff/vehicles" className="group rounded-2xl border-2 border-gray-100 hover:border-orange-500 p-6 transition-all duration-300 bg-white hover:shadow-lg hover:shadow-orange-500/10">
+              <div className="flex flex-col gap-4">
+                <div className="self-start p-3 bg-orange-50 text-orange-600 rounded-xl group-hover:bg-orange-500 group-hover:text-white transition-colors">
+                  <FaCar className="text-xl" />
+                </div>
+                <div>
+                  <h4 className="border-l-2 border-transparent group-hover:border-orange-500 pl-0 group-hover:pl-3 font-bold text-gray-900 transition-all">Vehicle Fleet</h4>
+                  <p className="text-xs font-medium text-gray-500 mt-1">{vehicles.length} vehicles managed</p>
+                </div>
               </div>
-            </div>
-          </Link>
-          <Link href="/staff/vehicles" className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-            <div className="flex items-center gap-3">
-              <FaCar className="text-gray-600" />
-              <div>
-                <div className="font-medium">Vehicle Management</div>
-                <div className="text-sm text-gray-500">{vehicles.length} vehicles</div>
+            </Link>
+
+            <Link href="/staff/users" className="group rounded-2xl border-2 border-gray-100 hover:border-blue-600 p-6 transition-all duration-300 bg-white hover:shadow-lg hover:shadow-blue-600/10">
+              <div className="flex flex-col gap-4">
+                <div className="self-start p-3 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                  <FaUsers className="text-xl" />
+                </div>
+                <div>
+                  <h4 className="border-l-2 border-transparent group-hover:border-blue-600 pl-0 group-hover:pl-3 font-bold text-gray-900 transition-all">User Access</h4>
+                  <p className="text-xs font-medium text-gray-500 mt-1">{users.length} active users</p>
+                </div>
               </div>
-            </div>
-          </Link>
-          <Link href="/staff/users" className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-            <div className="flex items-center gap-3">
-              <FaUsers className="text-gray-600" />
-              <div>
-                <div className="font-medium">User Management</div>
-                <div className="text-sm text-gray-500">{users.length} users</div>
+            </Link>
+
+            <Link href="/staff/bookings" className="group rounded-2xl border-2 border-gray-100 hover:border-purple-600 p-6 transition-all duration-300 bg-white hover:shadow-lg hover:shadow-purple-600/10">
+              <div className="flex flex-col gap-4">
+                <div className="self-start p-3 bg-purple-50 text-purple-600 rounded-xl group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                  <FaCalendarAlt className="text-xl" />
+                </div>
+                <div>
+                  <h4 className="border-l-2 border-transparent group-hover:border-purple-600 pl-0 group-hover:pl-3 font-bold text-gray-900 transition-all">All Bookings</h4>
+                  <p className="text-xs font-medium text-gray-500 mt-1">{bookings.length} total bookings</p>
+                </div>
               </div>
-            </div>
-          </Link>
-          <Link href="/staff/bookings" className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-            <div className="flex items-center gap-3">
-              <FaCalendarAlt className="text-purple-600" />
-              <div>
-                <div className="font-medium">Bookings</div>
-                <div className="text-sm text-gray-500">{bookings.length} total</div>
-              </div>
-            </div>
-          </Link>
+            </Link>
+          </div>
         </div>
+
       </div>
     </div>
   );
