@@ -14,7 +14,7 @@ const sidebarLinks = [
   { href: '/staff/bookings', label: 'Bookings', icon: <FaCalendarAlt />, roles: ['admin', 'manager', 'staff', 'transport-officer'] },
   { href: '/staff/vehicles', label: 'Vehicles', icon: <FaCar />, roles: ['admin', 'manager', 'transport-officer', 'staff'] },
   { href: '/staff/sales-dashboard', label: 'Sales Management', icon: <FaUsers />, roles: ['admin', 'manager', 'staff', 'sales'] },
-  { href: '/staff/reports', label: 'Reports', icon: <FaFileAlt />, roles: ['admin', 'manager', 'accountant'] },
+  { href: '/staff/reports', label: 'Reports', icon: <FaFileAlt />, roles: ['admin', 'manager'] },
   { href: '/staff/users', label: 'Users', icon: <FaInbox />, roles: ['admin', 'manager'] },
 ];
 
