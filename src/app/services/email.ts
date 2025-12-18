@@ -14,8 +14,8 @@ export async function sendEmail({
   attachments?: any[];
 }) {
   try {
-    // In development logic: Mock email if no SMTP_HOST is set
-    if (process.env.NODE_ENV === 'development' && !process.env.SMTP_HOST) {
+    // In development logic: Mock email if no SMTP_HOST or SMTP_USER is set
+    if (process.env.NODE_ENV === 'development' && (!process.env.SMTP_HOST || !process.env.SMTP_USER)) {
       console.log(`[Email Service] Dev Mode: Mocking email to ${to}`);
       console.log(`[Email Content]: ${text || html}`);
       return { id: `mock-${Date.now()}`, success: true };
