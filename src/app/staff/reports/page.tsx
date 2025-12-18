@@ -368,7 +368,7 @@ export default function ReportsPage() {
         {/* Header Navigation */}
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <Link
-            href="/staff/sales-dashboard"
+            href="/staff/accountant-dashboard"
             className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
           >
             &larr; Back to Dashboard
