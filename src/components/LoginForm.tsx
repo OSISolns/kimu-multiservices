@@ -22,6 +22,22 @@ interface Staff {
   whatsappNotifications: boolean;
 }
 
+// Helper to mask email for privacy
+const maskEmail = (email: string | null) => {
+  if (!email) return 'your email';
+  const [local, domain] = email.split('@');
+  if (!local || !domain) return email;
+
+  // Show first 3 chars, mask the rest of local part with fixed length asterisks for cleaner look
+  // or dynamic length. Let's use dynamic to match length but maybe cap it? 
+  // User asked to "Hide the portion".
+  // valery.osisolns -> val...
+
+  const visibleLength = Math.min(3, Math.max(1, Math.floor(local.length / 3)));
+  const visible = local.substring(0, visibleLength);
+  return `${visible}${'*'.repeat(local.length - visibleLength)}@${domain}`;
+};
+
 export default function LoginForm() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -371,7 +387,7 @@ export default function LoginForm() {
                 </div>
                 <h2 className="text-xl font-semibold text-gray-800 mb-2">Email Verification</h2>
                 <p className="text-gray-600 text-sm">
-                  We sent a 6-digit code to <strong>{staff.email || 'your email'}</strong>.
+                  We sent a 6-digit code to <strong>{maskEmail(staff.email)}</strong>.
                   <br />Please enter it below.
                 </p>
               </div>
