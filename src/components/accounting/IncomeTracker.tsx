@@ -14,6 +14,8 @@ interface Income {
   notes?: string;
   clientName?: string;
   clientPhone?: string;
+  isRefund?: boolean;
+  originalIncomeId?: number;
 }
 
 interface IncomeTrackerProps {
@@ -22,7 +24,7 @@ interface IncomeTrackerProps {
 
 const categories = [
   'car_rental', 'taxi_service', 'airport_transfer',
-  'hotel', 'car_sales', 'other'
+  'hotel', 'car_sales', 'refund', 'other'
 ];
 
 const paymentMethods = ['MTN Momo', 'Equity Bank', 'BK Bank', 'Bank of Africa', 'Access Bank', 'COPEDU', 'Cash'];
@@ -43,7 +45,9 @@ export default function IncomeTracker({ onIncomeAdded }: IncomeTrackerProps) {
     reference: '',
     notes: '',
     clientName: '',
-    clientPhone: ''
+    clientPhone: '',
+    isRefund: false,
+    originalIncomeId: ''
   });
 
   const fetchIncome = useCallback(async () => {
@@ -79,7 +83,9 @@ export default function IncomeTracker({ onIncomeAdded }: IncomeTrackerProps) {
         reference: editingIncome.reference || '',
         notes: editingIncome.notes || '',
         clientName: editingIncome.clientName || '',
-        clientPhone: editingIncome.clientPhone || ''
+        clientPhone: editingIncome.clientPhone || '',
+        isRefund: editingIncome.isRefund || false,
+        originalIncomeId: editingIncome.originalIncomeId?.toString() || ''
       });
       setShowAddModal(true);
     }
@@ -92,7 +98,9 @@ export default function IncomeTracker({ onIncomeAdded }: IncomeTrackerProps) {
     try {
       const incomeData = {
         ...formData,
-        amount: parseFloat(formData.amount)
+        amount: parseFloat(formData.amount),
+        isRefund: formData.isRefund,
+        originalIncomeId: formData.originalIncomeId ? parseInt(formData.originalIncomeId) : undefined
       };
 
       const url = editingIncome
@@ -164,7 +172,9 @@ export default function IncomeTracker({ onIncomeAdded }: IncomeTrackerProps) {
       reference: '',
       notes: '',
       clientName: '',
-      clientPhone: ''
+      clientPhone: '',
+      isRefund: false,
+      originalIncomeId: ''
     });
     setEditingIncome(null);
   };
@@ -291,20 +301,40 @@ export default function IncomeTracker({ onIncomeAdded }: IncomeTrackerProps) {
                 </tr>
               ) : (
                 income.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50/50 transition-colors duration-150">
+                  <tr key={item.id} className={`hover:bg-gray-50/50 transition-colors duration-150 ${item.isRefund ? 'bg-red-50/30' : ''}`}>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{item.description}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400 font-mono">#{item.id}</span>
+                        {item.isRefund && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-red-100 text-red-800 border border-red-200">
+                            <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                            </svg>
+                            REFUND
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-sm font-medium text-gray-900 mt-1">{item.description}</div>
                       {item.reference && (
                         <div className="text-xs text-gray-500 mt-0.5">Ref: {item.reference}</div>
                       )}
+                      {item.originalIncomeId && (
+                        <div className="text-xs text-blue-600 mt-0.5">
+                          Original Transaction: #{item.originalIncomeId}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-lg bg-green-50 text-green-700 border border-green-100">
+                      <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-lg ${item.isRefund
+                        ? 'bg-red-50 text-red-700 border border-red-100'
+                        : 'bg-green-50 text-green-700 border border-green-100'
+                        }`}>
                         {item.category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                      {item.amount.toLocaleString()} RWF
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold ${item.isRefund ? 'text-red-600' : 'text-gray-900'
+                      }`}>
+                      {item.isRefund && item.amount > 0 ? '-' : ''}{Math.abs(item.amount).toLocaleString()} RWF
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       {item.paymentMethod}
@@ -408,6 +438,119 @@ export default function IncomeTracker({ onIncomeAdded }: IncomeTrackerProps) {
                     />
                   </div>
 
+                  {/* Refund Toggle */}
+                  <div className="col-span-2">
+                    <label className="flex items-center gap-3 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-xl cursor-pointer hover:bg-yellow-100 transition-all">
+                      <input
+                        type="checkbox"
+                        checked={formData.isRefund}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setFormData({
+                            ...formData,
+                            isRefund: checked,
+                            category: checked ? 'refund' : formData.category === 'refund' ? '' : formData.category,
+                            amount: checked && formData.amount && parseFloat(formData.amount) > 0
+                              ? (-Math.abs(parseFloat(formData.amount))).toString()
+                              : formData.amount
+                          });
+                        }}
+                        className="w-5 h-5 text-yellow-600 rounded focus:ring-2 focus:ring-yellow-500"
+                      />
+                      <div className="flex-1">
+                        <span className="text-sm font-semibold text-gray-900">This is a refund</span>
+                        <p className="text-xs text-gray-600 mt-0.5">Check this if you're recording a refund for a previous income transaction</p>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Original Transaction ID (shown only for refunds) */}
+                  {formData.isRefund && (
+                    <div className="col-span-2 space-y-3">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Select Original Transaction
+                        <span className="text-gray-400 font-normal ml-2 text-xs">(Choose the transaction to refund)</span>
+                      </label>
+
+                      {/* Transaction Selector Dropdown */}
+                      <div className="relative">
+                        <select
+                          value={formData.originalIncomeId}
+                          onChange={(e) => {
+                            const selectedId = e.target.value;
+                            const selectedIncome = income.find(i => i.id === parseInt(selectedId));
+                            setFormData({
+                              ...formData,
+                              originalIncomeId: selectedId,
+                              description: selectedIncome ? `Refund: ${selectedIncome.description}` : formData.description
+                            });
+                          }}
+                          className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 outline-none transition-all hover:border-gray-300 appearance-none pr-10"
+                        >
+                          <option value="">-- Select a transaction to refund --</option>
+                          {income
+                            .filter(item => !item.isRefund)
+                            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                            .map((item) => (
+                              <option key={item.id} value={item.id}>
+                                #{item.id} - {item.clientName || item.description} - {item.amount.toLocaleString()} RWF ({new Date(item.date).toLocaleDateString()})
+                              </option>
+                            ))}
+                        </select>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      </div>
+
+                      {/* Quick Refund Buttons */}
+                      {formData.originalIncomeId && (
+                        <div className="flex gap-2">
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const originalIncome = income.find(i => i.id === parseInt(formData.originalIncomeId));
+                              if (originalIncome) {
+                                const fullRefund = -Math.abs(originalIncome.amount);
+                                setFormData({ ...formData, amount: fullRefund.toString() });
+                              }
+                            }}
+                            className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all text-sm font-semibold flex items-center justify-center gap-2"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            100% Full Refund
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const originalIncome = income.find(i => i.id === parseInt(formData.originalIncomeId));
+                              if (originalIncome) {
+                                const halfRefund = -Math.abs(originalIncome.amount) / 2;
+                                setFormData({ ...formData, amount: halfRefund.toString() });
+                              }
+                            }}
+                            className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-all text-sm font-semibold flex items-center justify-center gap-2"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            50% Partial Refund
+                          </button>
+                        </div>
+                      )}
+                      <p className="text-xs text-gray-500 flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Select a transaction, then click <strong>100%</strong> for full refund or <strong>50%</strong> for partial refund
+                      </p>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Amount (RWF)</label>
                     <div className="relative">
@@ -423,10 +566,18 @@ export default function IncomeTracker({ onIncomeAdded }: IncomeTrackerProps) {
                         value={formData.amount}
                         onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                         className="w-full pl-12 pr-16 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all font-semibold text-gray-900 hover:border-gray-300"
-                        placeholder="0.00"
+                        placeholder={formData.isRefund ? "-500000.00" : "0.00"}
                       />
                       <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-semibold">RWF</span>
                     </div>
+                    {formData.isRefund && (
+                      <p className="text-xs text-yellow-700 mt-1 flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Refund amounts should be negative (e.g., -500000)
+                      </p>
+                    )}
                   </div>
 
                   <div>

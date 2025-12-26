@@ -5,8 +5,8 @@ import { z } from 'zod';
 
 const incomeSchema = z.object({
   description: z.string().min(1, 'Description is required'),
-  amount: z.number().positive('Amount must be positive'),
-  category: z.enum(['car_rental', 'taxi_service', 'airport_transfer', 'hotel', 'car_sales', 'other']),
+  amount: z.number(),
+  category: z.enum(['car_rental', 'taxi_service', 'airport_transfer', 'hotel', 'car_sales', 'refund', 'other']),
   paymentMethod: z.enum(['MTN Momo', 'Equity Bank', 'BK Bank', 'Bank of Africa', 'Access Bank', 'COPEDU', 'Cash']),
   date: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: "Invalid date format"
@@ -14,7 +14,19 @@ const incomeSchema = z.object({
   reference: z.string().optional().or(z.literal('')),
   notes: z.string().optional().or(z.literal('')),
   clientName: z.string().optional().or(z.literal('')),
-  clientPhone: z.string().optional().or(z.literal(''))
+  clientPhone: z.string().optional().or(z.literal('')),
+  isRefund: z.boolean().optional(),
+  originalIncomeId: z.number().optional().or(z.literal(''))
+}).refine((data) => {
+  // If it's a refund, amount should be negative or zero
+  // If it's not a refund, amount should be positive
+  if (data.isRefund) {
+    return data.amount <= 0;
+  }
+  return data.amount > 0;
+}, {
+  message: "Refunds must have negative or zero amount, regular income must be positive",
+  path: ['amount']
 });
 
 export async function GET(req: NextRequest) {
@@ -58,7 +70,9 @@ export const POST = withValidation(incomeSchema, async (req, validatedData) => {
       reference: validatedData.reference || undefined,
       notes: validatedData.notes || undefined,
       clientName: validatedData.clientName || undefined,
-      clientPhone: validatedData.clientPhone || undefined
+      clientPhone: validatedData.clientPhone || undefined,
+      isRefund: validatedData.isRefund || false,
+      originalIncomeId: validatedData.originalIncomeId || undefined
     };
 
     const income = await prisma.income.create({
@@ -88,7 +102,9 @@ export const PUT = withValidation(incomeSchema, async (req, validatedData) => {
       reference: validatedData.reference || undefined,
       notes: validatedData.notes || undefined,
       clientName: validatedData.clientName || undefined,
-      clientPhone: validatedData.clientPhone || undefined
+      clientPhone: validatedData.clientPhone || undefined,
+      isRefund: validatedData.isRefund || false,
+      originalIncomeId: validatedData.originalIncomeId || undefined
     };
 
     const income = await prisma.income.update({

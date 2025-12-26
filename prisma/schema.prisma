@@ -215,18 +215,22 @@ model Quote {
 
 // Accounting Models
 model Income {
-  id            Int      @id @default(autoincrement())
-  description   String
-  amount        Float
-  category      String   // car_rental, taxi_service, airport_transfer, hotel, car_sales, other
-  paymentMethod String   // MTN Momo, Equity Bank, BK Bank, Cash
-  date          DateTime
-  reference     String?
-  notes         String?
-  clientName    String?
-  clientPhone   String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id               Int       @id @default(autoincrement())
+  description      String
+  amount           Float
+  category         String    // car_rental, taxi_service, airport_transfer, hotel, car_sales, refund, other
+  paymentMethod    String    // MTN Momo, Equity Bank, BK Bank, Cash
+  date             DateTime
+  reference        String?
+  notes            String?
+  clientName       String?
+  clientPhone      String?
+  isRefund         Boolean?  @default(false)
+  originalIncomeId Int?
+  originalIncome   Income?   @relation("IncomeRefunds", fields: [originalIncomeId], references: [id], onDelete: SetNull)
+  refunds          Income[]  @relation("IncomeRefunds")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }
 
 model Expense {
