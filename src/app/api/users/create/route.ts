@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import speakeasy from 'speakeasy';
 import { withValidation, jsonError, jsonOk } from '@/lib/api';
 import { z } from 'zod';
 
@@ -26,16 +25,13 @@ export const POST = withValidation(createUserSchema, async (req: NextRequest, bo
     return jsonError('Username already exists', 409);
   }
   const passwordHash = await bcrypt.hash(password, 10);
-  const totpSecret = speakeasy.generateSecret({ length: 20, name: `KIMU:${username}`, issuer: 'KIMU' }).base32;
   const user = await prisma.user.create({
     data: {
       username,
       passwordHash,
       role: role || 'staff',
       fullName,
-      totpSecret,
     },
   });
-  // Do not return totpSecret; return enrollment flag
-  return jsonOk({ user: { username: user.username, role: user.role, fullName: user.fullName }, requiresTotp: true });
+  return jsonOk({ user: { username: user.username, role: user.role, fullName: user.fullName } });
 });

@@ -30,7 +30,6 @@ export async function GET(req: NextRequest) {
         status: true,
         createdAt: true,
         lastLogin: true,
-        totpSecret: true,
         emailNotifications: true,
         whatsappNotifications: true
       },

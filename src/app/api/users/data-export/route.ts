@@ -19,7 +19,6 @@ export async function GET(request: NextRequest) {
         const user = await prisma.user.findUnique({
             where: { id: parseInt(userId) },
             include: {
-                trustedDevices: true,
                 employee: true,
                 reportTemplates: {
                     take: 10,
@@ -66,14 +65,6 @@ export async function GET(request: NextRequest) {
                 showEmail: user.showEmail,
                 showPhone: user.showPhone,
             },
-            trustedDevices: user.trustedDevices.map(device => ({
-                deviceName: device.deviceName,
-                deviceType: device.deviceType,
-                browserName: device.browserName,
-                osName: device.osName,
-                lastUsed: device.lastUsed,
-                createdAt: device.createdAt,
-            })),
             employee: user.employee ? {
                 employeeId: user.employee.employeeId,
                 position: user.employee.position,

@@ -21,6 +21,5 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     username: user.username,
-    totpSecret: user.totpSecret ?? null,
   });
 } 

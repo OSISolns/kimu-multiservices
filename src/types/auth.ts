@@ -9,7 +9,6 @@ export interface AuthUser {
   department?: string;
   status: UserStatus;
   profilePicture?: string;
-  totpSecret?: string;
   emailNotifications: boolean;
   whatsappNotifications: boolean;
   lastLogin?: Date;

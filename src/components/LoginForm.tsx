@@ -69,7 +69,6 @@ export default function LoginForm() {
         profilePicture: data.staff.profilePicture,
         createdAt: new Date(),
         lastLogin: new Date(),
-        totpSecret: null,
         emailNotifications: data.staff.emailNotifications,
         whatsappNotifications: data.staff.whatsappNotifications
       };

@@ -26,7 +26,6 @@ interface User {
   profilePicture: string | null;
   createdAt: Date;
   lastLogin?: Date | null;
-  totpSecret: string | null;
   emailNotifications: boolean;
   whatsappNotifications: boolean;
 }

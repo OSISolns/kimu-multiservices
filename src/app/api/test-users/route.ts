@@ -8,7 +8,6 @@ export async function GET(req: NextRequest) {
         id: true,
         username: true,
         role: true,
-        totpSecret: true,
         createdAt: true
       }
     });

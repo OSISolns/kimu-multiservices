@@ -11,7 +11,6 @@ export interface User {
   status: 'active' | 'inactive' | 'suspended';
   profilePicture?: string;
   createdAt: Date;
-  totpSecret?: string;
   emailNotifications: boolean;
   whatsappNotifications: boolean;
 }
@@ -102,17 +101,7 @@ export interface Payment {
   userId?: number;
 }
 
-export interface TrustedDevice {
-  id: number;
-  userId: number;
-  deviceId: string;
-  deviceName?: string;
-  userAgent?: string;
-  ipAddress?: string;
-  createdAt: Date;
-  expiresAt: Date;
-  lastUsed: Date;
-}
+
 
 export interface Lead {
   id: number;
