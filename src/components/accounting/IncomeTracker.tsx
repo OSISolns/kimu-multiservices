@@ -16,6 +16,7 @@ interface Income {
   clientPhone?: string;
   isRefund?: boolean;
   originalIncomeId?: number;
+  refunds?: Income[];
 }
 
 interface IncomeTrackerProps {
@@ -332,9 +333,26 @@ export default function IncomeTracker({ onIncomeAdded }: IncomeTrackerProps) {
                         {item.category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       </span>
                     </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold ${item.isRefund ? 'text-red-600' : 'text-gray-900'
-                      }`}>
-                      {item.isRefund && item.amount > 0 ? '-' : ''}{Math.abs(item.amount).toLocaleString()} RWF
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold ${item.isRefund ? 'text-red-600' : 'text-gray-900'}`}>
+                      {item.isRefund ? (
+                        <span className="text-red-600">
+                          {item.amount > 0 ? '-' : ''}{Math.abs(item.amount).toLocaleString()} RWF
+                        </span>
+                      ) : (
+                        <div className="flex flex-col">
+                          <span className="text-gray-900">{item.amount.toLocaleString()} RWF</span>
+                          {item.refunds && item.refunds.length > 0 && (
+                            <div className="text-xs mt-1">
+                              <div className="text-red-500">
+                                {item.refunds.reduce((sum, r) => sum + r.amount, 0).toLocaleString()} RWF (Refunded)
+                              </div>
+                              <div className="text-green-600 font-bold border-t border-gray-100 mt-0.5 pt-0.5">
+                                = {(item.amount + item.refunds.reduce((sum, r) => sum + r.amount, 0)).toLocaleString()} RWF
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       {item.paymentMethod}
@@ -379,344 +397,346 @@ export default function IncomeTracker({ onIncomeAdded }: IncomeTrackerProps) {
       </div>
 
       {/* Add/Edit Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm p-4 pt-12 animate-fadeIn overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden transform transition-all scale-100 my-8">
-            {/* Header with Gradient */}
-            <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-green-600 to-emerald-600">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+      {
+        showAddModal && (
+          <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm p-4 pt-12 animate-fadeIn overflow-y-auto">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden transform transition-all scale-100 my-8">
+              {/* Header with Gradient */}
+              <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-green-600 to-emerald-600">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white">
+                        {editingIncome ? 'Edit Income Record' : 'Record New Income'}
+                      </h3>
+                      <p className="text-sm text-green-100 mt-0.5">
+                        {editingIncome ? 'Update income details' : 'Add a new income transaction'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddModal(false);
+                      resetForm();
+                    }}
+                    className="text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-2 transition-all"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white">
-                      {editingIncome ? 'Edit Income Record' : 'Record New Income'}
-                    </h3>
-                    <p className="text-sm text-green-100 mt-0.5">
-                      {editingIncome ? 'Update income details' : 'Add a new income transaction'}
-                    </p>
-                  </div>
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddModal(false);
-                    resetForm();
-                  }}
-                  className="text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-2 transition-all"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
               </div>
-            </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              {/* Main Details Section */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  Transaction Details
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all hover:border-gray-300"
-                      placeholder="e.g., Car rental payment from John Doe"
-                    />
+              <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                {/* Main Details Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Transaction Details
                   </div>
 
-                  {/* Refund Toggle */}
-                  <div className="col-span-2">
-                    <label className="flex items-center gap-3 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-xl cursor-pointer hover:bg-yellow-100 transition-all">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="col-span-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
                       <input
-                        type="checkbox"
-                        checked={formData.isRefund}
-                        onChange={(e) => {
-                          const checked = e.target.checked;
-                          setFormData({
-                            ...formData,
-                            isRefund: checked,
-                            category: checked ? 'refund' : formData.category === 'refund' ? '' : formData.category,
-                            amount: checked && formData.amount && parseFloat(formData.amount) > 0
-                              ? (-Math.abs(parseFloat(formData.amount))).toString()
-                              : formData.amount
-                          });
-                        }}
-                        className="w-5 h-5 text-yellow-600 rounded focus:ring-2 focus:ring-yellow-500"
+                        type="text"
+                        required
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all hover:border-gray-300"
+                        placeholder="e.g., Car rental payment from John Doe"
                       />
-                      <div className="flex-1">
-                        <span className="text-sm font-semibold text-gray-900">This is a refund</span>
-                        <p className="text-xs text-gray-600 mt-0.5">Check this if you're recording a refund for a previous income transaction</p>
-                      </div>
-                    </label>
-                  </div>
+                    </div>
 
-                  {/* Original Transaction ID (shown only for refunds) */}
-                  {formData.isRefund && (
-                    <div className="col-span-2 space-y-3">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Select Original Transaction
-                        <span className="text-gray-400 font-normal ml-2 text-xs">(Choose the transaction to refund)</span>
-                      </label>
-
-                      {/* Transaction Selector Dropdown */}
-                      <div className="relative">
-                        <select
-                          value={formData.originalIncomeId}
+                    {/* Refund Toggle */}
+                    <div className="col-span-2">
+                      <label className="flex items-center gap-3 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-xl cursor-pointer hover:bg-yellow-100 transition-all">
+                        <input
+                          type="checkbox"
+                          checked={formData.isRefund}
                           onChange={(e) => {
-                            const selectedId = e.target.value;
-                            const selectedIncome = income.find(i => i.id === parseInt(selectedId));
+                            const checked = e.target.checked;
                             setFormData({
                               ...formData,
-                              originalIncomeId: selectedId,
-                              description: selectedIncome ? `Refund: ${selectedIncome.description}` : formData.description
+                              isRefund: checked,
+                              category: checked ? 'refund' : formData.category === 'refund' ? '' : formData.category,
+                              amount: checked && formData.amount && parseFloat(formData.amount) > 0
+                                ? (-Math.abs(parseFloat(formData.amount))).toString()
+                                : formData.amount
                             });
                           }}
-                          className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 outline-none transition-all hover:border-gray-300 appearance-none pr-10"
-                        >
-                          <option value="">-- Select a transaction to refund --</option>
-                          {income
-                            .filter(item => !item.isRefund)
-                            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                            .map((item) => (
-                              <option key={item.id} value={item.id}>
-                                #{item.id} - {item.clientName || item.description} - {item.amount.toLocaleString()} RWF ({new Date(item.date).toLocaleDateString()})
-                              </option>
-                            ))}
-                        </select>
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          className="w-5 h-5 text-yellow-600 rounded focus:ring-2 focus:ring-yellow-500"
+                        />
+                        <div className="flex-1">
+                          <span className="text-sm font-semibold text-gray-900">This is a refund</span>
+                          <p className="text-xs text-gray-600 mt-0.5">Check this if you're recording a refund for a previous income transaction</p>
+                        </div>
+                      </label>
+                    </div>
+
+                    {/* Original Transaction ID (shown only for refunds) */}
+                    {formData.isRefund && (
+                      <div className="col-span-2 space-y-3">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Select Original Transaction
+                          <span className="text-gray-400 font-normal ml-2 text-xs">(Choose the transaction to refund)</span>
+                        </label>
+
+                        {/* Transaction Selector Dropdown */}
+                        <div className="relative">
+                          <select
+                            value={formData.originalIncomeId}
+                            onChange={(e) => {
+                              const selectedId = e.target.value;
+                              const selectedIncome = income.find(i => i.id === parseInt(selectedId));
+                              setFormData({
+                                ...formData,
+                                originalIncomeId: selectedId,
+                                description: selectedIncome ? `Refund: ${selectedIncome.description}` : formData.description
+                              });
+                            }}
+                            className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500 outline-none transition-all hover:border-gray-300 appearance-none pr-10"
+                          >
+                            <option value="">-- Select a transaction to refund --</option>
+                            {income
+                              .filter(item => !item.isRefund)
+                              .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                              .map((item) => (
+                                <option key={item.id} value={item.id}>
+                                  #{item.id} - {item.clientName || item.description} - {item.amount.toLocaleString()} RWF ({new Date(item.date).toLocaleDateString()})
+                                </option>
+                              ))}
+                          </select>
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
+                        </div>
+
+                        {/* Quick Refund Buttons */}
+                        {formData.originalIncomeId && (
+                          <div className="flex gap-2">
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const originalIncome = income.find(i => i.id === parseInt(formData.originalIncomeId));
+                                if (originalIncome) {
+                                  const fullRefund = -Math.abs(originalIncome.amount);
+                                  setFormData({ ...formData, amount: fullRefund.toString() });
+                                }
+                              }}
+                              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all text-sm font-semibold flex items-center justify-center gap-2"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              100% Full Refund
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const originalIncome = income.find(i => i.id === parseInt(formData.originalIncomeId));
+                                if (originalIncome) {
+                                  const halfRefund = -Math.abs(originalIncome.amount) / 2;
+                                  setFormData({ ...formData, amount: halfRefund.toString() });
+                                }
+                              }}
+                              className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-all text-sm font-semibold flex items-center justify-center gap-2"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              50% Partial Refund
+                            </button>
+                          </div>
+                        )}
+                        <p className="text-xs text-gray-500 flex items-center gap-1">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Select a transaction, then click <strong>100%</strong> for full refund or <strong>50%</strong> for partial refund
+                        </p>
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Amount (RWF)</label>
+                      <div className="relative">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                         </div>
+                        <input
+                          type="number"
+                          step="0.01"
+                          required
+                          value={formData.amount}
+                          onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                          className="w-full pl-12 pr-16 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all font-semibold text-gray-900 hover:border-gray-300"
+                          placeholder={formData.isRefund ? "-500000.00" : "0.00"}
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-semibold">RWF</span>
                       </div>
-
-                      {/* Quick Refund Buttons */}
-                      {formData.originalIncomeId && (
-                        <div className="flex gap-2">
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const originalIncome = income.find(i => i.id === parseInt(formData.originalIncomeId));
-                              if (originalIncome) {
-                                const fullRefund = -Math.abs(originalIncome.amount);
-                                setFormData({ ...formData, amount: fullRefund.toString() });
-                              }
-                            }}
-                            className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all text-sm font-semibold flex items-center justify-center gap-2"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            100% Full Refund
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const originalIncome = income.find(i => i.id === parseInt(formData.originalIncomeId));
-                              if (originalIncome) {
-                                const halfRefund = -Math.abs(originalIncome.amount) / 2;
-                                setFormData({ ...formData, amount: halfRefund.toString() });
-                              }
-                            }}
-                            className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-all text-sm font-semibold flex items-center justify-center gap-2"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            50% Partial Refund
-                          </button>
-                        </div>
+                      {formData.isRefund && (
+                        <p className="text-xs text-yellow-700 mt-1 flex items-center gap-1">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Refund amounts should be negative (e.g., -500000)
+                        </p>
                       )}
-                      <p className="text-xs text-gray-500 flex items-center gap-1">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Select a transaction, then click <strong>100%</strong> for full refund or <strong>50%</strong> for partial refund
-                      </p>
                     </div>
-                  )}
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Amount (RWF)</label>
-                    <div className="relative">
-                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Date</label>
                       <input
-                        type="number"
-                        step="0.01"
+                        type="date"
                         required
-                        value={formData.amount}
-                        onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                        className="w-full pl-12 pr-16 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all font-semibold text-gray-900 hover:border-gray-300"
-                        placeholder={formData.isRefund ? "-500000.00" : "0.00"}
+                        value={formData.date}
+                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all hover:border-gray-300"
                       />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-semibold">RWF</span>
                     </div>
-                    {formData.isRefund && (
-                      <p className="text-xs text-yellow-700 mt-1 flex items-center gap-1">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Refund amounts should be negative (e.g., -500000)
-                      </p>
-                    )}
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Date</label>
-                    <input
-                      type="date"
-                      required
-                      value={formData.date}
-                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all hover:border-gray-300"
-                    />
-                  </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Category</label>
+                      <select
+                        required
+                        value={formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all hover:border-gray-300"
+                      >
+                        <option value="">Select Category</option>
+                        {categories.map(cat => (
+                          <option key={cat} value={cat}>
+                            {cat.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Category</label>
-                    <select
-                      required
-                      value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all hover:border-gray-300"
-                    >
-                      <option value="">Select Category</option>
-                      {categories.map(cat => (
-                        <option key={cat} value={cat}>
-                          {cat.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Payment Method</label>
-                    <select
-                      required
-                      value={formData.paymentMethod}
-                      onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all hover:border-gray-300"
-                    >
-                      <option value="">Select Method</option>
-                      {paymentMethods.map(method => (
-                        <option key={method} value={method}>{method}</option>
-                      ))}
-                    </select>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Payment Method</label>
+                      <select
+                        required
+                        value={formData.paymentMethod}
+                        onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all hover:border-gray-300"
+                      >
+                        <option value="">Select Method</option>
+                        {paymentMethods.map(method => (
+                          <option key={method} value={method}>{method}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Client Information Section */}
-              <div className="space-y-4 pt-2 border-t border-gray-100">
-                <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  Client Information
-                  <span className="text-xs text-gray-400 normal-case tracking-normal">(Optional)</span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Client Name</label>
-                    <input
-                      type="text"
-                      value={formData.clientName}
-                      onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all hover:border-gray-300"
-                      placeholder="Client Name"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Client Phone</label>
-                    <input
-                      type="tel"
-                      value={formData.clientPhone}
-                      onChange={(e) => setFormData({ ...formData, clientPhone: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all hover:border-gray-300"
-                      placeholder="+250..."
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Reference</label>
-                    <input
-                      type="text"
-                      value={formData.reference}
-                      onChange={(e) => setFormData({ ...formData, reference: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all hover:border-gray-300"
-                      placeholder="e.g., Booking #12345"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Notes Section */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">Notes <span className="text-gray-400 font-normal">(Optional)</span></label>
-                <textarea
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  rows={3}
-                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all resize-none hover:border-gray-300"
-                  placeholder="Additional notes about this income..."
-                />
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3 pt-4 border-t border-gray-100">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddModal(false);
-                    resetForm();
-                  }}
-                  className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold transition-all active:scale-95"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 font-semibold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-green-500/30"
-                >
-                  {isLoading && (
-                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                {/* Client Information Section */}
+                <div className="space-y-4 pt-2 border-t border-gray-100">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
-                  )}
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  {isLoading ? 'Saving...' : (editingIncome ? 'Update Income' : 'Save Income')}
-                </button>
-              </div>
-            </form>
+                    Client Information
+                    <span className="text-xs text-gray-400 normal-case tracking-normal">(Optional)</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Client Name</label>
+                      <input
+                        type="text"
+                        value={formData.clientName}
+                        onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all hover:border-gray-300"
+                        placeholder="Client Name"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Client Phone</label>
+                      <input
+                        type="tel"
+                        value={formData.clientPhone}
+                        onChange={(e) => setFormData({ ...formData, clientPhone: e.target.value })}
+                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all hover:border-gray-300"
+                        placeholder="+250..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Reference</label>
+                      <input
+                        type="text"
+                        value={formData.reference}
+                        onChange={(e) => setFormData({ ...formData, reference: e.target.value })}
+                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all hover:border-gray-300"
+                        placeholder="e.g., Booking #12345"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notes Section */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Notes <span className="text-gray-400 font-normal">(Optional)</span></label>
+                  <textarea
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    rows={3}
+                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all resize-none hover:border-gray-300"
+                    placeholder="Additional notes about this income..."
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddModal(false);
+                      resetForm();
+                    }}
+                    className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold transition-all active:scale-95"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 font-semibold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-green-500/30"
+                  >
+                    {isLoading && (
+                      <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    )}
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    {isLoading ? 'Saving...' : (editingIncome ? 'Update Income' : 'Save Income')}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 }
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { prisma, retryDatabaseOperation } from '@/lib/prisma';
 import { withValidation } from '@/lib/api';
 import { z } from 'zod';
 
@@ -51,6 +51,9 @@ export async function GET(req: NextRequest) {
 
     const income = await prisma.income.findMany({
       where: whereClause,
+      include: {
+        refunds: true
+      },
       orderBy: { date: 'desc' }
     });
 
@@ -107,9 +110,12 @@ export const PUT = withValidation(incomeSchema, async (req, validatedData) => {
       originalIncomeId: validatedData.originalIncomeId || undefined
     };
 
-    const income = await prisma.income.update({
-      where: { id: parseInt(id) },
-      data: cleanData
+    const income = await retryDatabaseOperation(async () => {
+      // Check network status before update if possible or just retry
+      return await prisma.income.update({
+        where: { id: parseInt(id) },
+        data: cleanData
+      });
     });
 
     return NextResponse.json(income);
