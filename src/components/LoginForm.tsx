@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { FaEye, FaEyeSlash, FaUser, FaLock, FaShieldAlt, FaEnvelope, FaCheckCircle, FaExclamationTriangle, FaSpinner } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaUser, FaLock, FaShieldAlt, FaExclamationTriangle, FaSpinner } from 'react-icons/fa';
 import { useUser } from '@/app/UserContext';
-import { generateDeviceFingerprint, generateDeviceName, isDeviceFingerprintingAvailable } from '@/lib/deviceFingerprint';
 
 interface Staff {
   id: number;
@@ -17,56 +16,28 @@ interface Staff {
   department: string | null;
   status: string;
   profilePicture: string | null;
-  totpSecret: string | null;
   emailNotifications: boolean;
   whatsappNotifications: boolean;
 }
 
-// Helper to mask email for privacy
-const maskEmail = (email: string | null) => {
-  if (!email) return 'your email';
-  const [local, domain] = email.split('@');
-  if (!local || !domain) return email;
-
-  // Show first 3 chars, mask the rest of local part with fixed length asterisks for cleaner look
-  // or dynamic length. Let's use dynamic to match length but maybe cap it? 
-  // User asked to "Hide the portion".
-  // valery.osisolns -> val...
-
-  const visibleLength = Math.min(3, Math.max(1, Math.floor(local.length / 3)));
-  const visible = local.substring(0, visibleLength);
-  return `${visible}${'*'.repeat(local.length - visibleLength)}@${domain}`;
-};
-
 export default function LoginForm() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [totpCode, setTotpCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [step, setStep] = useState<'credentials' | 'totp'>('credentials');
-  const [staff, setStaff] = useState<Staff | null>(null);
-  const [showTrustPrompt, setShowTrustPrompt] = useState(false);
-  const [trustDevice, setTrustDevice] = useState(false);
-  const [isFirstTimeDevice, setIsFirstTimeDevice] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [devCode, setDevCode] = useState<string | null>(null);
   const router = useRouter();
   const { loginUser } = useUser();
 
   // Handle Enter key press
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      if (step === 'credentials') {
-        handleCredentials();
-      } else if (step === 'totp') {
-        handleTotp();
-      }
+      handleLogin();
     }
   };
 
-  // Step 1: Handle credentials submit
-  const handleCredentials = async () => {
+  // Handle login
+  const handleLogin = async () => {
     setLoading(true);
     setError('');
 
@@ -84,153 +55,29 @@ export default function LoginForm() {
 
       const data = await res.json();
 
-      // Check for either requiresTotp OR requiresEmailAuth
-      if (data.requiresTotp || data.requiresEmailAuth) {
-        setStaff(data.staff);
-        if (data.devCode) setDevCode(data.devCode);
-        setStep('totp');
-
-        // Check if device is trusted (skip TOTP if trusted)
-        if (isDeviceFingerprintingAvailable()) {
-          const deviceId = generateDeviceFingerprint();
-          if (deviceId) {
-            try {
-              const trustCheckRes = await fetch('/api/check-trusted-device', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  username: data.staff.username,
-                  deviceId
-                })
-              });
-
-              if (trustCheckRes.ok) {
-                const trustData = await trustCheckRes.json();
-                if (trustData.trusted) {
-                  // Device is trusted, skip TOTP and login directly
-                  await handleDirectLogin(data.staff, false);
-                  return;
-                } else {
-                  // Device not trusted, show trust prompt for first-time devices
-                  setIsFirstTimeDevice(true);
-                  setShowTrustPrompt(true);
-                }
-              }
-            } catch (error) {
-              console.error('Error checking trusted device:', error);
-              // Continue with TOTP flow if trust check fails
-            }
-          }
-        }
-      } else {
-        // No TOTP required, login directly
-        await handleDirectLogin(data.staff, false);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Step 2: Handle TOTP verification
-  const handleTotp = async () => {
-    if (!staff) return;
-
-    setLoading(true);
-    setError('');
-
-    try {
-      const res = await fetch('/api/verify-totp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: staff.username,
-          code: totpCode.trim(),
-          trustDevice: trustDevice
-        })
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Invalid verification code');
-      }
-
-      const data = await res.json();
-
-      // Add trusted device if requested
-      if (trustDevice && isDeviceFingerprintingAvailable()) {
-        const deviceId = generateDeviceFingerprint();
-        const deviceName = generateDeviceName();
-        if (deviceId && deviceName) {
-          try {
-            await fetch('/api/trusted-devices', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                username: staff.username,
-                deviceId,
-                deviceName
-              })
-            });
-          } catch (error) {
-            console.error('Error adding trusted device:', error);
-            // Continue with login even if trusted device fails
-          }
-        }
-      }
-
-      await handleDirectLogin(staff, true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Verification failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Handle direct login after successful authentication
-  const handleDirectLogin = async (staffData: Staff, usedTotp: boolean) => {
-    try {
-      const res = await fetch('/api/staff/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: staffData.username,
-          password: password,
-          skipTotp: !usedTotp // Skip TOTP if device is trusted
-        })
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Login failed');
-      }
-
-      const data = await res.json();
-
-      // Login successful
+      // Login successful - update user context
       const userData = {
-        id: staffData.id,
-        username: staffData.username,
-        role: staffData.role,
-        fullName: staffData.fullName,
-        email: staffData.email,
-        phone: staffData.phone,
+        id: data.staff.id,
+        username: data.staff.username,
+        role: data.staff.role,
+        fullName: data.staff.fullName,
+        email: data.staff.email,
+        phone: data.staff.phone,
         passwordHash: '', // Not needed for client
-        department: staffData.department,
-        status: staffData.status,
-        profilePicture: staffData.profilePicture,
+        department: data.staff.department,
+        status: data.staff.status,
+        profilePicture: data.staff.profilePicture,
         createdAt: new Date(),
         lastLogin: new Date(),
-        totpSecret: staffData.totpSecret,
-        emailNotifications: staffData.emailNotifications,
-        whatsappNotifications: staffData.whatsappNotifications
+        totpSecret: null,
+        emailNotifications: data.staff.emailNotifications,
+        whatsappNotifications: data.staff.whatsappNotifications
       };
 
       loginUser(userData);
 
       // Redirect based on role
-      switch (staffData.role) {
+      switch (data.staff.role) {
         case 'accountant':
           router.push('/staff/accountant-dashboard');
           break;
@@ -251,6 +98,8 @@ export default function LoginForm() {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -302,163 +151,70 @@ export default function LoginForm() {
             </div>
           )}
 
-          {/* Step 1: Credentials */}
-          {step === 'credentials' && (
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Username
-                </label>
-                <div className="relative">
-                  <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="Enter your username"
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Password
-                </label>
-                <div className="relative">
-                  <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="Enter your password"
-                    disabled={loading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    disabled={loading}
-                  >
-                    {showPassword ? <FaEyeSlash /> : <FaEye />}
-                  </button>
-                </div>
-              </div>
-
-              <button
-                onClick={handleCredentials}
-                disabled={loading || !username || !password}
-                className="w-full bg-gradient-to-r from-blue-600 to-orange-500 text-white py-3 rounded-xl font-medium hover:from-blue-700 hover:to-orange-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <FaSpinner className="animate-spin" />
-                    Signing In...
-                  </>
-                ) : (
-                  <>
-                    <FaShieldAlt />
-                    Sign In
-                  </>
-                )}
-              </button>
-            </div>
-          )}
-
-          {/* Step 2: TOTP */}
-          {step === 'totp' && staff && (
-            <div className="space-y-6">
-              {/* Dev Hint */}
-              {devCode && (
-                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl flex items-center justify-center gap-3 animate-pulse">
-                  <FaExclamationTriangle className="text-yellow-500" />
-                  <p className="text-yellow-800 text-sm font-bold">
-                    Dev Code: <code className="bg-yellow-100 px-2 py-1 rounded text-lg tracking-widest">{devCode}</code>
-                  </p>
-                </div>
-              )}
-              <div className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-blue-500 rounded-full mx-auto mb-4 flex items-center justify-center">
-                  <FaEnvelope className="text-white text-xl" />
-                </div>
-                <h2 className="text-xl font-semibold text-gray-800 mb-2">Email Verification</h2>
-                <p className="text-gray-600 text-sm">
-                  We sent a 6-digit code to <strong>{maskEmail(staff.email)}</strong>.
-                  <br />Please enter it below.
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Verification Code
-                </label>
+          {/* Login form */}
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Username
+              </label>
+              <div className="relative">
+                <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
-                  value={totpCode}
-                  onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-center text-lg font-mono tracking-widest"
-                  placeholder="000000"
-                  maxLength={6}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  placeholder="Enter your username"
                   disabled={loading}
                 />
               </div>
-
-              {/* Trust device prompt */}
-              {showTrustPrompt && (
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                  <div className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      id="trustDevice"
-                      checked={trustDevice}
-                      onChange={(e) => setTrustDevice(e.target.checked)}
-                      className="mt-1"
-                    />
-                    <label htmlFor="trustDevice" className="text-sm text-blue-800">
-                      <strong>Trust this device</strong><br />
-                      Skip verification for 30 days on this device
-                    </label>
-                  </div>
-                </div>
-              )}
-
-              <button
-                onClick={handleTotp}
-                disabled={loading || totpCode.length !== 6}
-                className="w-full bg-gradient-to-r from-green-600 to-blue-500 text-white py-3 rounded-xl font-medium hover:from-green-700 hover:to-blue-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <FaSpinner className="animate-spin" />
-                    Verifying...
-                  </>
-                ) : (
-                  <>
-                    <FaCheckCircle />
-                    Verify & Sign In
-                  </>
-                )}
-              </button>
-
-              {/* Back to credentials */}
-              <button
-                onClick={() => {
-                  setStep('credentials');
-                  setTotpCode('');
-                  setError('');
-                }}
-                className="w-full text-gray-600 hover:text-gray-800 transition-colors text-sm"
-                disabled={loading}
-              >
-                ← Back to login
-              </button>
             </div>
-          )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  placeholder="Enter your password"
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  disabled={loading}
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              onClick={handleLogin}
+              disabled={loading || !username || !password}
+              className="w-full bg-gradient-to-r from-blue-600 to-orange-500 text-white py-3 rounded-xl font-medium hover:from-blue-700 hover:to-orange-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <FaSpinner className="animate-spin" />
+                  Signing In...
+                </>
+              ) : (
+                <>
+                  <FaShieldAlt />
+                  Sign In
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

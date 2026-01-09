@@ -43,7 +43,6 @@ interface UserProfile {
     status: string;
     createdAt: string;
     lastLogin: string | null;
-    totpSecret: string | null;
 }
 
 interface AccountStats {
@@ -331,11 +330,7 @@ export default function ProfilePage() {
                                     }`}>
                                     {profile.status === 'active' ? '● Active' : '○ Inactive'}
                                 </span>
-                                {profile.totpSecret && (
-                                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 flex items-center gap-1">
-                                        <FaShieldAlt /> 2FA Enabled
-                                    </span>
-                                )}
+
                             </div>
                             <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4 text-sm text-gray-600">
                                 <div className="flex items-center gap-2">
@@ -565,23 +560,7 @@ export default function ProfilePage() {
                                         Change
                                     </button>
                                 </div>
-                                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                                    <div>
-                                        <h3 className="font-medium text-gray-900 flex items-center gap-2">
-                                            <FaShieldAlt className="text-gray-400" />
-                                            Two-Factor Authentication
-                                        </h3>
-                                        <p className="text-sm text-gray-500">
-                                            {profile.totpSecret ? 'Currently enabled' : 'Add an extra layer of security'}
-                                        </p>
-                                    </div>
-                                    <button
-                                        onClick={() => router.push('/staff/settings/2fa')}
-                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                                    >
-                                        {profile.totpSecret ? 'Manage' : 'Enable'}
-                                    </button>
-                                </div>
+
                             </div>
                         </div>
                     </div>
