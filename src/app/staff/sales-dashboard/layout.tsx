@@ -17,7 +17,7 @@ export default function SalesDashboardLayout({
     useEffect(() => {
         if (!isLoading && !user) {
             router.push('/staff/login');
-        } else if (!isLoading && user && !['sales', 'staff'].includes(user.role)) {
+        } else if (!isLoading && user && !['sales', 'staff', 'sales-representative', 'agent', 'driver', 'customer-service', 'operations'].includes(user.role)) {
             // Redirect based on role to enforce 'own pages'
             if (user.role === 'admin') router.push('/staff/admin-dashboard');
             else if (user.role === 'accountant') router.push('/staff/accountant-dashboard');
@@ -27,7 +27,7 @@ export default function SalesDashboardLayout({
         }
     }, [user, isLoading, router]);
 
-    if (isLoading || !user || !['sales', 'staff'].includes(user.role)) {
+    if (isLoading || !user || !['sales', 'staff', 'sales-representative', 'agent', 'driver', 'customer-service', 'operations'].includes(user.role)) {
         return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><LoadingSpinner /></div>;
     }
 
