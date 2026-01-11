@@ -7,7 +7,7 @@ import { z } from 'zod';
 const createUserSchema = z.object({
   username: z.string().min(3),
   password: z.string().min(8),
-  role: z.enum(['admin', 'manager', 'staff', 'accountant', 'transport-officer', 'agent']).optional(),
+  role: z.enum(['admin', 'manager', 'staff', 'accountant', 'transport-officer', 'agent', 'sales-representative', 'driver', 'customer-service', 'operations']).optional(),
   fullName: z.string().min(2).optional(),
 });
 
