@@ -127,9 +127,63 @@ export async function GET(req: NextRequest) {
 
 export const POST = withValidation(createPayrollSchema, async (req: NextRequest, body) => {
   try {
-    const adminUsername = req.headers.get('x-username');
-    const admin = adminUsername ? await prisma.user.findUnique({ where: { username: adminUsername } }) : null;
-    if (!admin || (admin.role !== 'admin' && admin.role !== 'accountant')) {
+    // Get user from JWT token in cookies OR x-username header
+    const token = req.cookies.get('auth-token')?.value;
+    const usernameHeader = req.headers.get('x-username');
+    const emailHeader = req.headers.get('x-user-email');
+
+    let admin;
+
+    if (token) {
+      try {
+        const { jwtVerify } = await import('jose');
+        const secretText = process.env.JWT_SECRET;
+        if (!secretText) {
+          return jsonError('Server configuration error', 500);
+        }
+        const secret = new TextEncoder().encode(secretText);
+        const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
+        const userId = (payload as any)?.userId?.toString();
+
+        if (userId) {
+          admin = await prisma.user.findUnique({
+            where: { id: parseInt(userId) },
+            select: { id: true, username: true, role: true }
+          });
+        }
+      } catch (error) {
+        // Don't return error yet, try header auth
+      }
+    }
+
+    if (!admin && usernameHeader) {
+      // Try exact match first
+      admin = await prisma.user.findUnique({
+        where: { username: usernameHeader },
+        select: { id: true, username: true, role: true }
+      });
+
+      // If not found, try case-insensitive match
+      if (!admin) {
+        admin = await prisma.user.findFirst({
+          where: { username: { equals: usernameHeader } },
+          select: { id: true, username: true, role: true }
+        });
+      }
+    }
+
+    if (!admin && emailHeader) {
+      admin = await prisma.user.findFirst({
+        where: { email: emailHeader },
+        select: { id: true, username: true, role: true }
+      });
+    }
+
+    if (!admin) {
+      return jsonError('Not authenticated', 401);
+    }
+
+    if (admin.role !== 'admin' && admin.role !== 'accountant') {
       return jsonError('Not authorized', 403);
     }
 
@@ -189,19 +243,73 @@ export const POST = withValidation(createPayrollSchema, async (req: NextRequest,
 
 export async function PUT(req: NextRequest) {
   try {
-    const adminUsername = req.headers.get('x-username');
-    const admin = adminUsername ? await prisma.user.findUnique({ where: { username: adminUsername } }) : null;
-    if (!admin || (admin.role !== 'admin' && admin.role !== 'accountant')) {
+    // Get user from JWT token in cookies OR x-username header
+    const token = req.cookies.get('auth-token')?.value;
+    const usernameHeader = req.headers.get('x-username');
+    const emailHeader = req.headers.get('x-user-email');
+
+    let admin;
+
+    if (token) {
+      try {
+        const { jwtVerify } = await import('jose');
+        const secretText = process.env.JWT_SECRET;
+        if (!secretText) {
+          return jsonError('Server configuration error', 500);
+        }
+        const secret = new TextEncoder().encode(secretText);
+        const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
+        const userId = (payload as any)?.userId?.toString();
+
+        if (userId) {
+          admin = await prisma.user.findUnique({
+            where: { id: parseInt(userId) },
+            select: { id: true, username: true, role: true }
+          });
+        }
+      } catch (error) {
+        // Don't return error yet, try header auth
+      }
+    }
+
+    if (!admin && usernameHeader) {
+      // Try exact match first
+      admin = await prisma.user.findUnique({
+        where: { username: usernameHeader },
+        select: { id: true, username: true, role: true }
+      });
+
+      // If not found, try case-insensitive match
+      if (!admin) {
+        admin = await prisma.user.findFirst({
+          where: { username: { equals: usernameHeader } },
+          select: { id: true, username: true, role: true }
+        });
+      }
+    }
+
+    if (!admin && emailHeader) {
+      admin = await prisma.user.findFirst({
+        where: { email: emailHeader },
+        select: { id: true, username: true, role: true }
+      });
+    }
+
+    if (!admin) {
+      return jsonError('Not authenticated', 401);
+    }
+
+    if (admin.role !== 'admin' && admin.role !== 'accountant') {
       return jsonError('Not authorized', 403);
     }
 
     const { searchParams } = new URL(req.url);
     const payrollId = searchParams.get('id');
-    
+
     if (!payrollId) {
       return jsonError('Payroll ID is required', 400);
     }
-    
+
     const body = await req.json();
     const updateData = {
       status: body.status,
@@ -241,15 +349,70 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const adminUsername = req.headers.get('x-username');
-    const admin = adminUsername ? await prisma.user.findUnique({ where: { username: adminUsername } }) : null;
-    if (!admin || admin.role !== 'admin') {
+    // Get user from JWT token in cookies OR x-username header
+    const token = req.cookies.get('auth-token')?.value;
+    const usernameHeader = req.headers.get('x-username');
+    const emailHeader = req.headers.get('x-user-email');
+
+    let admin;
+
+    if (token) {
+      try {
+        const { jwtVerify } = await import('jose');
+        const secretText = process.env.JWT_SECRET;
+        if (!secretText) {
+          return jsonError('Server configuration error', 500);
+        }
+        const secret = new TextEncoder().encode(secretText);
+        const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
+        const userId = (payload as any)?.userId?.toString();
+
+        if (userId) {
+          admin = await prisma.user.findUnique({
+            where: { id: parseInt(userId) },
+            select: { id: true, username: true, role: true }
+          });
+        }
+      } catch (error) {
+        // Don't return error yet, try header auth
+      }
+    }
+
+    if (!admin && usernameHeader) {
+      // Try exact match first
+      admin = await prisma.user.findUnique({
+        where: { username: usernameHeader },
+        select: { id: true, username: true, role: true }
+      });
+
+      // If not found, try case-insensitive match
+      if (!admin) {
+        admin = await prisma.user.findFirst({
+          where: { username: { equals: usernameHeader } },
+          select: { id: true, username: true, role: true }
+        });
+      }
+    }
+
+    if (!admin && emailHeader) {
+      admin = await prisma.user.findFirst({
+        where: { email: emailHeader },
+        select: { id: true, username: true, role: true }
+      });
+    }
+
+    if (!admin) {
+      return jsonError('Not authenticated', 401);
+    }
+
+    // Only allow admin for DELETE
+    if (admin.role !== 'admin') {
       return jsonError('Not authorized', 403);
     }
 
     const { searchParams } = new URL(req.url);
     const payrollId = searchParams.get('id');
-    
+
     if (!payrollId) {
       return jsonError('Payroll ID is required', 400);
     }
