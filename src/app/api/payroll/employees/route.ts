@@ -238,7 +238,7 @@ export const POST = withValidation(createEmployeeSchema, async (req: NextRequest
     return jsonOk({ employee });
   } catch (error) {
     console.error('Error creating employee:', error);
-    return jsonError('Failed to create employee', 500);
+    return jsonError(error instanceof Error ? error.message : 'Failed to create employee', 500);
   }
 });
 
