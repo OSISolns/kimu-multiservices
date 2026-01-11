@@ -157,11 +157,11 @@ export default function TransportOfficerPage() {
   }
 
   const filteredBookings = bookings.filter(booking =>
-    filter === 'all' || booking.status === filter
+    filter === 'all' || booking.status.toLowerCase() === filter.toLowerCase()
   );
 
   const filteredVehicles = vehicles.filter(vehicle =>
-    vehicleFilter === 'all' || vehicle.status === vehicleFilter
+    vehicleFilter === 'all' || vehicle.status.toLowerCase() === vehicleFilter.toLowerCase()
   );
 
   const getStatusColor = (status: string) => {
