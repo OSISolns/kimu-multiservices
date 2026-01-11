@@ -127,13 +127,13 @@ export default function VehiclesPage() {
       let aValue, bValue
       switch (sortBy) {
         case 'price':
-          aValue = parseInt(a.price.replace(/[^\d]/g, '')) || 0
-          bValue = parseInt(b.price.replace(/[^\d]/g, '')) || 0
+          aValue = parseInt((a.price || '0').replace(/[^\d]/g, '')) || 0
+          bValue = parseInt((b.price || '0').replace(/[^\d]/g, '')) || 0
           break
-        case 'year': aValue = a.year; bValue = b.year; break
-        case 'mileage': aValue = parseInt(a.mileage.replace(/[^\d]/g, '')) || 0; bValue = parseInt(b.mileage.replace(/[^\d]/g, '')) || 0; break
-        case 'quantity': aValue = a.quantity; bValue = b.quantity; break
-        default: aValue = a.name.toLowerCase(); bValue = b.name.toLowerCase()
+        case 'year': aValue = a.year || 0; bValue = b.year || 0; break
+        case 'mileage': aValue = parseInt((a.mileage || '0').replace(/[^\d]/g, '')) || 0; bValue = parseInt((b.mileage || '0').replace(/[^\d]/g, '')) || 0; break
+        case 'quantity': aValue = a.quantity || 0; bValue = b.quantity || 0; break
+        default: aValue = (a.name || '').toLowerCase(); bValue = (b.name || '').toLowerCase()
       }
       return sortOrder === 'asc' ? (aValue > bValue ? 1 : -1) : (aValue < bValue ? 1 : -1)
     })
@@ -162,10 +162,11 @@ export default function VehiclesPage() {
 
   // Check if this is the first vehicle of its brand (used for brand representation)
   const isFirstVehicleOfBrand = (vehicle: Vehicle): boolean => {
+    if (!vehicle || !vehicle.name) return false;
     // Find the first vehicle with the same brand name (assuming brand is in the name)
     const brandName = vehicle.name.split(' ')[0] // Extract brand from vehicle name
     const firstVehicleOfBrand = vehicles.find(v =>
-      v.name.startsWith(brandName) && v.id !== vehicle.id
+      v.name && v.name.startsWith(brandName) && v.id !== vehicle.id
     )
 
     // If no other vehicle with same brand exists, or this one has a lower ID, it's the first
@@ -232,7 +233,7 @@ export default function VehiclesPage() {
   }
 
   const getStatusIcon = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch ((status || '').toLowerCase()) {
       case 'available': return <FaCheckCircle className="text-green-500" />
       case 'maintenance': return <FaTools className="text-yellow-500" />
       case 'rented': return <FaCar className="text-blue-500" />
@@ -668,15 +669,15 @@ export default function VehiclesPage() {
               >
                 <div className="relative h-48 bg-gradient-to-br from-gray-50 to-white rounded-t-3xl overflow-hidden">
                   <Image
-                    src={vehicle.image}
-                    alt={vehicle.name}
+                    src={vehicle.image || '/vehicles/land-cruiser.jpg'}
+                    alt={vehicle.name || 'Vehicle'}
                     fill
                     className="object-contain p-4 hover:scale-110 transition-transform duration-500"
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                   />
                   <div className="absolute top-3 left-3 flex flex-col gap-2">
-                    <span className={`status-badge ${vehicle.status.toLowerCase().replace(' ', '-')} hover-bounce`}>
-                      {vehicle.status}
+                    <span className={`status-badge ${(vehicle.status || 'Available').toLowerCase().replace(' ', '-')} hover-bounce`}>
+                      {vehicle.status || 'Available'}
                     </span>
                     {isFirstVehicleOfBrand(vehicle) && (
                       <span className="status-badge warning hover-bounce">
