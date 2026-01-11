@@ -88,7 +88,7 @@ export default function TransportOfficerPage() {
       const response = await fetch('/api/bookings');
       if (response.ok) {
         const data = await response.json();
-        setBookings(data.bookings || []);
+        setBookings(data.data || data.bookings || []);
       }
     } catch (error) {
       console.error('Error fetching bookings:', error);
