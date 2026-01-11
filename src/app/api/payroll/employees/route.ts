@@ -236,8 +236,18 @@ export const POST = withValidation(createEmployeeSchema, async (req: NextRequest
     });
 
     return jsonOk({ employee });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating employee:', error);
+    console.error('Request payload:', JSON.stringify(body, null, 2));
+
+    // Return detailed Prisma error info if available
+    if (error?.code) {
+      return jsonError(`Database Error: ${error.message} (Code: ${error.code})`, 500, {
+        meta: error.meta,
+        code: error.code
+      });
+    }
+
     return jsonError(error instanceof Error ? error.message : 'Failed to create employee', 500);
   }
 });
