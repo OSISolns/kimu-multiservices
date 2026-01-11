@@ -37,19 +37,34 @@ export default function BookingsPage() {
   const fetchBookings = useCallback(async () => {
     if (!user?.username) return;
 
+    setLoading(true);
     try {
-      const response = await fetch('/api/bookings');
+      const params = new URLSearchParams();
+      // Map frontend filter values to backend PascalCase statuses
+      if (filter !== 'all') {
+        const statusMap: Record<string, string> = {
+          'active': 'Active',
+          'pending': 'Pending',
+          'confirmed': 'Confirmed',
+          'in-progress': 'In Progress',
+          'completed': 'Completed',
+          'cancelled': 'Cancelled'
+        };
+        params.append('status', statusMap[filter] || filter);
+      }
+
+      const response = await fetch(`/api/bookings?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
         console.log('Bookings API response:', data); // Debug log
-        setBookings(data.bookings || []);
+        setBookings(data.bookings || data.data || []); // Handle both response structures
       }
     } catch (error) {
       console.error('Error fetching bookings:', error);
     } finally {
       setLoading(false);
     }
-  }, [user?.username]);
+  }, [user?.username, filter]);
 
   useEffect(() => {
     if (user && !userLoading) {
@@ -106,21 +121,24 @@ export default function BookingsPage() {
   });
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
+      case 'active': return 'bg-blue-100 text-blue-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'confirmed': return 'bg-blue-100 text-blue-800';
+      case 'confirmed': return 'bg-green-100 text-green-800';
       case 'in-progress': return 'bg-purple-100 text-purple-800';
-      case 'completed': return 'bg-green-100 text-green-800';
+      case 'completed': return 'bg-gray-100 text-gray-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed': return <FaCheckCircle className="text-green-600" />;
+    switch (status.toLowerCase()) {
+      case 'active': return <FaCheckCircle className="text-blue-600" />;
+      case 'completed': return <FaCheckCircle className="text-gray-600" />;
       case 'cancelled': return <FaTimesCircle className="text-red-600" />;
-      default: return <FaClock className="text-blue-600" />;
+      case 'confirmed': return <FaCheckCircle className="text-green-600" />;
+      default: return <FaClock className="text-yellow-600" />;
     }
   };
 
@@ -152,7 +170,9 @@ export default function BookingsPage() {
               onChange={(e) => setFilter(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
+// Update filter dropdown
               <option value="all">All Statuses</option>
+              <option value="active">Active</option>
               <option value="pending">Pending</option>
               <option value="confirmed">Confirmed</option>
               <option value="in-progress">In Progress</option>

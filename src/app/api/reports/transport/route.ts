@@ -48,14 +48,23 @@ export async function GET(req: NextRequest) {
     const fuelEfficiencyValues = vehicles
       .map(v => parseFloat(v.fuelEfficiency?.replace(/[^\d.]/g, '') || '0'))
       .filter(v => v > 0)
-    
-    const averageFuelEfficiency = fuelEfficiencyValues.length > 0 
+
+    const averageFuelEfficiency = fuelEfficiencyValues.length > 0
       ? (fuelEfficiencyValues.reduce((sum, v) => sum + v, 0) / fuelEfficiencyValues.length).toFixed(1)
       : 0
 
     // Find most and least used vehicles (simplified logic)
     const mostUsedVehicle = vehicles.length > 0 ? vehicles[0].name : 'N/A'
     const leastUsedVehicle = vehicles.length > 1 ? vehicles[vehicles.length - 1].name : 'N/A'
+
+    // Get active bookings count
+    const activeBookings = await prisma.booking.count({
+      where: {
+        status: {
+          in: ['Active', 'active', 'Confirmed', 'confirmed', 'Pending', 'pending', 'In Progress', 'in-progress', 'in_progress']
+        }
+      }
+    })
 
     // Get maintenance data
     const maintenanceDue = vehicles.filter(v => {
@@ -86,7 +95,8 @@ export async function GET(req: NextRequest) {
       leastUsedVehicle,
       maintenanceDue,
       upcomingMaintenance,
-      recentActiveVehicles
+      recentActiveVehicles,
+      activeBookings
     }
 
     return NextResponse.json(reportData)
