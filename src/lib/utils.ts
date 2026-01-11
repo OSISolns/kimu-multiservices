@@ -32,10 +32,10 @@ export function hasPermission(
   action: string
 ): boolean {
   if (!user) return false;
-  
+
   // Admin has all permissions
   if (user.role === 'admin') return true;
-  
+
   // Define role-based permissions
   const rolePermissions: Record<UserRole, Array<{ resource: string; action: string }>> = {
     admin: [
@@ -70,12 +70,32 @@ export function hasPermission(
       { resource: 'vehicles', action: 'read' },
       { resource: 'bookings', action: 'create' },
       { resource: 'bookings', action: 'read' }
+    ],
+    'sales-representative': [
+      { resource: 'vehicles', action: 'read' },
+      { resource: 'bookings', action: 'create' },
+      { resource: 'bookings', action: 'read' },
+      { resource: 'leads', action: '*' }
+    ],
+    driver: [
+      { resource: 'vehicles', action: 'read' },
+      { resource: 'bookings', action: 'read' }
+    ],
+    'customer-service': [
+      { resource: 'vehicles', action: 'read' },
+      { resource: 'bookings', action: '*' },
+      { resource: 'reports', action: 'read' }
+    ],
+    operations: [
+      { resource: 'vehicles', action: '*' },
+      { resource: 'bookings', action: '*' },
+      { resource: 'reports', action: 'read' }
     ]
   };
-  
+
   const permissions = rolePermissions[user.role] || [];
-  
-  return permissions.some(permission => 
+
+  return permissions.some(permission =>
     (permission.resource === '*' || permission.resource === resource) &&
     (permission.action === '*' || permission.action === action)
   );
@@ -89,14 +109,14 @@ export function capitalizeFirst(str: string): string {
 export function formatPhoneNumber(phone: string): string {
   // Remove all non-digit characters
   const cleaned = phone.replace(/\D/g, '');
-  
+
   // Format based on length
   if (cleaned.length === 10) {
     return `+250 ${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)} ${cleaned.slice(6)}`;
   } else if (cleaned.length === 12 && cleaned.startsWith('250')) {
     return `+${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)} ${cleaned.slice(6, 9)} ${cleaned.slice(9)}`;
   }
-  
+
   return phone; // Return original if format is not recognized
 }
 
@@ -152,7 +172,7 @@ export function sortBy<T>(
   return [...array].sort((a, b) => {
     const aVal = keyFn(a);
     const bVal = keyFn(b);
-    
+
     if (aVal < bVal) return direction === 'asc' ? -1 : 1;
     if (aVal > bVal) return direction === 'asc' ? 1 : -1;
     return 0;
@@ -266,7 +286,7 @@ export function calculatePagination(
 } {
   const totalPages = Math.ceil(total / limit);
   const offset = (page - 1) * limit;
-  
+
   return {
     page,
     limit,
@@ -285,35 +305,35 @@ export function getFileExtension(filename: string): string {
 
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Bytes';
-  
+
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 // URL utilities
 export function buildQueryString(params: Record<string, any>): string {
   const searchParams = new URLSearchParams();
-  
+
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
       searchParams.append(key, String(value));
     }
   });
-  
+
   return searchParams.toString();
 }
 
 export function parseQueryString(queryString: string): Record<string, string> {
   const params: Record<string, string> = {};
   const searchParams = new URLSearchParams(queryString);
-  
+
   searchParams.forEach((value, key) => {
     params[key] = value;
   });
-  
+
   return params;
 }
 
