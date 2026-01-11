@@ -24,7 +24,7 @@ export interface User {
   whatsappNotifications: boolean;
 }
 
-export type UserRole = 'admin' | 'manager' | 'staff' | 'accountant' | 'transport-officer' | 'agent';
+export type UserRole = 'admin' | 'manager' | 'staff' | 'accountant' | 'transport-officer' | 'agent' | 'sales-representative' | 'driver' | 'customer-service' | 'operations';
 export type UserStatus = 'active' | 'inactive' | 'suspended';
 
 // Vehicle Types

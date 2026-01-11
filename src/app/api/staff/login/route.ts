@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
       return createAuthErrorResponse('Invalid username or password');
     }
     // Only allow staff, admin, transport-officer, or accountant
-    if (!hasAnyRole({ role: user.role as UserRole }, ['staff', 'admin', 'transport-officer', 'accountant', 'manager', 'agent'])) {
+    if (!hasAnyRole({ role: user.role as UserRole }, ['staff', 'admin', 'transport-officer', 'accountant', 'manager', 'agent', 'sales-representative', 'driver', 'customer-service', 'operations'])) {
       return NextResponse.json({
         success: false,
         error: 'Not authorized',

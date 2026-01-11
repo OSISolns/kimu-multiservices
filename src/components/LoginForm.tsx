@@ -84,6 +84,8 @@ export default function LoginForm() {
           router.push('/staff/admin-dashboard');
           break;
         case 'sales':
+        case 'sales-representative':
+        case 'agent':
           router.push('/staff/sales-dashboard');
           break;
         case 'transport-officer':
