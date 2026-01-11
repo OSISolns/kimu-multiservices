@@ -1,13 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
-import { verifyMfaTrustToken, normalizeIpAddress } from '@/lib/mfa'
-
-// Which routes require MFA?
-const MFA_PROTECTED_PATHS = [
-  '/staff/',
-  '/admin/',
-];
 
 // Verify JWT from HttpOnly cookie and return user id
 async function getUserIdFromSession(req: NextRequest): Promise<string | null> {
@@ -23,10 +16,6 @@ async function getUserIdFromSession(req: NextRequest): Promise<string | null> {
   } catch {
     return null
   }
-}
-
-function requiresMfa(pathname: string): boolean {
-  return MFA_PROTECTED_PATHS.some(path => pathname.startsWith(path));
 }
 
 export async function middleware(request: NextRequest) {
@@ -61,19 +50,19 @@ export async function middleware(request: NextRequest) {
   response.headers.set('Permissions-Policy', 'geolocation=(), microphone=(), camera=(), payment=(), usb=()')
   response.headers.set('Cross-Origin-Opener-Policy', 'same-origin')
   response.headers.set('Cross-Origin-Resource-Policy', 'same-site')
-  
+
   // Cache static assets
-  if (request.nextUrl.pathname.startsWith('/_next/static') || 
-      request.nextUrl.pathname.startsWith('/images') ||
-      request.nextUrl.pathname.startsWith('/vehicles') ||
-      request.nextUrl.pathname.endsWith('.png') ||
-      request.nextUrl.pathname.endsWith('.jpg') ||
-      request.nextUrl.pathname.endsWith('.jpeg') ||
-      request.nextUrl.pathname.endsWith('.gif') ||
-      request.nextUrl.pathname.endsWith('.svg') ||
-      request.nextUrl.pathname.endsWith('.ico') ||
-      request.nextUrl.pathname.endsWith('.css') ||
-      request.nextUrl.pathname.endsWith('.js')) {
+  if (request.nextUrl.pathname.startsWith('/_next/static') ||
+    request.nextUrl.pathname.startsWith('/images') ||
+    request.nextUrl.pathname.startsWith('/vehicles') ||
+    request.nextUrl.pathname.endsWith('.png') ||
+    request.nextUrl.pathname.endsWith('.jpg') ||
+    request.nextUrl.pathname.endsWith('.jpeg') ||
+    request.nextUrl.pathname.endsWith('.gif') ||
+    request.nextUrl.pathname.endsWith('.svg') ||
+    request.nextUrl.pathname.endsWith('.ico') ||
+    request.nextUrl.pathname.endsWith('.css') ||
+    request.nextUrl.pathname.endsWith('.js')) {
     response.headers.set('Cache-Control', 'public, max-age=31536000, immutable')
   }
 
@@ -88,20 +77,15 @@ export async function middleware(request: NextRequest) {
     );
   }
 
-  // Skip MFA checking for non-protected routes
-  if (!requiresMfa(request.nextUrl.pathname)) {
-    return response;
-  }
-
-  // Skip MFA checking for login pages
+  // Skip auth checking for login pages
   if (request.nextUrl.pathname === '/staff/login' || request.nextUrl.pathname === '/admin/login') {
     return response;
   }
 
   // Check if user is signed in
   const userId = await getUserIdFromSession(request);
-  
-  // If not signed in, redirect to login
+
+  // If not signed in and trying to access protected routes, redirect to login
   if (!userId) {
     if (request.nextUrl.pathname.startsWith('/staff/')) {
       url.pathname = '/staff/login';
@@ -110,31 +94,6 @@ export async function middleware(request: NextRequest) {
       url.pathname = '/admin/login';
       return NextResponse.redirect(url);
     }
-  }
-
-  // Enforce MFA trusted device token for protected routes
-  const mfaToken = request.cookies.get('mfa_trust')?.value
-  if (mfaToken && userId) {
-    const ua = request.headers.get('user-agent') || ''
-    const forwardedFor = request.headers.get('x-forwarded-for')
-    const ip = forwardedFor ? forwardedFor.split(',')[0]?.trim() || '' : ''
-    const normalizedIp = normalizeIpAddress(ip)
-    const trusted = await verifyMfaTrustToken(mfaToken, { userId, userAgent: ua, ip: normalizedIp })
-    if (trusted) {
-      return response
-    }
-  }
-
-  // If no trusted token, redirect to MFA page
-  if (request.nextUrl.pathname.startsWith('/staff/')) {
-    url.pathname = '/mfa'
-    url.searchParams.set('next', request.nextUrl.pathname)
-    return NextResponse.redirect(url)
-  }
-  if (request.nextUrl.pathname.startsWith('/admin/')) {
-    url.pathname = '/mfa'
-    url.searchParams.set('next', request.nextUrl.pathname)
-    return NextResponse.redirect(url)
   }
 
   return response;
