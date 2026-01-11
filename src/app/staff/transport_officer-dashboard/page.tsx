@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/UserContext';
 import { FaCar, FaCalendarAlt, FaMapMarkerAlt, FaClock, FaCheckCircle, FaTimesCircle, FaEye, FaRoute, FaTimes, FaCog, FaGasPump, FaUsers, FaDoorOpen, FaTachometerAlt } from 'react-icons/fa';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import BookingDetailsModal from '../bookings/components/BookingDetailsModal';
 
 interface Booking {
   id: number;
@@ -80,6 +81,20 @@ export default function TransportOfficerPage() {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [showFleetModal, setShowFleetModal] = useState(false);
   const [aggregate, setAggregate] = useState<TransportAggregate | null>(null);
+
+  // Booking Modal State
+  const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+
+  const handleViewBooking = (booking: any) => {
+    setSelectedBooking(booking);
+    setShowBookingModal(true);
+  };
+
+  const closeBookingModal = () => {
+    setShowBookingModal(false);
+    setSelectedBooking(null);
+  };
 
   const fetchBookings = useCallback(async () => {
     if (!user?.username) return;
@@ -370,7 +385,7 @@ export default function TransportOfficerPage() {
                           RWF {booking.totalAmount?.toLocaleString()}
                         </span>
                         <button
-                          onClick={() => router.push(`/staff/bookings/${booking.id}`)}
+                          onClick={() => handleViewBooking(booking)}
                           className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl text-xs font-semibold hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                         >
                           <FaEye className="mr-1" />
@@ -663,6 +678,14 @@ export default function TransportOfficerPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Booking Details Modal */}
+      {showBookingModal && selectedBooking && (
+        <BookingDetailsModal
+          booking={selectedBooking}
+          onClose={closeBookingModal}
+        />
       )}
     </div>
   );
