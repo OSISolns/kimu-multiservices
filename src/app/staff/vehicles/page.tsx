@@ -378,7 +378,7 @@ export default function VehiclesPage() {
 
         console.log('Sending vehicle creation data:', createData)
 
-        const response = await fetch('/api/vehicles/create', {
+        const response = await fetch('/api/vehicles', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -398,7 +398,7 @@ export default function VehiclesPage() {
         console.log('Vehicle creation success response:', result)
 
         // Add new vehicle to local state
-        setVehicles(prev => [result.vehicle, ...prev])
+        setVehicles(prev => [result, ...prev])
 
         // Refresh the vehicle list to ensure UI is up to date
         await fetchVehicles()
