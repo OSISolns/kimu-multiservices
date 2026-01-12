@@ -207,20 +207,28 @@ export const POST = withValidation(createEmployeeSchema, async (req: NextRequest
     // Exclude fields that don't exist in the Employee model
     const { workingHours, hourlyRate, userId, ...employeeData } = data;
 
-    const employee = await prisma.employee.create({
-      data: {
-        ...employeeData,
-        userId: userId ?? null,
-        salaryStructures: {
-          create: {
-            baseSalary: data.salary,
-            allowances: {},
-            deductions: {},
-            effectiveDate: new Date(),
-            isActive: true,
-          }
+    // Prepare create data, omitting userId if it's null/undefined to avoid adapter issues
+    const createData: any = {
+      ...employeeData,
+      salaryStructures: {
+        create: {
+          baseSalary: data.salary,
+          allowances: {},
+          deductions: {},
+          effectiveDate: new Date(),
+          isActive: true,
         }
-      },
+      }
+    };
+
+    if (userId) {
+      createData.userId = userId;
+    }
+
+    console.log('🔍 Prisma Create Data keys:', Object.keys(createData));
+
+    const employee = await prisma.employee.create({
+      data: createData,
       include: {
         user: {
           select: {
