@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, MouseEvent } from "react";
 import { useUser } from "../../../UserContext";
-import { FaSearch, FaPlus, FaEnvelope, FaPhone, FaMapMarkerAlt, FaTimes, FaEdit } from "react-icons/fa";
+import { FaSearch, FaPlus, FaEnvelope, FaPhone, FaMapMarkerAlt, FaTimes, FaEdit, FaTrash } from "react-icons/fa";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 interface Lead {
@@ -31,6 +31,8 @@ export default function CustomersPage() {
         stage: 'Contacted',
         value: 0
     });
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
 
     useEffect(() => {
         const fetchLeads = async () => {
@@ -111,6 +113,28 @@ export default function CustomersPage() {
         } catch (error) {
             console.error('Error updating customer:', error);
             alert('An error occurred while updating the customer.');
+        }
+    };
+
+    const handleDeleteCustomer = async () => {
+        if (!leadToDelete) return;
+
+        try {
+            const response = await fetch(`/api/leads/${leadToDelete.id}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                setLeads(leads.filter(l => l.id !== leadToDelete.id));
+                setIsDeleteModalOpen(false);
+                setLeadToDelete(null);
+                setIsViewModalOpen(false);
+            } else {
+                alert('Failed to delete customer');
+            }
+        } catch (error) {
+            console.error('Error deleting customer:', error);
+            alert('An error occurred while deleting the customer.');
         }
     };
 
@@ -204,13 +228,26 @@ export default function CustomersPage() {
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {new Date(lead.lastContact).toLocaleDateString()}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end gap-2">
                                     <button
                                         onClick={() => handleViewCustomer(lead)}
                                         className="text-blue-600 hover:text-blue-900"
                                     >
                                         View
                                     </button>
+                                    {(user?.role === 'sales-rep' || user?.role === 'admin' || user?.role === 'manager') && (
+                                        <button
+                                            onClick={(e: MouseEvent) => {
+                                                e.stopPropagation();
+                                                setLeadToDelete(lead);
+                                                setIsDeleteModalOpen(true);
+                                            }}
+                                            className="text-red-600 hover:text-red-900 ml-2"
+                                            title="Delete Customer"
+                                        >
+                                            <FaTrash />
+                                        </button>
+                                    )}
                                 </td>
                             </tr>
                         ))}
@@ -480,6 +517,37 @@ export default function CustomersPage() {
                                 </div>
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {isDeleteModalOpen && leadToDelete && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 m-4">
+                        <div className="text-center">
+                            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <FaTrash className="text-red-600 text-xl" />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Customer</h3>
+                            <p className="text-gray-500 mb-6">
+                                Are you sure you want to delete <span className="font-semibold text-gray-900">{leadToDelete.name}</span>? This action cannot be undone.
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setIsDeleteModalOpen(false)}
+                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleDeleteCustomer}
+                                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium"
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
