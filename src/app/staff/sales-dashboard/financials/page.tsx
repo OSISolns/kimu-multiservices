@@ -47,6 +47,10 @@ export default function FinancialsPage() {
     const [docs, setDocs] = useState<FinancialDoc[]>([]);
     const [leads, setLeads] = useState<Lead[]>([]);
     const [isLoadingData, setIsLoadingData] = useState(true);
+
+    useEffect(() => {
+        console.log("Financials Page: Component Mounted - v2");
+    }, []);
     const [filterType, setFilterType] = useState<'All' | 'Invoice' | 'Quote'>('All');
     const [searchTerm, setSearchTerm] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -909,7 +913,7 @@ export default function FinancialsPage() {
                                                     >
                                                         <FaTrash className="text-red-500" /> Delete
                                                     </button>
-                                                    {doc.type === 'Quote' && doc.status === 'Draft' && (
+                                                    {doc.type === 'Quote' && ['Draft', 'Pending', 'draft', 'pending'].includes(doc.status) && (
                                                         <button
                                                             onClick={() => handleMarkAsSent(doc)}
                                                             className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm flex items-center gap-2 text-blue-600"
@@ -917,7 +921,7 @@ export default function FinancialsPage() {
                                                             <FaCheck className="text-blue-500" /> Mark as Sent
                                                         </button>
                                                     )}
-                                                    {doc.type === 'Quote' && doc.status !== 'Converted' && (
+                                                    {doc.type === 'Quote' && !['Converted', 'converted'].includes(doc.status) && (
                                                         <button
                                                             onClick={() => handleConvertToInvoice(doc)}
                                                             className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm flex items-center gap-2 text-green-600"
