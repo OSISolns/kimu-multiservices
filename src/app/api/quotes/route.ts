@@ -75,6 +75,22 @@ export async function POST(req: NextRequest) {
       }
     });
 
+    // Update the lead's value and stage
+    // We swallow errors here to not block the response if lead update fails
+    try {
+      await prisma.lead.update({
+        where: { id: customerId },
+        data: {
+          value: amount,
+          stage: 'Proposal Sent',
+          lastContact: new Date()
+        }
+      });
+      console.log(`Updated lead ${customerId} with new value ${amount}`);
+    } catch (leadError) {
+      console.error('Failed to update lead after creating quote:', leadError);
+    }
+
     // Log the activity
     await logActivity(
       createdBy,
