@@ -565,7 +565,7 @@ export default function FinancialsPage() {
                     <h2 className="text-2xl font-bold text-gray-900">Financials</h2>
                     <p className="text-gray-500">Manage quotes, invoices, and payments.</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-3 overflow-x-auto md:overflow-visible">
                     <div className="relative group">
                         <button
                             className="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 font-medium shadow-sm"
@@ -733,6 +733,13 @@ export default function FinancialsPage() {
                                             title="Download PDF"
                                         >
                                             <FaDownload />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteDoc(doc)}
+                                            className="text-red-500 hover:text-red-700 mx-2"
+                                            title="Delete"
+                                        >
+                                            <FaTrash />
                                         </button>
                                         <div className="inline-block relative">
                                             <button
