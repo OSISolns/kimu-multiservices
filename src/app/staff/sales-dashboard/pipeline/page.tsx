@@ -1,8 +1,19 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useUser } from "../../../UserContext";
-import { FaPlus, FaSearch, FaEllipsisH, FaTimes, FaFilter, FaFileExport } from "react-icons/fa";
+import {
+    FaPlus,
+    FaSearch,
+    FaEllipsisH,
+    FaTimes,
+    FaFilter,
+    FaFileExport,
+    FaChartPie,
+    FaFunnelDollar,
+    FaPercentage,
+    FaExclamationCircle
+} from "react-icons/fa";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 interface Lead {
@@ -38,6 +49,18 @@ export default function PipelinePage() {
         value: 0
     });
 
+    const stats = useMemo(() => {
+        const totalValue = leads.reduce((sum: number, l: Lead) => sum + (l.stage === 'Closed Lost' ? 0 : l.value), 0);
+        const activeLeads = leads.filter((l: Lead) => !['Closed Won', 'Closed Lost'].includes(l.stage));
+        const activeValue = activeLeads.reduce((sum: number, l: Lead) => sum + l.value, 0);
+        const winRate = leads.length > 0
+            ? (leads.filter((l: Lead) => l.stage === 'Closed Won').length / leads.length) * 100
+            : 0;
+        const avgDealSize = leads.length > 0 ? totalValue / leads.length : 0;
+
+        return { totalValue, activeValue, winRate, avgDealSize };
+    }, [leads]);
+
     useEffect(() => {
         const fetchLeads = async () => {
             try {
@@ -60,7 +83,7 @@ export default function PipelinePage() {
     }, [user, isLoading]);
 
     const filteredLeads = useMemo(() =>
-        leads.filter(lead => {
+        leads.filter((lead: Lead) => {
             const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 lead.company.toLowerCase().includes(searchTerm.toLowerCase());
             const matchesValue = lead.value >= filterMinValue && lead.value <= filterMaxValue;
@@ -72,17 +95,17 @@ export default function PipelinePage() {
         const sorted = [...leadsToSort];
         switch (sortBy) {
             case 'value-desc':
-                return sorted.sort((a, b) => b.value - a.value);
+                return sorted.sort((a: Lead, b: Lead) => b.value - a.value);
             case 'value-asc':
-                return sorted.sort((a, b) => a.value - b.value);
+                return sorted.sort((a: Lead, b: Lead) => a.value - b.value);
             case 'date-desc':
-                return sorted.sort((a, b) => new Date(b.lastContact).getTime() - new Date(a.lastContact).getTime());
+                return sorted.sort((a: Lead, b: Lead) => new Date(b.lastContact).getTime() - new Date(a.lastContact).getTime());
             case 'date-asc':
-                return sorted.sort((a, b) => new Date(a.lastContact).getTime() - new Date(b.lastContact).getTime());
+                return sorted.sort((a: Lead, b: Lead) => new Date(a.lastContact).getTime() - new Date(b.lastContact).getTime());
             case 'name-asc':
-                return sorted.sort((a, b) => a.name.localeCompare(b.name));
+                return sorted.sort((a: Lead, b: Lead) => a.name.localeCompare(b.name));
             case 'name-desc':
-                return sorted.sort((a, b) => b.name.localeCompare(a.name));
+                return sorted.sort((a: Lead, b: Lead) => b.name.localeCompare(a.name));
             default:
                 return sorted;
         }
@@ -91,7 +114,7 @@ export default function PipelinePage() {
     const leadsByStage = useMemo(() => {
         return STAGES.map(stage => ({
             stage,
-            leads: sortLeads(filteredLeads.filter(lead => lead.stage === stage))
+            leads: sortLeads(filteredLeads.filter((lead: Lead) => lead.stage === stage))
         }));
     }, [filteredLeads, sortBy]);
 
@@ -123,7 +146,7 @@ export default function PipelinePage() {
     };
 
     const exportStageData = (stage: string) => {
-        const stageLeads = leads.filter(lead => lead.stage === stage);
+        const stageLeads = leads.filter((lead: Lead) => lead.stage === stage);
         if (stageLeads.length === 0) {
             alert('No deals to export in this stage.');
             return;
@@ -132,7 +155,7 @@ export default function PipelinePage() {
         const headers = ['Name', 'Company', 'Email', 'Phone', 'Location', 'Value (RWF)', 'Last Contact', 'Next Follow Up'];
         const csvContent = [
             headers.join(','),
-            ...stageLeads.map(lead => [
+            ...stageLeads.map((lead: Lead) => [
                 `"${lead.name}"`,
                 `"${lead.company}"`,
                 `"${lead.email || 'N/A'}"`,
@@ -166,7 +189,7 @@ export default function PipelinePage() {
         const headers = ['Name', 'Company', 'Stage', 'Email', 'Phone', 'Location', 'Value (RWF)', 'Last Contact', 'Next Follow Up'];
         const csvContent = [
             headers.join(','),
-            ...filteredLeads.map(lead => [
+            ...filteredLeads.map((lead: Lead) => [
                 `"${lead.name}"`,
                 `"${lead.company}"`,
                 `"${lead.stage}"`,
@@ -201,27 +224,77 @@ export default function PipelinePage() {
     }
 
     return (
-        <div className="h-full flex flex-col">
-            <div className="flex justify-between items-center mb-6">
+        <div className="h-full flex flex-col space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-blue-100 text-sm font-medium mb-1">Pipeline Value</p>
+                            <h3 className="text-2xl font-bold">RWF {stats.activeValue.toLocaleString()}</h3>
+                        </div>
+                        <div className="bg-white/20 p-3 rounded-lg backdrop-blur-sm">
+                            <FaFunnelDollar className="text-2xl" />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-purple-100 text-sm font-medium mb-1">Avg Deal Size</p>
+                            <h3 className="text-2xl font-bold">RWF {Math.round(stats.avgDealSize).toLocaleString()}</h3>
+                        </div>
+                        <div className="bg-white/20 p-3 rounded-lg backdrop-blur-sm">
+                            <FaChartPie className="text-2xl" />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-lg">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-green-100 text-sm font-medium mb-1">Win Rate</p>
+                            <h3 className="text-2xl font-bold">{stats.winRate.toFixed(1)}%</h3>
+                        </div>
+                        <div className="bg-white/20 p-3 rounded-lg backdrop-blur-sm">
+                            <FaPercentage className="text-2xl" />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white shadow-lg">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-orange-100 text-sm font-medium mb-1">At Risk</p>
+                            <h3 className="text-2xl font-bold">0</h3>
+                        </div>
+                        <div className="bg-white/20 p-3 rounded-lg backdrop-blur-sm">
+                            <FaExclamationCircle className="text-2xl" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900">Sales Pipeline</h2>
                     <p className="text-gray-500">Manage your deals and track progress.</p>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 w-full sm:w-auto">
                     <div className="relative">
                         <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         <input
                             type="text"
                             placeholder="Search leads..."
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                            className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64 transition-all"
                         />
                     </div>
 
                     <select
                         value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value as SortOption)}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSortBy(e.target.value as SortOption)}
                         className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     >
                         <option value="date-desc">Latest First</option>
@@ -235,8 +308,8 @@ export default function PipelinePage() {
                     <button
                         onClick={() => setShowFilterModal(true)}
                         className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${filterMinValue > 0 || filterMaxValue < Infinity
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                     >
                         <FaFilter />
@@ -292,7 +365,7 @@ export default function PipelinePage() {
                                             </button>
                                             <div className="border-t border-gray-100">
                                                 <div className="px-4 py-2 text-xs text-gray-500">
-                                                    Total Value: {column.leads.reduce((sum, lead) => sum + lead.value, 0).toLocaleString()} RWF
+                                                    Total Value: {column.leads.reduce((sum: number, lead: Lead) => sum + lead.value, 0).toLocaleString()} RWF
                                                 </div>
                                             </div>
                                         </div>
@@ -301,7 +374,7 @@ export default function PipelinePage() {
                             </div>
 
                             <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-                                {column.leads.map((lead) => (
+                                {column.leads.map((lead: Lead) => (
                                     <div
                                         key={lead.id}
                                         className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all cursor-pointer group"
@@ -337,7 +410,7 @@ export default function PipelinePage() {
 
             {/* Filter Modal */}
             {showFilterModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100]">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 m-4">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-gray-900">Filter Deals</h3>
@@ -352,7 +425,7 @@ export default function PipelinePage() {
                                 <input
                                     type="number"
                                     value={filterMinValue}
-                                    onChange={(e) => setFilterMinValue(parseInt(e.target.value) || 0)}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilterMinValue(parseInt(e.target.value) || 0)}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     placeholder="0"
                                 />
@@ -362,7 +435,7 @@ export default function PipelinePage() {
                                 <input
                                     type="number"
                                     value={filterMaxValue === Infinity ? '' : filterMaxValue}
-                                    onChange={(e) => setFilterMaxValue(parseInt(e.target.value) || Infinity)}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilterMaxValue(parseInt(e.target.value) || Infinity)}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     placeholder="No limit"
                                 />
@@ -389,7 +462,7 @@ export default function PipelinePage() {
 
             {/* Add Deal Modal */}
             {isAddModalOpen && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100]">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 m-4">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-gray-900">Add New Deal</h3>
@@ -407,7 +480,7 @@ export default function PipelinePage() {
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="John Doe"
                                         value={newDeal.name || ''}
-                                        onChange={e => setNewDeal({ ...newDeal, name: e.target.value })}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewDeal({ ...newDeal, name: e.target.value })}
                                     />
                                 </div>
                                 <div>
@@ -417,7 +490,7 @@ export default function PipelinePage() {
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="Acme Corp"
                                         value={newDeal.company || ''}
-                                        onChange={e => setNewDeal({ ...newDeal, company: e.target.value })}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewDeal({ ...newDeal, company: e.target.value })}
                                     />
                                 </div>
                             </div>
@@ -429,7 +502,7 @@ export default function PipelinePage() {
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="john@acme.com"
                                         value={newDeal.email || ''}
-                                        onChange={e => setNewDeal({ ...newDeal, email: e.target.value })}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewDeal({ ...newDeal, email: e.target.value })}
                                     />
                                 </div>
                                 <div>
@@ -439,7 +512,7 @@ export default function PipelinePage() {
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="+250 XXX XXX XXX"
                                         value={newDeal.contact || ''}
-                                        onChange={e => setNewDeal({ ...newDeal, contact: e.target.value })}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewDeal({ ...newDeal, contact: e.target.value })}
                                     />
                                 </div>
                             </div>
@@ -450,7 +523,7 @@ export default function PipelinePage() {
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     placeholder="Kigali, Rwanda"
                                     value={newDeal.location || ''}
-                                    onChange={e => setNewDeal({ ...newDeal, location: e.target.value })}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewDeal({ ...newDeal, location: e.target.value })}
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
@@ -459,7 +532,7 @@ export default function PipelinePage() {
                                     <select
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         value={newDeal.stage || 'Contacted'}
-                                        onChange={e => setNewDeal({ ...newDeal, stage: e.target.value })}
+                                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setNewDeal({ ...newDeal, stage: e.target.value })}
                                     >
                                         {STAGES.map(stage => (
                                             <option key={stage} value={stage}>{stage}</option>
@@ -473,7 +546,7 @@ export default function PipelinePage() {
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="0"
                                         value={newDeal.value || ''}
-                                        onChange={e => setNewDeal({ ...newDeal, value: parseInt(e.target.value) || 0 })}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewDeal({ ...newDeal, value: parseInt(e.target.value) || 0 })}
                                     />
                                 </div>
                             </div>
