@@ -329,19 +329,17 @@ export default function CustomersPage() {
                                     >
                                         View
                                     </button>
-                                    {(user?.role === 'sales-rep' || user?.role === 'admin' || user?.role === 'manager') && (
-                                        <button
-                                            onClick={(e: MouseEvent) => {
-                                                e.stopPropagation();
-                                                setLeadToDelete(lead);
-                                                setIsDeleteModalOpen(true);
-                                            }}
-                                            className="text-red-600 hover:text-red-900 ml-2"
-                                            title="Delete Customer"
-                                        >
-                                            <FaTrash />
-                                        </button>
-                                    )}
+                                    <button
+                                        onClick={(e: MouseEvent) => {
+                                            e.stopPropagation();
+                                            setLeadToDelete(lead);
+                                            setIsDeleteModalOpen(true);
+                                        }}
+                                        className="text-red-600 hover:text-red-900 ml-2"
+                                        title="Delete Customer"
+                                    >
+                                        <FaTrash />
+                                    </button>
                                 </td>
                             </tr>
                         ))}
@@ -602,17 +600,15 @@ export default function CustomersPage() {
                                 </div>
 
                                 <div className="border-t pt-4 flex gap-3">
-                                    {(user?.role === 'sales-rep' || user?.role === 'admin' || user?.role === 'manager') && (
-                                        <button
-                                            onClick={() => {
-                                                setLeadToDelete(selectedLead);
-                                                setIsDeleteModalOpen(true);
-                                            }}
-                                            className="flex-1 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium flex items-center justify-center gap-2"
-                                        >
-                                            <FaTrash /> Delete
-                                        </button>
-                                    )}
+                                    <button
+                                        onClick={() => {
+                                            setLeadToDelete(selectedLead);
+                                            setIsDeleteModalOpen(true);
+                                        }}
+                                        className="flex-1 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium flex items-center justify-center gap-2"
+                                    >
+                                        <FaTrash /> Delete
+                                    </button>
                                     <button
                                         onClick={() => setIsEditMode(true)}
                                         className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center justify-center gap-2"
