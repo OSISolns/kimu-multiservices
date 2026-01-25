@@ -108,11 +108,11 @@ export default function FinancialsPage() {
                     const quotesArray = responseData.data?.quotes || responseData.quotes || [];
                     fetchedQuotes = quotesArray.map((q: any) => ({
                         id: `q-${q.id}`,
-                        type: 'Quote',
+                        type: 'Quote' as const,
                         number: `QT-${q.id}`,
                         client: q.customer?.name || 'Unknown',
                         amount: q.amount,
-                        status: q.status.charAt(0).toUpperCase() + q.status.slice(1),
+                        status: (q.status.charAt(0).toUpperCase() + q.status.slice(1)) as FinancialDoc['status'],
                         date: new Date(q.createdAt).toISOString().split('T')[0],
                         dueDate: new Date(q.validUntil).toISOString().split('T')[0]
                     }));
@@ -125,11 +125,11 @@ export default function FinancialsPage() {
                     const data = await invoicesRes.json();
                     fetchedInvoices = data.map((inv: any) => ({
                         id: `i-${inv.id}`,
-                        type: 'Invoice',
+                        type: 'Invoice' as const,
                         number: inv.invoiceNumber,
                         client: inv.clientName,
                         amount: inv.grandTotal,
-                        status: inv.status.charAt(0).toUpperCase() + inv.status.slice(1),
+                        status: (inv.status.charAt(0).toUpperCase() + inv.status.slice(1)) as FinancialDoc['status'],
                         date: new Date(inv.createdAt).toISOString().split('T')[0],
                         dueDate: new Date(inv.dueDate).toISOString().split('T')[0]
                     }));

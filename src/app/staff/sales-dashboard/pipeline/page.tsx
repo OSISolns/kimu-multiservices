@@ -41,6 +41,20 @@ interface FinancialDoc {
     amount: number;
 }
 
+interface ApiQuote {
+    id: number;
+    customer?: { name: string };
+    status: string;
+    amount: number;
+}
+
+interface ApiInvoice {
+    id: number;
+    clientName: string;
+    status: string;
+    grandTotal: number;
+}
+
 type SortOption = 'value-desc' | 'value-asc' | 'date-desc' | 'date-asc' | 'name-asc' | 'name-desc';
 
 const STAGES = ["Contacted", "Proposal Sent", "Negotiation", "Closed Won", "Closed Lost"];
@@ -74,7 +88,12 @@ export default function PipelinePage() {
             : 0;
         const avgDealSize = leads.length > 0 ? totalValue / leads.length : 0;
 
-        return { totalValue, activeValue, winRate, avgDealSize };
+        const atRiskCount = leads.filter((l: Lead) =>
+            !['Closed Won', 'Closed Lost'].includes(l.stage) &&
+            new Date(l.lastContact).getTime() < Date.now() - (14 * 24 * 60 * 60 * 1000) // 14 days without contact
+        ).length;
+
+        return { totalValue, activeValue, winRate, avgDealSize, atRiskCount };
     }, [leads]);
 
     useEffect(() => {
@@ -100,9 +119,9 @@ export default function PipelinePage() {
                 if (quotesRes.ok) {
                     const qData = await quotesRes.json();
                     const quotes = qData.data?.quotes || qData.quotes || [];
-                    allFinancials = [...allFinancials, ...quotes.map((q: any) => ({
+                    allFinancials = [...allFinancials, ...quotes.map((q: ApiQuote) => ({
                         id: `q-${q.id}`,
-                        type: 'Quote',
+                        type: 'Quote' as const,
                         client: q.customer?.name || 'Unknown',
                         status: q.status,
                         amount: q.amount
@@ -111,9 +130,9 @@ export default function PipelinePage() {
 
                 if (invoicesRes.ok) {
                     const iData = await invoicesRes.json();
-                    allFinancials = [...allFinancials, ...iData.map((inv: any) => ({
+                    allFinancials = [...allFinancials, ...iData.map((inv: ApiInvoice) => ({
                         id: `i-${inv.id}`,
-                        type: 'Invoice',
+                        type: 'Invoice' as const,
                         client: inv.clientName,
                         status: inv.status,
                         amount: inv.grandTotal
@@ -303,7 +322,7 @@ export default function PipelinePage() {
                     <div className="flex justify-between items-start">
                         <div>
                             <p className="text-orange-100 text-sm font-medium mb-1">At Risk</p>
-                            <h3 className="text-2xl font-bold">{leads.filter(l => l.stage !== 'Closed Won' && l.stage !== 'Closed Lost' && new Date(l.lastContact).getTime() < Date.now() - 30 * 86400000).length}</h3>
+                            <h3 className="text-2xl font-bold">{stats.atRiskCount}</h3>
                         </div>
                         <div className="bg-white/20 p-3 rounded-lg backdrop-blur-sm">
                             <FaExclamationCircle className="text-2xl" />
