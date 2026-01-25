@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useUser } from "../../../UserContext";
 import {
     FaFileInvoiceDollar,
@@ -14,7 +14,11 @@ import {
     FaEdit,
     FaTrash,
     FaEnvelope,
-    FaCheck
+    FaCheck,
+    FaMoneyBillWave,
+    FaChartLine,
+    FaClock,
+    FaWallet
 } from "react-icons/fa";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { generateInvoicePDF, generateQuotePDF, downloadPDF, getPDFBase64 } from "@/lib/pdfGenerator";
@@ -63,6 +67,22 @@ export default function FinancialsPage() {
     const [editingDocId, setEditingDocId] = useState<string | null>(null);
     const [activeMenuDocId, setActiveMenuDocId] = useState<string | null>(null);
     const [previewDoc, setPreviewDoc] = useState<{ id: string, type: 'invoice' | 'quote' } | null>(null);
+
+    const stats = useMemo(() => {
+        const totalRevenue = docs
+            .filter((d: FinancialDoc) => d.type === 'Invoice' && d.status === 'Paid')
+            .reduce((sum: number, d: FinancialDoc) => sum + d.amount, 0);
+
+        const outstandingAmount = docs
+            .filter((d: FinancialDoc) => d.type === 'Invoice' && ['Pending', 'Overdue', 'Sent'].includes(d.status))
+            .reduce((sum: number, d: FinancialDoc) => sum + d.amount, 0);
+
+        const pipelineValue = docs
+            .filter((d: FinancialDoc) => d.type === 'Quote' && ['Draft', 'Sent', 'Pending'].includes(d.status))
+            .reduce((sum: number, d: FinancialDoc) => sum + d.amount, 0);
+
+        return { totalRevenue, outstandingAmount, pipelineValue };
+    }, [docs]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -585,19 +605,58 @@ export default function FinancialsPage() {
                 </div>
             </div>
 
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-blue-100 font-medium mb-1">Total Revenue</p>
+                            <h3 className="text-3xl font-bold">RWF {stats.totalRevenue.toLocaleString()}</h3>
+                        </div>
+                        <div className="bg-white/20 p-2 rounded-lg">
+                            <FaWallet className="w-6 h-6 text-white" />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-6 text-white shadow-lg">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-amber-100 font-medium mb-1">Outstanding Invoices</p>
+                            <h3 className="text-3xl font-bold">RWF {stats.outstandingAmount.toLocaleString()}</h3>
+                        </div>
+                        <div className="bg-white/20 p-2 rounded-lg">
+                            <FaClock className="w-6 h-6 text-white" />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-purple-100 font-medium mb-1">Pipeline Value (Quotes)</p>
+                            <h3 className="text-3xl font-bold">RWF {stats.pipelineValue.toLocaleString()}</h3>
+                        </div>
+                        <div className="bg-white/20 p-2 rounded-lg">
+                            <FaChartLine className="w-6 h-6 text-white" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* Filters & Search */}
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                <div className="flex gap-2">
+                <div className="flex bg-gray-100 p-1 rounded-lg">
                     {['All', 'Invoice', 'Quote'].map(type => (
                         <button
                             key={type}
                             onClick={() => setFilterType(type as any)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-all
                                 ${filterType === type
-                                    ? 'bg-gray-900 text-white'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                                    ? 'bg-white text-gray-900 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-900'}`}
                         >
-                            {type}s
+                            {type === 'All' ? 'All Documents' : `${type}s`}
                         </button>
                     ))}
                 </div>
