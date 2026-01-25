@@ -601,10 +601,21 @@ export default function CustomersPage() {
                                     </div>
                                 </div>
 
-                                <div className="border-t pt-4">
+                                <div className="border-t pt-4 flex gap-3">
+                                    {(user?.role === 'sales-rep' || user?.role === 'admin' || user?.role === 'manager') && (
+                                        <button
+                                            onClick={() => {
+                                                setLeadToDelete(selectedLead);
+                                                setIsDeleteModalOpen(true);
+                                            }}
+                                            className="flex-1 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium flex items-center justify-center gap-2"
+                                        >
+                                            <FaTrash /> Delete
+                                        </button>
+                                    )}
                                     <button
                                         onClick={() => setIsEditMode(true)}
-                                        className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center justify-center gap-2"
+                                        className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center justify-center gap-2"
                                     >
                                         <FaEdit /> Edit Customer
                                     </button>
@@ -617,7 +628,7 @@ export default function CustomersPage() {
 
             {/* Delete Confirmation Modal */}
             {isDeleteModalOpen && leadToDelete && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100]">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[110]">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 m-4">
                         <div className="text-center">
                             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
