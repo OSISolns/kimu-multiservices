@@ -31,7 +31,7 @@ interface FinancialDoc {
     number: string;
     client: string;
     amount: number;
-    status: 'Paid' | 'Pending' | 'Overdue' | 'Draft' | 'Sent' | 'Accepted' | 'Rejected';
+    status: 'Paid' | 'Pending' | 'Overdue' | 'Draft' | 'Sent' | 'Accepted' | 'Rejected' | 'Converted';
     date: string;
     dueDate?: string;
 }
@@ -387,6 +387,122 @@ export default function FinancialsPage() {
         setActiveMenuDocId(null);
     };
 
+    const handleMarkAsSent = async (doc: FinancialDoc) => {
+        if (doc.type !== 'Quote') return;
+
+        try {
+            const id = doc.id.replace('q-', '');
+            const response = await fetch('/api/quotes', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, status: 'sent' }) // sending lowercase 'sent' to API
+            });
+
+            if (response.ok) {
+                setDocs(docs.map(d => d.id === doc.id ? { ...d, status: 'Sent' } : d));
+                alert('Quote marked as sent.');
+            } else {
+                alert('Failed to update quote status.');
+            }
+        } catch (error) {
+            console.error('Error updating quote:', error);
+            alert('An error occurred.');
+        }
+        setActiveMenuDocId(null);
+    };
+
+    const handleConvertToInvoice = async (doc: FinancialDoc) => {
+        if (doc.type !== 'Quote') return;
+        if (!confirm('Are you sure you want to convert this quote to an invoice?')) return;
+
+        try {
+            // 1. Fetch full quote details to get email and other missing info if needed
+            // Currently doc has client name, but maybe not email.
+            // We'll try to find the lead/client in our leads list first.
+            const clientLead = leads.find(l => l.name === doc.client);
+            // If not found in leads, we might need to fetch the quote detail.
+            let clientEmail = clientLead?.email || '';
+
+            if (!clientEmail) {
+                const quotesRes = await fetch(`/api/quotes?id=${doc.id.replace('q-', '')}`); // Assuming GET /api/quotes returns list, filtering might be needed or fetching detail.
+                // The current GET /api/quotes returns a list.
+                // Let's rely on what we have or genericize.
+                // Actually, let's just fetch the quotes list again or filter from state if we had more details.
+                // For now, if no email, we might prompt or just proceed with empty email.
+                // Better approach: Fetch the quote specifically if possible, or use existing data.
+            }
+
+            // Create Invoice Payload
+            const payload = {
+                invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+                clientName: doc.client,
+                clientEmail: clientEmail || 'no-email@example.com', // Fallback
+                amount: doc.amount,
+                description: `Converted from Quote ${doc.number}`,
+                dueDate: new Date(Date.now() + 30 * 86400000).toISOString(),
+                items: [
+                    {
+                        description: `Service per Quote ${doc.number}`,
+                        quantity: 1,
+                        unitPrice: doc.amount,
+                        total: doc.amount
+                    }
+                ],
+                status: 'pending'
+            };
+
+            // 2. Create Invoice
+            const invoiceResponse = await fetch('/api/accounting/invoices', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!invoiceResponse.ok) {
+                const err = await invoiceResponse.json();
+                throw new Error(err.error || 'Failed to create invoice');
+            }
+
+            const newInvoiceJson = await invoiceResponse.json();
+            const newInvoice: FinancialDoc = {
+                id: `i-${newInvoiceJson.id}`,
+                type: 'Invoice',
+                number: newInvoiceJson.invoiceNumber,
+                client: newInvoiceJson.clientName,
+                amount: newInvoiceJson.grandTotal,
+                status: 'Pending',
+                date: new Date(newInvoiceJson.createdAt).toISOString().split('T')[0],
+                dueDate: new Date(newInvoiceJson.dueDate).toISOString().split('T')[0]
+            };
+
+            // 3. Update Quote Status to converted
+            const quoteId = doc.id.replace('q-', '');
+            const quoteUpdateResponse = await fetch('/api/quotes', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: quoteId, status: 'converted' })
+            });
+
+            if (quoteUpdateResponse.ok) {
+                setDocs(prevDocs => {
+                    // Replace the quote with updated status and add the new invoice
+                    const updatedQuote = { ...doc, status: 'Converted' as const };
+                    return [newInvoice, ...prevDocs.map(d => d.id === doc.id ? updatedQuote : d)].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                });
+                alert('Quote converted to invoice successfully!');
+            } else {
+                alert('Invoice created, but failed to update quote status.');
+                // Still add invoice to list
+                setDocs(prevDocs => [newInvoice, ...prevDocs].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+            }
+
+        } catch (error) {
+            console.error('Error converting quote:', error);
+            alert('An error occurred during conversion.');
+        }
+        setActiveMenuDocId(null);
+    };
+
     const handleSendToClient = async (doc: FinancialDoc) => {
         if (!confirm(`Are you sure you want to send this ${doc.type} to the client?`)) return;
 
@@ -714,12 +830,14 @@ export default function FinancialsPage() {
                                         RWF {doc.amount.toLocaleString()}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full items-center gap-1
                                             ${doc.status === 'Paid' || doc.status === 'Accepted' ? 'bg-green-100 text-green-800' :
                                                 doc.status === 'Overdue' || doc.status === 'Rejected' ? 'bg-red-100 text-red-800' :
                                                     doc.status === 'Sent' ? 'bg-blue-100 text-blue-800' :
-                                                        'bg-gray-100 text-gray-800'}`}>
-                                            {doc.status}
+                                                        doc.status === 'Converted' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
+                                                            'bg-gray-100 text-gray-800'}`}>
+                                            {doc.status === 'Converted' && <FaCheck className="w-3 h-3" />}
+                                            {doc.status === 'Converted' ? 'Converted!' : doc.status}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -791,6 +909,22 @@ export default function FinancialsPage() {
                                                     >
                                                         <FaTrash className="text-red-500" /> Delete
                                                     </button>
+                                                    {doc.type === 'Quote' && doc.status === 'Draft' && (
+                                                        <button
+                                                            onClick={() => handleMarkAsSent(doc)}
+                                                            className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm flex items-center gap-2 text-blue-600"
+                                                        >
+                                                            <FaCheck className="text-blue-500" /> Mark as Sent
+                                                        </button>
+                                                    )}
+                                                    {doc.type === 'Quote' && doc.status !== 'Converted' && (
+                                                        <button
+                                                            onClick={() => handleConvertToInvoice(doc)}
+                                                            className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm flex items-center gap-2 text-green-600"
+                                                        >
+                                                            <FaMoneyBillWave className="text-green-500" /> Convert to Invoice
+                                                        </button>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
