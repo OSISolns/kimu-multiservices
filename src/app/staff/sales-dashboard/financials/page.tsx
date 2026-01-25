@@ -797,7 +797,7 @@ export default function FinancialsPage() {
 
             {/* Create Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100]">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 m-4">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-gray-900">{editingDocId ? 'Edit' : 'Create'} {modalType}</h3>
