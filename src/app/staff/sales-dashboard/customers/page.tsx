@@ -1,8 +1,21 @@
 "use client";
 
-import { useState, useEffect, useMemo, MouseEvent } from "react";
+import React, { useState, useEffect, useMemo, MouseEvent } from "react";
 import { useUser } from "../../../UserContext";
-import { FaSearch, FaPlus, FaEnvelope, FaPhone, FaMapMarkerAlt, FaTimes, FaEdit, FaTrash } from "react-icons/fa";
+import {
+    FaSearch,
+    FaPlus,
+    FaEnvelope,
+    FaPhone,
+    FaMapMarkerAlt,
+    FaTimes,
+    FaEdit,
+    FaTrash,
+    FaUsers,
+    FaHandshake,
+    FaTrophy,
+    FaChartLine
+} from "react-icons/fa";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 interface Lead {
@@ -31,8 +44,20 @@ export default function CustomersPage() {
         stage: 'Contacted',
         value: 0
     });
+    const [selectedStage, setSelectedStage] = useState<string>('All');
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
+
+    const stats = useMemo(() => {
+        const totalCustomers = leads.length;
+        const activeDeals = leads.filter((l: Lead) => ['Contacted', 'Proposal Sent', 'Negotiation'].includes(l.stage)).length;
+        const closedWon = leads.filter((l: Lead) => l.stage === 'Closed Won').length;
+        const pipelineValue = leads
+            .filter((l: Lead) => ['Contacted', 'Proposal Sent', 'Negotiation'].includes(l.stage))
+            .reduce((sum: number, l: Lead) => sum + (l.value || 0), 0);
+
+        return { totalCustomers, activeDeals, closedWon, pipelineValue };
+    }, [leads]);
 
     useEffect(() => {
         const fetchLeads = async () => {
@@ -104,7 +129,7 @@ export default function CustomersPage() {
 
             if (response.ok) {
                 const updatedLead = await response.json();
-                setLeads(leads.map(l => l.id === selectedLead.id ? updatedLead : l));
+                setLeads(leads.map((l: Lead) => l.id === selectedLead.id ? updatedLead : l));
                 setIsViewModalOpen(false);
                 setIsEditMode(false);
             } else {
@@ -125,7 +150,7 @@ export default function CustomersPage() {
             });
 
             if (response.ok) {
-                setLeads(leads.filter(l => l.id !== leadToDelete.id));
+                setLeads(leads.filter((l: Lead) => l.id !== leadToDelete.id));
                 setIsDeleteModalOpen(false);
                 setLeadToDelete(null);
                 setIsViewModalOpen(false);
@@ -139,11 +164,19 @@ export default function CustomersPage() {
     };
 
     const filteredLeads = useMemo(() =>
-        leads.filter(lead =>
-            lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            lead.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            lead.email?.toLowerCase().includes(searchTerm.toLowerCase())
-        ), [leads, searchTerm]
+        leads.filter((lead: Lead) => {
+            const matchesSearch =
+                lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                lead.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                lead.email?.toLowerCase().includes(searchTerm.toLowerCase());
+
+            const matchesStage = selectedStage === 'All' ||
+                (selectedStage === 'Active' ? ['Contacted', 'Proposal Sent', 'Negotiation'].includes(lead.stage) :
+                    selectedStage === 'Won' ? lead.stage === 'Closed Won' :
+                        lead.stage === selectedStage);
+
+            return matchesSearch && matchesStage;
+        }), [leads, searchTerm, selectedStage]
     );
 
     if (isLoading || isLoadingData) {
@@ -152,25 +185,86 @@ export default function CustomersPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Customers</h2>
-                    <p className="text-gray-500">View and manage your customer database.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-blue-100 text-sm font-medium mb-1">Total Customers</p>
+                            <h3 className="text-3xl font-bold">{stats.totalCustomers}</h3>
+                        </div>
+                        <div className="bg-white/20 p-3 rounded-lg backdrop-blur-sm">
+                            <FaUsers className="text-2xl" />
+                        </div>
+                    </div>
                 </div>
-                <div className="flex items-center gap-4">
-                    <div className="relative">
+
+                <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-purple-100 text-sm font-medium mb-1">Active Deals</p>
+                            <h3 className="text-3xl font-bold">{stats.activeDeals}</h3>
+                        </div>
+                        <div className="bg-white/20 p-3 rounded-lg backdrop-blur-sm">
+                            <FaHandshake className="text-2xl" />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-lg">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-green-100 text-sm font-medium mb-1">Closed Won</p>
+                            <h3 className="text-3xl font-bold">{stats.closedWon}</h3>
+                        </div>
+                        <div className="bg-white/20 p-3 rounded-lg backdrop-blur-sm">
+                            <FaTrophy className="text-2xl" />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white shadow-lg">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-orange-100 text-sm font-medium mb-1">Pipeline Value</p>
+                            <h3 className="text-3xl font-bold">RWF {stats.pipelineValue.toLocaleString()}</h3>
+                        </div>
+                        <div className="bg-white/20 p-3 rounded-lg backdrop-blur-sm">
+                            <FaChartLine className="text-2xl" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                <div className="flex bg-gray-100 p-1 rounded-lg overflow-x-auto max-w-full">
+                    {['All', 'Active', 'Won', 'Closed Lost'].map(type => (
+                        <button
+                            key={type}
+                            onClick={() => setSelectedStage(type)}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap
+                                ${selectedStage === type
+                                    ? 'bg-white text-gray-900 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-900'}`}
+                        >
+                            {type === 'All' ? 'All Leads' : type}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <div className="relative flex-1 sm:flex-none">
                         <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         <input
                             type="text"
-                            placeholder="Search customers..."
+                            placeholder="Search name, company..."
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                            className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64 transition-all"
                         />
                     </div>
                     <button
                         onClick={() => setIsAddModalOpen(true)}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium shadow-sm"
+                        className="bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2 font-medium shadow-sm whitespace-nowrap"
                     >
                         <FaPlus className="w-4 h-4" />
                         <span>Add Customer</span>
@@ -191,7 +285,7 @@ export default function CustomersPage() {
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredLeads.map((lead) => (
+                        {filteredLeads.map((lead: Lead) => (
                             <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex items-center">
@@ -257,7 +351,7 @@ export default function CustomersPage() {
 
             {/* Add Customer Modal */}
             {isAddModalOpen && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100]">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 m-4">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-gray-900">Add New Customer</h3>
@@ -274,7 +368,7 @@ export default function CustomersPage() {
                                         type="text"
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         value={formData.name || ''}
-                                        onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, name: e.target.value })}
                                     />
                                 </div>
                                 <div>
@@ -283,7 +377,7 @@ export default function CustomersPage() {
                                         type="text"
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         value={formData.company || ''}
-                                        onChange={e => setFormData({ ...formData, company: e.target.value })}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, company: e.target.value })}
                                     />
                                 </div>
                             </div>
@@ -294,7 +388,7 @@ export default function CustomersPage() {
                                         type="email"
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         value={formData.email || ''}
-                                        onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, email: e.target.value })}
                                     />
                                 </div>
                                 <div>
@@ -303,7 +397,7 @@ export default function CustomersPage() {
                                         type="tel"
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         value={formData.contact || ''}
-                                        onChange={e => setFormData({ ...formData, contact: e.target.value })}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, contact: e.target.value })}
                                     />
                                 </div>
                             </div>
@@ -313,7 +407,7 @@ export default function CustomersPage() {
                                     type="text"
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     value={formData.location || ''}
-                                    onChange={e => setFormData({ ...formData, location: e.target.value })}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, location: e.target.value })}
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
@@ -322,7 +416,7 @@ export default function CustomersPage() {
                                     <select
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         value={formData.stage || 'Contacted'}
-                                        onChange={e => setFormData({ ...formData, stage: e.target.value })}
+                                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, stage: e.target.value })}
                                     >
                                         <option value="Contacted">Contacted</option>
                                         <option value="Proposal Sent">Proposal Sent</option>
@@ -337,7 +431,7 @@ export default function CustomersPage() {
                                         type="number"
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         value={formData.value || ''}
-                                        onChange={e => setFormData({ ...formData, value: parseInt(e.target.value) })}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, value: parseInt(e.target.value) })}
                                     />
                                 </div>
                             </div>
@@ -363,7 +457,7 @@ export default function CustomersPage() {
 
             {/* View/Edit Customer Modal */}
             {isViewModalOpen && selectedLead && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100]">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 m-4">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-gray-900">
@@ -383,7 +477,7 @@ export default function CustomersPage() {
                                             type="text"
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             value={formData.name || ''}
-                                            onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, name: e.target.value })}
                                         />
                                     </div>
                                     <div>
@@ -392,7 +486,7 @@ export default function CustomersPage() {
                                             type="text"
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             value={formData.company || ''}
-                                            onChange={e => setFormData({ ...formData, company: e.target.value })}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, company: e.target.value })}
                                         />
                                     </div>
                                 </div>
@@ -403,7 +497,7 @@ export default function CustomersPage() {
                                             type="email"
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             value={formData.email || ''}
-                                            onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, email: e.target.value })}
                                         />
                                     </div>
                                     <div>
@@ -412,7 +506,7 @@ export default function CustomersPage() {
                                             type="tel"
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             value={formData.contact || ''}
-                                            onChange={e => setFormData({ ...formData, contact: e.target.value })}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, contact: e.target.value })}
                                         />
                                     </div>
                                 </div>
@@ -422,7 +516,7 @@ export default function CustomersPage() {
                                         type="text"
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         value={formData.location || ''}
-                                        onChange={e => setFormData({ ...formData, location: e.target.value })}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, location: e.target.value })}
                                     />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
@@ -431,7 +525,7 @@ export default function CustomersPage() {
                                         <select
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             value={formData.stage || ''}
-                                            onChange={e => setFormData({ ...formData, stage: e.target.value })}
+                                            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, stage: e.target.value })}
                                         >
                                             <option value="Contacted">Contacted</option>
                                             <option value="Proposal Sent">Proposal Sent</option>
@@ -446,7 +540,7 @@ export default function CustomersPage() {
                                             type="number"
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             value={formData.value || ''}
-                                            onChange={e => setFormData({ ...formData, value: parseInt(e.target.value) })}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, value: parseInt(e.target.value) })}
                                         />
                                     </div>
                                 </div>
@@ -523,7 +617,7 @@ export default function CustomersPage() {
 
             {/* Delete Confirmation Modal */}
             {isDeleteModalOpen && leadToDelete && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100]">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 m-4">
                         <div className="text-center">
                             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
