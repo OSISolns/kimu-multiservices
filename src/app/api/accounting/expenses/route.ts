@@ -7,7 +7,7 @@ const expenseSchema = z.object({
   description: z.string().min(1, 'Description is required'),
   amount: z.number().positive('Amount must be positive'),
   category: z.enum(['fuel', 'maintenance', 'insurance', 'salaries', 'wages', 'utilities', 'office', 'marketing', 'traffic_tickets', 'other']),
-  paymentMethod: z.enum(['MTN Momo', 'Equity Bank', 'BK Bank', 'Cash']),
+  paymentMethod: z.enum(['MTN Momo', 'Equity Bank', 'BK Bank', 'Bank of Africa', 'Access Bank', 'COPEDU', 'Cash']),
   date: z.string().min(1, 'Date is required'),
   receiptNumber: z.string().optional(),
   notes: z.string().optional(),
