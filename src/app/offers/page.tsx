@@ -19,7 +19,7 @@ import {
   FaRoad,
   FaEye
 } from 'react-icons/fa'
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import CarListModal from '@/components/CarListModal'
 import Auto24Integration from '@/components/auto24/Auto24Integration'
@@ -43,17 +43,23 @@ function getActiveTabClass(color: string) {
   }
 }
 
-export default function Offers() {
+// Separate component to handle search params
+function TabSelector({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: (tab: string) => void }) {
   const searchParams = useSearchParams();
-  const [vehicles, setVehicles] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState('car-rental');
 
   useEffect(() => {
     const tabParam = searchParams.get('tab');
     if (tabParam && tabs.some(t => t.id === tabParam)) {
       setActiveTab(tabParam);
     }
-  }, [searchParams]);
+  }, [searchParams, setActiveTab]);
+
+  return null;
+}
+
+function OffersContent() {
+  const [vehicles, setVehicles] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState('car-rental');
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -801,6 +807,15 @@ export default function Offers() {
           cars={selectedModel.cars}
         />
       )}
+
+      {/* Tab Selector in Suspense */}
+      <Suspense fallback={null}>
+        <TabSelector activeTab={activeTab} setActiveTab={setActiveTab} />
+      </Suspense>
     </div>
   )
+}
+
+export default function Offers() {
+  return <OffersContent />;
 }
