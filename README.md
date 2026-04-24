@@ -138,7 +138,7 @@ src/
 
 ## Contact Information
 
-- **Phone**: +250 798 284 312
+- **Phone**:  +250 792 958 752
 - **Email**: kimutransport6@gmail.com
 - **Address**: KG 24 St, Kigali, Rwanda
 - **Website**: [kimutransport.co.rw](https://kimutransport.co.rw)

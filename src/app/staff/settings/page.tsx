@@ -175,7 +175,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50/50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed ">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -187,8 +187,8 @@ export default function SettingsPage() {
 
         <div className="space-y-6">
           {/* Profile Settings */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b border-gray-200">
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-gray-200/50 border border-white/60">
+            <div className="px-6 py-4 border-b border-gray-100/80">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div className="relative w-16 h-16 rounded-full overflow-hidden bg-gray-100 border-2 border-white shadow-md">
@@ -213,7 +213,7 @@ export default function SettingsPage() {
                 {!editingProfile && (
                   <button
                     onClick={() => setEditingProfile(true)}
-                    className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-blue-50/50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
                     <FaEdit className="mr-2" />
                     Edit
@@ -312,7 +312,7 @@ export default function SettingsPage() {
                           whatsappNotifications: currentUser?.whatsappNotifications || false
                         });
                       }}
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                      className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-blue-50/50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
                     >
                       <FaTimes className="mr-2" />
                       Cancel
@@ -355,8 +355,8 @@ export default function SettingsPage() {
           </div>
 
           {/* Trusted Devices */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b border-gray-200">
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-gray-200/50 border border-white/60">
+            <div className="px-6 py-4 border-b border-gray-100/80">
               <div className="flex items-center space-x-3">
                 <FaShieldAlt className="text-green-600 text-xl" />
                 <h2 className="text-lg font-semibold text-gray-900">Trusted Devices</h2>
@@ -367,7 +367,7 @@ export default function SettingsPage() {
               {trustedDevices.length > 0 ? (
                 <div className="space-y-4">
                   {trustedDevices.map((device) => (
-                    <div key={device.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                    <div key={device.id} className="flex items-center justify-between p-4 border border-gray-100/80 rounded-lg">
                       <div className="flex items-center space-x-4">
                         <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
                           {getDeviceIcon(device.deviceType)}
@@ -406,8 +406,8 @@ export default function SettingsPage() {
           </div>
 
           {/* Security Settings */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b border-gray-200">
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-gray-200/50 border border-white/60">
+            <div className="px-6 py-4 border-b border-gray-100/80">
               <div className="flex items-center space-x-3">
                 <FaShieldAlt className="text-red-600 text-xl" />
                 <h2 className="text-lg font-semibold text-gray-900">Security</h2>
@@ -423,7 +423,7 @@ export default function SettingsPage() {
                   </div>
                   <button
                     onClick={() => router.push('/staff/settings/password')}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-blue-50/50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
                   >
                     Change
                   </button>

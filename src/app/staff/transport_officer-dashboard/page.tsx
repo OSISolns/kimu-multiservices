@@ -323,7 +323,7 @@ export default function TransportOfficerPage() {
               <div className="p-6">
                 <ul className="divide-y divide-gray-100">
                   {aggregate.recentActiveVehicles.map(v => (
-                    <li key={v.id} className="py-3 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg px-2">
+                    <li key={v.id} className="py-3 flex items-center justify-between hover:bg-blue-50/50 transition-colors transition-colors rounded-lg px-2">
                       <span className="text-gray-800 font-medium">{v.name}</span>
                       <span className={`text-xs px-3 py-1 rounded-full font-semibold ${getVehicleStatusColor(v.status)}`}>{v.status}</span>
                     </li>
@@ -340,7 +340,7 @@ export default function TransportOfficerPage() {
                 <select
                   value={filter}
                   onChange={(e) => setFilter(e.target.value)}
-                  className="px-4 py-2 border-2 border-gray-200 rounded-xl text-sm font-medium focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all bg-white shadow-sm hover:shadow-md"
+                  className="px-4 py-2 border-2 border-gray-100/80 rounded-xl text-sm font-medium focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all bg-white/90 backdrop-blur-md shadow-xl border border-white/60-sm hover:shadow-md"
                 >
                   <option value="all">All Statuses</option>
                   <option value="active">Active</option>
@@ -423,7 +423,7 @@ export default function TransportOfficerPage() {
                 <select
                   value={vehicleFilter}
                   onChange={(e) => setVehicleFilter(e.target.value)}
-                  className="px-4 py-2 border-2 border-gray-200 rounded-xl text-sm font-medium focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all bg-white shadow-sm hover:shadow-md"
+                  className="px-4 py-2 border-2 border-gray-100/80 rounded-xl text-sm font-medium focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all bg-white/90 backdrop-blur-md shadow-xl border border-white/60-sm hover:shadow-md"
                 >
                   <option value="all">All Statuses</option>
                   <option value="available">Available</option>
@@ -658,7 +658,7 @@ export default function TransportOfficerPage() {
               )}
 
               {/* Modal Footer */}
-              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100/80">
                 <button
                   onClick={closeFleetModal}
                   className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"

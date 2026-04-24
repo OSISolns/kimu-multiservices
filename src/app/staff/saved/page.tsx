@@ -72,16 +72,16 @@ export default function SavedPage() {
         </div>
 
         {/* Filter */}
-        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-1">
+        <div className="flex items-center gap-2 bg-white border border-gray-100/80 rounded-lg p-1">
           <button
             onClick={() => setFilter("all")}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${filter === "all" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"}`}
+            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${filter === "all" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-blue-50/50 transition-colors"}`}
           >
             All
           </button>
           <button
             onClick={() => setFilter("vehicle")}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${filter === "vehicle" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"}`}
+            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${filter === "vehicle" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-blue-50/50 transition-colors"}`}
           >
             Vehicles
           </button>
@@ -89,7 +89,7 @@ export default function SavedPage() {
       </div>
 
       {savedItems.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+        <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-100/80">
           <FaCar className="mx-auto h-12 w-12 text-gray-300 mb-4" />
           <h3 className="text-lg font-medium text-gray-900">No saved items yet</h3>
           <p className="text-gray-500 mt-1">Items you save will appear here for quick access.</p>
@@ -100,7 +100,7 @@ export default function SavedPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredItems.map((item) => (
-            <div key={item.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group">
+            <div key={item.id} className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl shadow-gray-200/50 border border-white/60-sm border border-gray-100/80 overflow-hidden hover:shadow-md transition-shadow group">
               {/* Card Content based on itemType */}
               {item.itemType === 'vehicle' && (
                 <>

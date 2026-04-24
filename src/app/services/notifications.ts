@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 
 // Agent phone numbers - these should be stored in environment variables in production
 const AGENT_PHONE_NUMBERS = [
-  process.env.AGENT_PHONE_1 || '+250788647452',
+  process.env.AGENT_PHONE_1 || '+250792958752',
   //process.env.AGENT_PHONE_2 || '+250789654321',
 ];
 

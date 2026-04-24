@@ -249,13 +249,13 @@ export default function InventoryPage() {
                             placeholder="Search vehicles..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
+                            className="pl-10 pr-4 py-2 border border-gray-100/80 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
                         />
                     </div>
                     <select
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
-                        className="border border-gray-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="border border-gray-100/80 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                         <option value="All">All Statuses</option>
                         <option value="Available">Available</option>
@@ -266,7 +266,7 @@ export default function InventoryPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredVehicles.map((vehicle) => (
-                    <div key={vehicle.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all group">
+                    <div key={vehicle.id} className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl shadow-gray-200/50 border border-white/60-sm border border-gray-100/80 overflow-hidden hover:shadow-md transition-all group">
                         <div className="relative h-48 bg-gray-100">
                             <Image
                                 src={vehicle.image || '/placeholder-car.png'}
@@ -385,7 +385,7 @@ export default function InventoryPage() {
                             <div className="flex gap-3 pt-4 border-t">
                                 <button
                                     onClick={() => setIsDetailModalOpen(false)}
-                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-blue-50/50 transition-colors font-medium"
                                 >
                                     Close
                                 </button>
@@ -427,7 +427,7 @@ export default function InventoryPage() {
                                         required
                                         value={bookingForm.name}
                                         onChange={(e) => setBookingForm({ ...bookingForm, name: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                         placeholder="John Doe"
                                     />
                                 </div>
@@ -437,7 +437,7 @@ export default function InventoryPage() {
                                         type="email"
                                         value={bookingForm.email}
                                         onChange={(e) => setBookingForm({ ...bookingForm, email: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                         placeholder="john@example.com"
                                     />
                                 </div>
@@ -448,8 +448,8 @@ export default function InventoryPage() {
                                         required
                                         value={bookingForm.phone}
                                         onChange={(e) => setBookingForm({ ...bookingForm, phone: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="+250 788 123 456"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
+                                        placeholder="+250 792 958 752"
                                     />
                                 </div>
                                 <div>
@@ -459,7 +459,7 @@ export default function InventoryPage() {
                                         required
                                         value={bookingForm.nationality}
                                         onChange={(e) => setBookingForm({ ...bookingForm, nationality: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                         placeholder="Rwanda"
                                     />
                                 </div>
@@ -470,7 +470,7 @@ export default function InventoryPage() {
                                         required
                                         value={bookingForm.idOrPassport}
                                         onChange={(e) => setBookingForm({ ...bookingForm, idOrPassport: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                         placeholder="ID or Passport Number"
                                     />
                                 </div>
@@ -490,7 +490,7 @@ export default function InventoryPage() {
                                             required
                                             value={bookingForm.pickupDate}
                                             onChange={(e) => setBookingForm({ ...bookingForm, pickupDate: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                         />
                                     </div>
                                     <div>
@@ -500,7 +500,7 @@ export default function InventoryPage() {
                                             required
                                             value={bookingForm.pickupTime}
                                             onChange={(e) => setBookingForm({ ...bookingForm, pickupTime: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                         />
                                     </div>
                                     <div>
@@ -510,7 +510,7 @@ export default function InventoryPage() {
                                             required
                                             value={bookingForm.returnDate}
                                             onChange={(e) => setBookingForm({ ...bookingForm, returnDate: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                         />
                                     </div>
                                     <div>
@@ -520,7 +520,7 @@ export default function InventoryPage() {
                                             required
                                             value={bookingForm.returnTime}
                                             onChange={(e) => setBookingForm({ ...bookingForm, returnTime: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                         />
                                     </div>
                                 </div>
@@ -540,7 +540,7 @@ export default function InventoryPage() {
                                 <button
                                     type="button"
                                     onClick={() => setIsBookingModalOpen(false)}
-                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-blue-50/50 transition-colors font-medium"
                                     disabled={isSubmitting}
                                 >
                                     Cancel

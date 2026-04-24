@@ -87,7 +87,7 @@ export default function AgentCalendarPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50/50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed flex-col flex items-center justify-center">
         <LoadingSpinner message="Loading Calendar" size="lg" fullScreen={true} />
       </div>
     );
@@ -115,7 +115,7 @@ export default function AgentCalendarPage() {
             <div className="grid grid-cols-7 gap-2">
               {days.map((d, i) => d ? (
                 <div key={i} className={`rounded-lg p-2 h-16 flex flex-col items-center justify-start border
-                  ${bookingsByDay[d] ? 'bg-blue-300 border-blue-600 text-white shadow-md' : 'bg-gray-50 border-gray-200'}
+                  ${bookingsByDay[d] ? 'bg-blue-300 border-blue-600 text-white shadow-md' : 'bg-gray-50 border-gray-100/80'}
                   ${new Date(year, month, d).toISOString().slice(0, 10) === todayStr ? 'ring-2 ring-blue-500' : ''}
                 `}>
                   <div className="font-bold mb-1">{d}</div>

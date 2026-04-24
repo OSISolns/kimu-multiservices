@@ -280,7 +280,7 @@ export default function FinancialReportsPage() {
                       <select
                         value={period}
                         onChange={(e) => setPeriod(e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all outline-none hover:border-gray-200 shadow-sm"
+                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all outline-none hover:border-gray-100/80 shadow-sm"
                       >
                         <option value="week">Last 7 Days</option>
                         <option value="month">Current Month</option>
@@ -298,7 +298,7 @@ export default function FinancialReportsPage() {
                             type="date"
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all outline-none hover:border-gray-200 shadow-sm"
+                            className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all outline-none hover:border-gray-100/80 shadow-sm"
                           />
                         </div>
                         <div className="animate-slideDown">
@@ -307,7 +307,7 @@ export default function FinancialReportsPage() {
                             type="date"
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all outline-none hover:border-gray-200 shadow-sm"
+                            className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all outline-none hover:border-gray-100/80 shadow-sm"
                           />
                         </div>
                       </>
@@ -339,7 +339,7 @@ export default function FinancialReportsPage() {
                         </button>
                         <button
                           onClick={printReport}
-                          className="flex-1 bg-gray-50 text-gray-700 border border-gray-200 px-6 py-4 rounded-2xl hover:bg-gray-100 flex items-center justify-center gap-2 transition-all active:scale-95 font-black uppercase tracking-widest text-xs"
+                          className="flex-1 bg-gray-50 text-gray-700 border border-gray-100/80 px-6 py-4 rounded-2xl hover:bg-gray-100 flex items-center justify-center gap-2 transition-all active:scale-95 font-black uppercase tracking-widest text-xs"
                         >
                           <FaPrint className="text-lg" />
                           Print
@@ -363,7 +363,7 @@ export default function FinancialReportsPage() {
                       Analysis generated {new Date(reportData.generatedAt).toLocaleString()}
                     </div>
                   </div>
-                  <div className="px-4 py-2 bg-white shadow-sm text-gray-900 rounded-2xl text-xs font-black uppercase tracking-widest border border-gray-100">
+                  <div className="px-4 py-2 bg-white/90 backdrop-blur-md shadow-xl border border-white/60-sm text-gray-900 rounded-2xl text-xs font-black uppercase tracking-widest border border-gray-100">
                     {period === 'custom' ? `${startDate} to ${endDate}` : `${period} view active`}
                   </div>
                 </div>

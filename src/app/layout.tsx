@@ -132,8 +132,8 @@ export default function RootLayout({
                 <h3 className="text-xl font-bold mb-4">
                   Contact <span className="text-orange-300">Us</span>
                 </h3>
-                <p>Phone: +250 798 284 312</p>
-                <p>Phone: +250 788 447 574</p>
+                <p>Phone: +250 792 958 752</p>
+                <p>Phone: +250 792 958 752</p>
                 <p>Email: kimutransport6@gmail.com</p>
                 <p>Address: Gisozi, KG 780 St</p>
               </div>
@@ -192,7 +192,7 @@ export default function RootLayout({
 
                 {/* WhatsApp */}
                 <a
-                  href="https://wa.me/250798284312"
+                  href="https://wa.me/250792958752"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group text-gray-400 hover:text-orange-500 transition-all duration-300 transform hover:scale-110"

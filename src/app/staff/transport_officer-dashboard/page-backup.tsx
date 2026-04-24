@@ -176,7 +176,7 @@ export default function TransportOfficerPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50/50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed ">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -188,7 +188,7 @@ export default function TransportOfficerPage() {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-gray-200/50 border border-white/60 p-6">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <FaCalendarAlt className="text-blue-600 text-xl" />
@@ -202,7 +202,7 @@ export default function TransportOfficerPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-gray-200/50 border border-white/60 p-6">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
                 <FaCar className="text-green-600 text-xl" />
@@ -216,7 +216,7 @@ export default function TransportOfficerPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-gray-200/50 border border-white/60 p-6">
             <div className="flex items-center">
               <div className="p-2 bg-yellow-100 rounded-lg">
                 <FaClock className="text-yellow-600 text-xl" />
@@ -230,7 +230,7 @@ export default function TransportOfficerPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-gray-200/50 border border-white/60 p-6">
             <div className="flex items-center">
               <div className="p-2 bg-purple-100 rounded-lg">
                 <FaRoute className="text-purple-600 text-xl" />
@@ -247,8 +247,8 @@ export default function TransportOfficerPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Active Bookings */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b border-gray-200">
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-gray-200/50 border border-white/60">
+            <div className="px-6 py-4 border-b border-gray-100/80">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-900">Active Bookings</h2>
                 <select
@@ -269,7 +269,7 @@ export default function TransportOfficerPage() {
               {filteredBookings.length > 0 ? (
                 <div className="space-y-4">
                   {filteredBookings.slice(0, 5).map((booking) => (
-                    <div key={booking.id} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div key={booking.id} className="p-4 border border-gray-100/80 rounded-lg hover:bg-blue-50/50 transition-colors transition-colors">
                       <div className="flex items-center justify-between mb-3">
                         <h3 className="font-medium text-gray-900">{booking.customerName}</h3>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
@@ -299,7 +299,7 @@ export default function TransportOfficerPage() {
                         </span>
                         <button
                           onClick={() => router.push(`/staff/bookings/${booking.id}`)}
-                          className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-blue-50/50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
                           <FaEye className="mr-1" />
                           View
@@ -329,8 +329,8 @@ export default function TransportOfficerPage() {
           </div>
 
           {/* Fleet Status */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b border-gray-200">
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-gray-200/50 border border-white/60">
+            <div className="px-6 py-4 border-b border-gray-100/80">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-900">Fleet Status</h2>
                 <select
@@ -351,7 +351,7 @@ export default function TransportOfficerPage() {
               {filteredVehicles.length > 0 ? (
                 <div className="space-y-4">
                   {filteredVehicles.slice(0, 5).map((vehicle) => (
-                    <div key={vehicle.id} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div key={vehicle.id} className="p-4 border border-gray-100/80 rounded-lg hover:bg-blue-50/50 transition-colors transition-colors">
                       <div className="flex items-center justify-between mb-3">
                         <h3 className="font-medium text-gray-900">
                           {vehicle.year} {vehicle.name}
@@ -376,7 +376,7 @@ export default function TransportOfficerPage() {
                         <span className="text-sm text-gray-500">Vehicle ID: {vehicle.id}</span>
                         <button
                           onClick={() => openFleetModal(vehicle)}
-                          className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-blue-50/50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
                           <FaEye className="mr-1" />
                           Details
@@ -407,12 +407,12 @@ export default function TransportOfficerPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="mt-8 bg-white rounded-lg shadow p-6">
+        <div className="mt-8 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-gray-200/50 border border-white/60 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <button
               onClick={() => router.push('/staff/bookings/new')}
-              className="flex items-center justify-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center justify-center p-4 border border-gray-300 rounded-lg hover:bg-blue-50/50 transition-colors transition-colors"
             >
               <FaCalendarAlt className="text-blue-600 text-xl mr-3" />
               <span className="font-medium">Create Booking</span>
@@ -420,7 +420,7 @@ export default function TransportOfficerPage() {
             
             <button
               onClick={() => router.push('/staff/vehicles/new')}
-              className="flex items-center justify-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center justify-center p-4 border border-gray-300 rounded-lg hover:bg-blue-50/50 transition-colors transition-colors"
             >
               <FaCar className="text-green-600 text-xl mr-3" />
               <span className="font-medium">Add Vehicle</span>
@@ -428,7 +428,7 @@ export default function TransportOfficerPage() {
             
             <button
               onClick={() => router.push('/staff/reports/transport')}
-              className="flex items-center justify-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center justify-center p-4 border border-gray-300 rounded-lg hover:bg-blue-50/50 transition-colors transition-colors"
             >
               <FaRoute className="text-purple-600 text-xl mr-3" />
               <span className="font-medium">Transport Report</span>
@@ -605,7 +605,7 @@ export default function TransportOfficerPage() {
                 )}
 
                 {/* Modal Footer */}
-                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100/80">
                   <button
                     onClick={closeFleetModal}
                     className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"

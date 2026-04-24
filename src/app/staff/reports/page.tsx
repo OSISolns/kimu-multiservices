@@ -382,7 +382,7 @@ export default function ReportsPage() {
         </div>
 
         {/* Page Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl shadow-gray-200/50 border border-white/60-sm border border-slate-200 p-6 mb-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-slate-800">Reports & Analytics</h1>
@@ -408,7 +408,7 @@ export default function ReportsPage() {
         </div>
 
         {/* Date Range Picker */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl shadow-gray-200/50 border border-white/60-sm border border-slate-200 p-6 mb-6">
           <div className="flex items-center gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
@@ -525,7 +525,7 @@ export default function ReportsPage() {
                         const config = STATUS_ICONS[status as keyof typeof STATUS_ICONS];
 
                         return (
-                          <tr key={status} className="border-b last:border-0 hover:bg-gray-50">
+                          <tr key={status} className="border-b last:border-0 hover:bg-blue-50/50 transition-colors">
                             <td className={`py-2 px-4 font-semibold flex items-center gap-2 ${config?.textColor || ''}`}>
                               {renderStatusIcon(status)} {status}
                             </td>
@@ -563,7 +563,7 @@ export default function ReportsPage() {
                     </thead>
                     <tbody>
                       {recentBookings.map((booking) => (
-                        <tr key={booking.id} className="border-b last:border-0 hover:bg-gray-50">
+                        <tr key={booking.id} className="border-b last:border-0 hover:bg-blue-50/50 transition-colors">
                           <td className="py-2 px-4">{booking.id}</td>
                           <td className="py-2 px-4">{booking.type}</td>
                           <td className="py-2 px-4">{booking.name}</td>
@@ -619,7 +619,7 @@ export default function ReportsPage() {
                         </thead>
                         <tbody>
                           {filteredStaff.map((staff) => (
-                            <tr key={staff.id} className="border-b last:border-0 hover:bg-gray-50">
+                            <tr key={staff.id} className="border-b last:border-0 hover:bg-blue-50/50 transition-colors">
                               <td className="py-2 px-4 font-semibold">{staff.name}</td>
                               <td className="py-2 px-4">{formatRWF(staff.totalRevenue)}</td>
                               <td className="py-2 px-4">{staff.totalBookings}</td>
@@ -670,7 +670,7 @@ export default function ReportsPage() {
                       <select
                         value={financialPeriod}
                         onChange={(e) => setFinancialPeriod(e.target.value as FinancialPeriod)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                       >
                         {FINANCIAL_PERIODS.map(({ value, label }) => (
                           <option key={value} value={value}>{label}</option>
@@ -684,7 +684,7 @@ export default function ReportsPage() {
                         type="date"
                         value={financialStartDate}
                         onChange={(e) => setFinancialStartDate(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                       />
                     </div>
 
@@ -694,7 +694,7 @@ export default function ReportsPage() {
                         type="date"
                         value={financialEndDate}
                         onChange={(e) => setFinancialEndDate(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                       />
                     </div>
 
@@ -800,7 +800,7 @@ export default function ReportsPage() {
                               {financialSummary.netProfit >= 0 ? '+' : ''}{formatRWF(financialSummary.netProfit)}
                             </span>
                           </div>
-                          <div className="flex justify-between font-bold mt-2 pt-2 border-t border-gray-200 bg-gray-50 p-2 rounded">
+                          <div className="flex justify-between font-bold mt-2 pt-2 border-t border-gray-100/80 bg-gray-50 p-2 rounded">
                             <span>Cash at End of Period</span>
                             <span className="text-blue-700">{formatRWF(totalClosingBalance)}</span>
                           </div>
@@ -822,7 +822,7 @@ export default function ReportsPage() {
                           <div className="space-y-4">
                             <div>
                               <h5 className="font-semibold text-gray-600 text-sm uppercase mb-2">Current Assets</h5>
-                              <div className="pl-3 border-l-2 border-gray-200 space-y-2">
+                              <div className="pl-3 border-l-2 border-gray-100/80 space-y-2">
                                 <div className="flex justify-between text-sm">
                                   <span className="text-gray-600">Cash on Hand</span>
                                   <span className="font-medium">{formatRWF(financialSummary.closingBalances.cashRWF)}</span>
@@ -854,7 +854,7 @@ export default function ReportsPage() {
                           <div className="space-y-6">
                             <div>
                               <h5 className="font-semibold text-gray-600 text-sm uppercase mb-2">Liabilities</h5>
-                              <div className="pl-3 border-l-2 border-gray-200">
+                              <div className="pl-3 border-l-2 border-gray-100/80">
                                 <div className="flex justify-between text-sm">
                                   <span className="text-gray-600">Total Liabilities</span>
                                   <span className="font-medium">0 RWF</span>
@@ -864,7 +864,7 @@ export default function ReportsPage() {
 
                             <div>
                               <h5 className="font-semibold text-gray-600 text-sm uppercase mb-2">Equity</h5>
-                              <div className="pl-3 border-l-2 border-gray-200 space-y-2">
+                              <div className="pl-3 border-l-2 border-gray-100/80 space-y-2">
                                 <div className="flex justify-between text-sm">
                                   <span className="text-gray-600">Owner&apos;s Equity</span>
                                   <span className="font-medium">{formatRWF(totalClosingBalance)}</span>

@@ -765,7 +765,7 @@ export default function VehiclesPage() {
             <button
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
-              className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
+              className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-blue-50/50 transition-colors disabled:opacity-50"
             >
               Previous
             </button>
@@ -776,7 +776,7 @@ export default function VehiclesPage() {
                 onClick={() => setCurrentPage(page)}
                 className={`px-3 py-2 rounded-lg text-sm font-medium ${currentPage === page
                   ? 'bg-blue-600 text-white'
-                  : 'border border-gray-300 hover:bg-gray-50'
+                  : 'border border-gray-300 hover:bg-blue-50/50 transition-colors'
                   }`}
               >
                 {page}
@@ -786,7 +786,7 @@ export default function VehiclesPage() {
             <button
               onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
-              className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
+              className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-blue-50/50 transition-colors disabled:opacity-50"
             >
               Next
             </button>
@@ -1157,7 +1157,7 @@ export default function VehiclesPage() {
 
                 {/* Vehicle Specifications Section */}
                 <div className="md:col-span-2">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2 border-b border-gray-200 pb-2">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2 border-b border-gray-100/80 pb-2">
                     <FaTools className="text-blue-600" />
                     Vehicle Specifications
                   </h3>
@@ -1252,7 +1252,7 @@ export default function VehiclesPage() {
               </div>
 
               {modalType !== 'view' && (
-                <div className="flex gap-4 mt-8 pt-6 border-t border-gray-200">
+                <div className="flex gap-4 mt-8 pt-6 border-t border-gray-100/80">
                   <button
                     onClick={closeModal}
                     className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-xl hover:bg-gray-200 transition-all duration-200 font-medium"

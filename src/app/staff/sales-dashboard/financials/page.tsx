@@ -688,21 +688,21 @@ export default function FinancialsPage() {
                 <div className="flex gap-3 overflow-x-auto md:overflow-visible">
                     <div className="relative group">
                         <button
-                            className="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 font-medium shadow-sm"
+                            className="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:bg-blue-50/50 transition-colors transition-colors flex items-center gap-2 font-medium shadow-sm"
                         >
                             <FaFileExport className="text-gray-500" />
                             <span>Export</span>
                         </button>
-                        <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                        <div className="absolute right-0 mt-2 w-40 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-gray-200/50 border border-white/60-lg border border-gray-100/80 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
                             <button
                                 onClick={() => handleExport('excel')}
-                                className="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-t-lg text-sm"
+                                className="w-full text-left px-4 py-2 hover:bg-blue-50/50 transition-colors rounded-t-lg text-sm"
                             >
                                 Export to Excel
                             </button>
                             <button
                                 onClick={() => handleExport('csv')}
-                                className="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-b-lg text-sm"
+                                className="w-full text-left px-4 py-2 hover:bg-blue-50/50 transition-colors rounded-b-lg text-sm"
                             >
                                 Export to CSV
                             </button>
@@ -710,7 +710,7 @@ export default function FinancialsPage() {
                     </div>
                     <button
                         onClick={() => openModal('Quote')}
-                        className="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 font-medium shadow-sm"
+                        className="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:bg-blue-50/50 transition-colors transition-colors flex items-center gap-2 font-medium shadow-sm"
                     >
                         <FaFileAlt className="text-gray-500" />
                         <span>Create Quote</span>
@@ -765,7 +765,7 @@ export default function FinancialsPage() {
             </div>
 
             {/* Filters & Search */}
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white/90 backdrop-blur-xl p-4 rounded-2xl shadow-xl shadow-gray-200/50 border border-white/60">
                 <div className="flex bg-gray-100 p-1 rounded-lg">
                     {['All', 'Invoice', 'Quote'].map(type => (
                         <button
@@ -787,13 +787,13 @@ export default function FinancialsPage() {
                         placeholder="Search client or number..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full pl-10 pr-4 py-2 border border-gray-100/80 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                 </div>
             </div>
 
             {/* Documents List */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl shadow-gray-200/50 border border-white/60-sm border border-gray-100/80 overflow-hidden">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
@@ -814,7 +814,7 @@ export default function FinancialsPage() {
                             </tr>
                         ) : (
                             filteredDocs.map((doc) => (
-                                <tr key={doc.id} className="hover:bg-gray-50 transition-colors">
+                                <tr key={doc.id} className="hover:bg-blue-50/50 transition-colors transition-colors">
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
                                             <div className={`p-2 rounded-lg mr-3 
@@ -872,7 +872,7 @@ export default function FinancialsPage() {
                                             </button>
 
                                             {activeMenuDocId === doc.id && (
-                                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20 py-1">
+                                                <div className="absolute right-0 mt-2 w-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-gray-200/50 border border-white/60-lg border border-gray-100/80 z-20 py-1">
                                                     <button
                                                         onClick={() => {
                                                             const id = doc.id.replace(/^[iq]-/, '');
@@ -882,26 +882,26 @@ export default function FinancialsPage() {
                                                             });
                                                             setActiveMenuDocId(null);
                                                         }}
-                                                        className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm flex items-center gap-2 text-gray-700"
+                                                        className="w-full text-left px-4 py-2 hover:bg-blue-50/50 transition-colors text-sm flex items-center gap-2 text-gray-700"
                                                     >
                                                         <FaFileInvoiceDollar className="text-gray-400" /> Preview
                                                     </button>
                                                     <button
                                                         onClick={() => handleEditDoc(doc)}
-                                                        className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm flex items-center gap-2 text-gray-700"
+                                                        className="w-full text-left px-4 py-2 hover:bg-blue-50/50 transition-colors text-sm flex items-center gap-2 text-gray-700"
                                                     >
                                                         <FaEdit className="text-gray-400" /> Edit {doc.type}
                                                     </button>
                                                     <button
                                                         onClick={() => handleSendToClient(doc)}
-                                                        className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm flex items-center gap-2 text-gray-700"
+                                                        className="w-full text-left px-4 py-2 hover:bg-blue-50/50 transition-colors text-sm flex items-center gap-2 text-gray-700"
                                                     >
                                                         <FaEnvelope className="text-gray-400" /> Send to Client
                                                     </button>
                                                     {doc.type === 'Invoice' && doc.status !== 'Paid' && (
                                                         <button
                                                             onClick={() => handleMarkAsPaid(doc)}
-                                                            className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm flex items-center gap-2 text-green-600"
+                                                            className="w-full text-left px-4 py-2 hover:bg-blue-50/50 transition-colors text-sm flex items-center gap-2 text-green-600"
                                                         >
                                                             <FaCheck className="text-green-500" /> Mark as Paid
                                                         </button>
@@ -916,7 +916,7 @@ export default function FinancialsPage() {
                                                     {doc.type === 'Quote' && ['Draft', 'Pending', 'draft', 'pending'].includes(doc.status) && (
                                                         <button
                                                             onClick={() => handleMarkAsSent(doc)}
-                                                            className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm flex items-center gap-2 text-blue-600"
+                                                            className="w-full text-left px-4 py-2 hover:bg-blue-50/50 transition-colors text-sm flex items-center gap-2 text-blue-600"
                                                         >
                                                             <FaCheck className="text-blue-500" /> Mark as Sent
                                                         </button>
@@ -924,7 +924,7 @@ export default function FinancialsPage() {
                                                     {doc.type === 'Quote' && !['Converted', 'converted'].includes(doc.status) && (
                                                         <button
                                                             onClick={() => handleConvertToInvoice(doc)}
-                                                            className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm flex items-center gap-2 text-green-600"
+                                                            className="w-full text-left px-4 py-2 hover:bg-blue-50/50 transition-colors text-sm flex items-center gap-2 text-green-600"
                                                         >
                                                             <FaMoneyBillWave className="text-green-500" /> Convert to Invoice
                                                         </button>
@@ -955,7 +955,7 @@ export default function FinancialsPage() {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Client</label>
                                 <select
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                     value={newDoc.clientId}
                                     onChange={e => setNewDoc({ ...newDoc, clientId: e.target.value })}
                                 >
@@ -972,7 +972,7 @@ export default function FinancialsPage() {
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Client Name (Manual)</label>
                                         <input
                                             type="text"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                             value={newDoc.clientName}
                                             onChange={e => setNewDoc({ ...newDoc, clientName: e.target.value })}
                                         />
@@ -981,7 +981,7 @@ export default function FinancialsPage() {
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Client Email</label>
                                         <input
                                             type="email"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                             value={newDoc.clientEmail}
                                             onChange={e => setNewDoc({ ...newDoc, clientEmail: e.target.value })}
                                         />
@@ -993,7 +993,7 @@ export default function FinancialsPage() {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                                 <input
                                     type="text"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                     placeholder="e.g., Service Fee"
                                     value={newDoc.description}
                                     onChange={e => setNewDoc({ ...newDoc, description: e.target.value })}
@@ -1004,7 +1004,7 @@ export default function FinancialsPage() {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Amount (RWF)</label>
                                 <input
                                     type="number"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                     placeholder="0.00"
                                     value={newDoc.amount || ''}
                                     onChange={e => setNewDoc({ ...newDoc, amount: parseFloat(e.target.value) })}
@@ -1019,7 +1019,7 @@ export default function FinancialsPage() {
                         <div className="flex gap-3 mt-8">
                             <button
                                 onClick={() => setIsModalOpen(false)}
-                                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-blue-50/50 transition-colors font-medium"
                             >
                                 Cancel
                             </button>

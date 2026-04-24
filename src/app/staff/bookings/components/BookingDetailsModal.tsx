@@ -131,14 +131,14 @@ export default function BookingDetailsModal({ booking, onClose }: BookingDetails
                                         <span className="text-sm text-gray-600 flex items-center"><FaClock className="mr-2 text-gray-400" /> Duration</span>
                                         <span className="text-sm font-medium text-gray-900">{booking.rentalDays} Day(s)</span>
                                     </div>
-                                    <div className="border-t border-gray-200 my-2 pt-2">
+                                    <div className="border-t border-gray-100/80 my-2 pt-2">
                                         <p className="text-xs text-gray-500 mb-1">Pickup</p>
                                         <div className="flex items-center text-sm font-medium text-gray-900">
                                             <FaCalendarAlt className="mr-2 text-green-500" />
                                             {new Date(booking.pickupDate).toLocaleDateString()} at {booking.pickupTime}
                                         </div>
                                     </div>
-                                    <div className="border-t border-gray-200 my-2 pt-2">
+                                    <div className="border-t border-gray-100/80 my-2 pt-2">
                                         <p className="text-xs text-gray-500 mb-1">Return</p>
                                         <div className="flex items-center text-sm font-medium text-gray-900">
                                             <FaCalendarAlt className="mr-2 text-red-500" />
@@ -178,7 +178,7 @@ export default function BookingDetailsModal({ booking, onClose }: BookingDetails
                     <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                         <button
                             type="button"
-                            className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                            className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-blue-50/50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                             onClick={onClose}
                         >
                             Close

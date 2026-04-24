@@ -87,6 +87,10 @@ model Booking {
   rentalDays       Int?
   returnConfirmed  Boolean @default(false)
   fullTank         Boolean @default(false)
+  pickupLocation   String?
+  dropoffLocation  String?
+  flightNumber     String?
+  notes            String?
   status           String  @default("Active")
   createdAt        DateTime @default(now())
 }

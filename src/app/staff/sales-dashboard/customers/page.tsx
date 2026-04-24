@@ -235,7 +235,7 @@ export default function CustomersPage() {
                 </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white/90 backdrop-blur-xl p-4 rounded-2xl shadow-xl shadow-gray-200/50 border border-white/60">
                 <div className="flex bg-gray-100 p-1 rounded-lg overflow-x-auto max-w-full">
                     {['All', 'Active', 'Won', 'Closed Lost'].map(type => (
                         <button
@@ -259,7 +259,7 @@ export default function CustomersPage() {
                             placeholder="Search name, company..."
                             value={searchTerm}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                            className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64 transition-all"
+                            className="pl-10 pr-4 py-2 border border-gray-100/80 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64 transition-all"
                         />
                     </div>
                     <button
@@ -272,7 +272,7 @@ export default function CustomersPage() {
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl shadow-gray-200/50 border border-white/60-sm border border-gray-100/80 overflow-hidden">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
@@ -286,7 +286,7 @@ export default function CustomersPage() {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {filteredLeads.map((lead: Lead) => (
-                            <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
+                            <tr key={lead.id} className="hover:bg-blue-50/50 transition-colors transition-colors">
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex items-center">
                                         <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
@@ -364,7 +364,7 @@ export default function CustomersPage() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
                                     <input
                                         type="text"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                         value={formData.name || ''}
                                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, name: e.target.value })}
                                     />
@@ -373,7 +373,7 @@ export default function CustomersPage() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Company *</label>
                                     <input
                                         type="text"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                         value={formData.company || ''}
                                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, company: e.target.value })}
                                     />
@@ -384,7 +384,7 @@ export default function CustomersPage() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                                     <input
                                         type="email"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                         value={formData.email || ''}
                                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, email: e.target.value })}
                                     />
@@ -393,7 +393,7 @@ export default function CustomersPage() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
                                     <input
                                         type="tel"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                         value={formData.contact || ''}
                                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, contact: e.target.value })}
                                     />
@@ -403,7 +403,7 @@ export default function CustomersPage() {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
                                 <input
                                     type="text"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                     value={formData.location || ''}
                                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, location: e.target.value })}
                                 />
@@ -412,7 +412,7 @@ export default function CustomersPage() {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Stage</label>
                                     <select
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                         value={formData.stage || 'Contacted'}
                                         onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, stage: e.target.value })}
                                     >
@@ -427,7 +427,7 @@ export default function CustomersPage() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Deal Value (RWF)</label>
                                     <input
                                         type="number"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                         value={formData.value || ''}
                                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, value: parseInt(e.target.value) })}
                                     />
@@ -438,7 +438,7 @@ export default function CustomersPage() {
                         <div className="flex gap-3 mt-6">
                             <button
                                 onClick={() => setIsAddModalOpen(false)}
-                                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-blue-50/50 transition-colors font-medium"
                             >
                                 Cancel
                             </button>
@@ -473,7 +473,7 @@ export default function CustomersPage() {
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                                         <input
                                             type="text"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                             value={formData.name || ''}
                                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, name: e.target.value })}
                                         />
@@ -482,7 +482,7 @@ export default function CustomersPage() {
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
                                         <input
                                             type="text"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                             value={formData.company || ''}
                                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, company: e.target.value })}
                                         />
@@ -493,7 +493,7 @@ export default function CustomersPage() {
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                                         <input
                                             type="email"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                             value={formData.email || ''}
                                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, email: e.target.value })}
                                         />
@@ -502,7 +502,7 @@ export default function CustomersPage() {
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
                                         <input
                                             type="tel"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                             value={formData.contact || ''}
                                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, contact: e.target.value })}
                                         />
@@ -512,7 +512,7 @@ export default function CustomersPage() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
                                     <input
                                         type="text"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                         value={formData.location || ''}
                                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, location: e.target.value })}
                                     />
@@ -521,7 +521,7 @@ export default function CustomersPage() {
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Stage</label>
                                         <select
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                             value={formData.stage || ''}
                                             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, stage: e.target.value })}
                                         >
@@ -536,7 +536,7 @@ export default function CustomersPage() {
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Deal Value (RWF)</label>
                                         <input
                                             type="number"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                             value={formData.value || ''}
                                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, value: parseInt(e.target.value) })}
                                         />
@@ -545,7 +545,7 @@ export default function CustomersPage() {
                                 <div className="flex gap-3 mt-6">
                                     <button
                                         onClick={() => setIsEditMode(false)}
-                                        className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                                        className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-blue-50/50 transition-colors font-medium"
                                     >
                                         Cancel
                                     </button>
@@ -637,7 +637,7 @@ export default function CustomersPage() {
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setIsDeleteModalOpen(false)}
-                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-blue-50/50 transition-colors font-medium"
                                 >
                                     Cancel
                                 </button>

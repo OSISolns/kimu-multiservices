@@ -347,7 +347,7 @@ export default function CampaignsPage() {
             </div>
 
             {/* Campaigns List */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl shadow-gray-200/50 border border-white/60-sm border border-gray-100/80 overflow-hidden">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
@@ -370,7 +370,7 @@ export default function CampaignsPage() {
                             campaigns.map((campaign) => {
                                 const roi = campaign.spent > 0 ? ((campaign.conversion * 100) / campaign.spent).toFixed(1) : '0.0';
                                 return (
-                                    <tr key={campaign.id} className="hover:bg-gray-50 transition-colors">
+                                    <tr key={campaign.id} className="hover:bg-blue-50/50 transition-colors transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
                                                 <div className={`p-2 rounded-lg mr-3 
@@ -448,7 +448,7 @@ export default function CampaignsPage() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Campaign Name</label>
                                     <input
                                         type="text"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                         placeholder="e.g., Summer Sale"
                                         value={newCampaign.name || ''}
                                         onChange={e => setNewCampaign({ ...newCampaign, name: e.target.value })}
@@ -464,7 +464,7 @@ export default function CampaignsPage() {
                                                 className={`py-3 px-4 text-sm rounded-lg border text-left transition-all flex items-center gap-2
                                                     ${newCampaign.type === type
                                                         ? 'bg-blue-50 border-blue-500 text-blue-700 font-medium'
-                                                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                                                        : 'border-gray-100/80 text-gray-600 hover:bg-blue-50/50 transition-colors'}`}
                                             >
                                                 <div className={`w-4 h-4 rounded-full border flex items-center justify-center
                                                     ${newCampaign.type === type ? 'border-blue-600' : 'border-gray-400'}`}>
@@ -483,7 +483,7 @@ export default function CampaignsPage() {
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
                                         <input
                                             type="date"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                             value={newCampaign.startDate || ''}
                                             onChange={e => setNewCampaign({ ...newCampaign, startDate: e.target.value })}
                                         />
@@ -492,7 +492,7 @@ export default function CampaignsPage() {
                                         <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
                                         <input
                                             type="date"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                             value={newCampaign.endDate || ''}
                                             onChange={e => setNewCampaign({ ...newCampaign, endDate: e.target.value })}
                                         />
@@ -502,7 +502,7 @@ export default function CampaignsPage() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Budget (RWF)</label>
                                     <input
                                         type="number"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                         placeholder="5000"
                                         value={newCampaign.budget || ''}
                                         onChange={e => setNewCampaign({ ...newCampaign, budget: parseInt(e.target.value) })}
@@ -515,14 +515,14 @@ export default function CampaignsPage() {
                             {wizardStep === 1 ? (
                                 <button
                                     onClick={() => setIsWizardOpen(false)}
-                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-blue-50/50 transition-colors font-medium"
                                 >
                                     Cancel
                                 </button>
                             ) : (
                                 <button
                                     onClick={() => setWizardStep(1)}
-                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-blue-50/50 transition-colors font-medium"
                                 >
                                     Back
                                 </button>
@@ -568,7 +568,7 @@ export default function CampaignsPage() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Campaign Name</label>
                                     <input
                                         type="text"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                         value={editedCampaign.name?.replace(/^\[.*?\]\s*/, '') || ''}
                                         onChange={e => setEditedCampaign({ ...editedCampaign, name: e.target.value })}
                                     />
@@ -583,7 +583,7 @@ export default function CampaignsPage() {
                                                 className={`py-2 px-3 text-sm rounded-lg border transition-all
                                                     ${editedCampaign.type === type
                                                         ? 'bg-blue-50 border-blue-500 text-blue-700 font-medium'
-                                                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                                                        : 'border-gray-100/80 text-gray-600 hover:bg-blue-50/50 transition-colors'}`}
                                             >
                                                 {type}
                                             </button>
@@ -595,7 +595,7 @@ export default function CampaignsPage() {
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
                                         <input
                                             type="date"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                             value={editedCampaign.startDate || ''}
                                             onChange={e => setEditedCampaign({ ...editedCampaign, startDate: e.target.value })}
                                         />
@@ -604,7 +604,7 @@ export default function CampaignsPage() {
                                         <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
                                         <input
                                             type="date"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                             value={editedCampaign.endDate || ''}
                                             onChange={e => setEditedCampaign({ ...editedCampaign, endDate: e.target.value })}
                                         />
@@ -614,7 +614,7 @@ export default function CampaignsPage() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Budget (RWF)</label>
                                     <input
                                         type="number"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                         value={editedCampaign.budget || ''}
                                         onChange={e => setEditedCampaign({ ...editedCampaign, budget: parseInt(e.target.value) })}
                                     />
@@ -622,7 +622,7 @@ export default function CampaignsPage() {
                                 <div className="flex gap-3 mt-6">
                                     <button
                                         onClick={() => setIsEditMode(false)}
-                                        className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                                        className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-blue-50/50 transition-colors font-medium"
                                     >
                                         Cancel
                                     </button>

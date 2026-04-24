@@ -15,7 +15,7 @@ export default function ReportsLayout({
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="min-h-screen bg-gray-50/50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed flex-col flex items-center justify-center">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
                     <p className="text-gray-600">Loading...</p>
@@ -27,14 +27,14 @@ export default function ReportsLayout({
     const allowedRoles = ["admin", "manager", "staff", "accountant"];
     if (!user || !allowedRoles.includes(user.role)) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="min-h-screen bg-gray-50/50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed flex-col flex items-center justify-center">
                 <p className="text-gray-700">Not authorized</p>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex">
+        <div className="min-h-screen bg-gray-50/50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed flex">
             {user.role === "admin" ? <AdminSidebar /> : <StaffSidebar />}
             <main className="flex-1 max-w-full mx-auto p-8 flex flex-col gap-8">
                 {children}

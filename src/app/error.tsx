@@ -44,8 +44,8 @@ export default function Error({ error, reset }: ErrorProps) {
           </p>
           <div className="text-sm text-gray-600">
             <p>📧 Email: valery.osisolns@gmail.com</p>
-            <p>📞 Phone: +250 788 647 452</p>
-            <p>💬 WhatsApp: +250 788 647 452</p>
+            <p>📞 Phone: +250 792 958 752</p>
+            <p>💬 WhatsApp: +250 792 958 752</p>
           </div>
         </div>
       </div>

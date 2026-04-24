@@ -238,8 +238,8 @@ function createInvoiceEmailTemplate(invoice: any, customMessage?: string) {
             <p><strong>KIMU Transport & Multiservices</strong></p>
             <p>Gisozi, KG 780 St, Kigali, Rwanda</p>
             <p>Email: kimutransport6@gmail.com</p>
-            <p>Phone: +250 798 284 312</p>
-            <p>Phone: +250 788 447 574</p>
+            <p>Phone: +250 792 958 752</p>
+            <p>Phone: +250 792 958 752</p>
           </div>
           <div class="client-info">
             <h3>Bill To:</h3>
@@ -318,8 +318,8 @@ function createInvoiceEmailTemplate(invoice: any, customMessage?: string) {
           <div class="mobile-money">
             <h4>Mobile Money:</h4>
             <p><strong>MOMO PAY:</strong> 627309</p>
-            <p><strong>MTN:</strong> +250 798 284 312</p>
-            <p><strong>MTN:</strong> +250 788 447 574</p>
+            <p><strong>MTN:</strong> +250 792 958 752</p>
+            <p><strong>MTN:</strong> +250 792 958 752</p>
           </div>
         </div>
       </div>

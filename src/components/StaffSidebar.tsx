@@ -8,9 +8,10 @@ import Link from 'next/link';
 const sidebarLinks = [
   { href: '/staff/admin-dashboard', label: 'Admin Dashboard', icon: <FaTachometerAlt />, roles: ['admin'] },
   { href: '/staff/manager-dashboard', label: 'Manager Dashboard', icon: <FaTachometerAlt />, roles: ['manager'] },
-  { href: '/staff/sales-dashboard', label: 'Sales Dashboard', icon: <FaCar />, roles: ['staff', 'sales'] },
+  { href: '/staff/sales-dashboard', label: 'Sales Dashboard', icon: <FaCar />, roles: ['staff', 'sales', 'sales-representative'] },
   { href: '/staff/transport_officer-dashboard', label: 'Transport Dashboard', icon: <FaMapMarkedAlt />, roles: ['transport-officer'] },
   { href: '/staff/accountant-dashboard', label: 'Finance Dashboard', icon: <FaMoneyBillWave />, roles: ['accountant'] },
+  { href: '/staff/operations-dashboard', label: 'Operations Dashboard', icon: <FaMapMarkedAlt />, roles: ['operations', 'admin', 'manager'] },
 ];
 
 export default function StaffSidebar() {
@@ -33,7 +34,7 @@ export default function StaffSidebar() {
             ))}
 
             {/* Special Notifications Item with Bell */}
-            {user && ['admin', 'staff', 'accountant', 'transport-officer', 'manager'].includes(user.role) && (
+            {user && ['admin', 'staff', 'accountant', 'transport-officer', 'manager', 'operations'].includes(user.role) && (
               <li>
                 <Link
                   href="/staff/notifications"

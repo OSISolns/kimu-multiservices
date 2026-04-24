@@ -24,6 +24,24 @@
             max-width: 800px;
             margin: 0 auto;
             padding: 40px;
+            position: relative;
+        }
+
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 400px;
+            background-image: url('/logo.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.05;
+            z-index: -1;
+            pointer-events: none;
         }
 
         /* Header Section */
@@ -326,8 +344,8 @@
                     <p><strong>KIMU Transport & Multiservices</strong></p>
                     <p>Gisozi, KG 780 St, Kigali, Rwanda</p>
                     <p>Email: kimutransport6@gmail.com</p>
-                    <p>Phone: +250 798 284 312</p>
-                    <p>Phone: +250 788 447 574</p>
+                    <p>Phone: +250 792 958 752</p>
+                    <p>Phone: +250 792 958 752</p>
                 </div>
             </div>
             <div class="party" style="text-align: right;">

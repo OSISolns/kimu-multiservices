@@ -143,7 +143,7 @@ export default function ProtectedRoute({
             </p>
             <div className="text-sm text-gray-600">
               <p>📧 valery.osisolns@gmail.com</p>
-              <p>📞 +250 788 647 452</p>
+              <p>📞 +250 792 958 752</p>
             </div>
           </div>
         </div>

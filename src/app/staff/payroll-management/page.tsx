@@ -38,7 +38,7 @@ export default function PayrollManagementPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50/50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed ">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -49,8 +49,8 @@ export default function PayrollManagementPage() {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white shadow rounded-lg mb-6">
-          <div className="border-b border-gray-200">
+        <div className="bg-white/90 backdrop-blur-md shadow-xl border border-white/60 rounded-lg mb-6">
+          <div className="border-b border-gray-100/80">
             <nav className="-mb-px flex space-x-8 px-6">
               {tabs.map((tab) => (
                 <button

@@ -151,7 +151,7 @@ export default function ActivitiesPage() {
     }
 
     return (
-        <div className="space-y-6 h-[calc(100vh-8rem)] flex flex-col">
+        <div className="space-y-6 h-[calc(100vh-8rem)] flex ">
             {/* Header */}
             <div className="flex justify-between items-center flex-shrink-0">
                 <div>
@@ -190,7 +190,7 @@ export default function ActivitiesPage() {
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex-1 overflow-hidden bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl shadow-gray-200/50 border border-white/60-sm border border-gray-100/80 p-6">
                 {viewMode === 'list' ? (
                     <div className="h-full overflow-y-auto custom-scrollbar space-y-4">
                         {activities.length === 0 ? (
@@ -230,13 +230,13 @@ export default function ActivitiesPage() {
                         )}
                     </div>
                 ) : (
-                    <div className="h-full flex flex-col">
+                    <div className="h-full flex ">
                         <div className="flex items-center justify-between mb-6">
                             <button onClick={() => setMonth(m => m === 0 ? 11 : m - 1)} className="p-2 hover:bg-gray-100 rounded-full">&lt;</button>
                             <h3 className="font-bold text-lg">{monthNames[month]} {year}</h3>
                             <button onClick={() => setMonth(m => m === 11 ? 0 : m + 1)} className="p-2 hover:bg-gray-100 rounded-full">&gt;</button>
                         </div>
-                        <div className="grid grid-cols-7 gap-px bg-gray-200 border border-gray-200 rounded-lg overflow-hidden flex-1">
+                        <div className="grid grid-cols-7 gap-px bg-gray-200 border border-gray-100/80 rounded-lg overflow-hidden flex-1">
                             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
                                 <div key={d} className="bg-gray-50 p-2 text-center text-xs font-semibold text-gray-500 uppercase">
                                     {d}
@@ -297,7 +297,7 @@ export default function ActivitiesPage() {
                                             className={`py-2 text-sm rounded-lg border transition-all
                                                 ${newActivity.type === type
                                                     ? 'bg-blue-50 border-blue-500 text-blue-700 font-medium'
-                                                    : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                                                    : 'border-gray-100/80 text-gray-600 hover:bg-blue-50/50 transition-colors'}`}
                                         >
                                             {type}
                                         </button>
@@ -309,7 +309,7 @@ export default function ActivitiesPage() {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
                                 <input
                                     type="text"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                     placeholder="e.g., Follow up call"
                                     value={newActivity.title || ''}
                                     onChange={e => setNewActivity({ ...newActivity, title: e.target.value })}
@@ -321,7 +321,7 @@ export default function ActivitiesPage() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
                                     <input
                                         type="date"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                         value={newActivity.date || ''}
                                         onChange={e => setNewActivity({ ...newActivity, date: e.target.value })}
                                     />
@@ -330,7 +330,7 @@ export default function ActivitiesPage() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
                                     <input
                                         type="time"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                         value={newActivity.time || ''}
                                         onChange={e => setNewActivity({ ...newActivity, time: e.target.value })}
                                     />
@@ -341,7 +341,7 @@ export default function ActivitiesPage() {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Related To (Client Name)</label>
                                 <input
                                     type="text"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                     placeholder="e.g., Client Name"
                                     value={newActivity.relatedTo || ''}
                                     onChange={e => setNewActivity({ ...newActivity, relatedTo: e.target.value })}
@@ -351,7 +351,7 @@ export default function ActivitiesPage() {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Description / Outcome</label>
                                 <textarea
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                     rows={3}
                                     placeholder="Add details..."
                                     value={newActivity.description || ''}
@@ -363,7 +363,7 @@ export default function ActivitiesPage() {
                         <div className="flex gap-3 mt-8">
                             <button
                                 onClick={() => setIsModalOpen(false)}
-                                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-blue-50/50 transition-colors font-medium"
                             >
                                 Cancel
                             </button>

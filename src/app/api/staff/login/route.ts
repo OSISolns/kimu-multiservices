@@ -7,6 +7,7 @@ import { handleApiError, createSuccessResponse, createValidationErrorResponse, c
 import { hasAnyRole } from '@/lib/utils';
 import { logActivity, logError, logInfo } from '@/lib/logger';
 import { LoginRequest, LoginResponse, UserRole } from '@/types/api';
+import { decryptPayload } from '@/lib/encryption';
 
 // Simple in-memory rate limiter per IP
 const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
@@ -96,13 +97,27 @@ export async function POST(req: NextRequest) {
 
     const body: LoginRequest = await req.json();
 
-    // Validate input
-    const validation = validateInput(loginSchema, body);
+    // Handle Payload Decryption (High Security Feature)
+    let { username, password } = body as any;
+    const isEncrypted = (body as any).isEncrypted;
+
+    if (isEncrypted && password) {
+      try {
+        password = await decryptPayload(password);
+      } catch (decryptErr) {
+        return NextResponse.json({
+          success: false,
+          error: 'Security verification failed. Please try again.',
+          timestamp: new Date().toISOString()
+        }, { status: 400 });
+      }
+    }
+
+    // Validate input with decrypted password
+    const validation = validateInput(loginSchema, { username, password });
     if (!validation.success) {
       return createValidationErrorResponse(validation.errors!);
     }
-
-    const { username, password } = validation.data!;
 
     // Sanitize input
     const sanitizedUsername = sanitizeString(username);

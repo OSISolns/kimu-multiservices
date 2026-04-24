@@ -17,7 +17,7 @@ export default function SalesDashboardLayout({
     useEffect(() => {
         if (!isLoading && !user) {
             router.push('/staff/login');
-        } else if (!isLoading && user && !['sales', 'staff', 'sales-representative', 'agent', 'driver', 'customer-service', 'operations'].includes(user.role)) {
+        } else if (!isLoading && user && !['sales-representative'].includes(user.role)) {
             // Redirect based on role to enforce 'own pages'
             if (user.role === 'admin') router.push('/staff/admin-dashboard');
             else if (user.role === 'accountant') router.push('/staff/accountant-dashboard');
@@ -27,12 +27,12 @@ export default function SalesDashboardLayout({
         }
     }, [user, isLoading, router]);
 
-    if (isLoading || !user || !['sales', 'staff', 'sales-representative', 'agent', 'driver', 'customer-service', 'operations'].includes(user.role)) {
-        return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><LoadingSpinner /></div>;
+    if (isLoading || !user || !['sales-representative'].includes(user.role)) {
+        return <div className="min-h-screen bg-gray-50/50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed flex-col flex items-center justify-center"><LoadingSpinner /></div>;
     }
 
     return (
-        <div className="flex min-h-screen bg-gray-50 font-sans">
+        <div className="flex min-h-screen bg-gray-50/50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed font-sans">
             <SalesSidebar />
             <main className="flex-1 overflow-x-hidden overflow-y-auto">
                 <div className="max-w-7xl mx-auto p-8">

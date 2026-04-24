@@ -595,7 +595,7 @@ export default function UsersPage() {
   // Show loading state while authentication is being checked
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50/50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed flex-col flex items-center justify-center">
         <LoadingSpinner message="Loading..." size="lg" fullScreen={true} />
       </div>
     );
@@ -603,7 +603,7 @@ export default function UsersPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50/50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed flex-col flex items-center justify-center">
         <LoadingSpinner message="Redirecting..." size="lg" fullScreen={true} />
       </div>
     );
@@ -612,7 +612,7 @@ export default function UsersPage() {
   // Show unauthorized message if user is not admin or manager
   if (!user || !['admin', 'manager', 'accountant'].includes(user.role)) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50/50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed flex-col flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">Not Authorized</h1>
           <p className="text-gray-600 mb-4">You don&apos;t have permission to access this page.</p>
@@ -625,7 +625,7 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50/50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed ">
       <div className="max-w-7xl mx-auto p-8">
         <div className="bg-white rounded-2xl shadow p-8">
           <div className="flex justify-between items-center mb-6">
@@ -655,7 +655,7 @@ export default function UsersPage() {
                   placeholder="Search users..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                 />
               </div>
               <div>
@@ -663,7 +663,7 @@ export default function UsersPage() {
                 <select
                   value={roleFilter}
                   onChange={(e) => setRoleFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                 >
                   <option value="all">All Roles</option>
                   <option value="admin">Administrator</option>
@@ -681,7 +681,7 @@ export default function UsersPage() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                 >
                   <option value="all">All Status</option>
                   <option value="active">Active</option>
@@ -694,7 +694,7 @@ export default function UsersPage() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as keyof User)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                 >
                   <option value="username">Username</option>
                   <option value="fullName">Full Name</option>
@@ -785,7 +785,7 @@ export default function UsersPage() {
                 </thead>
                 <tbody>
                   {filteredAndSortedUsers.map((tableUser) => (
-                    <tr key={tableUser.username} className="border-b hover:bg-gray-50 transition-colors">
+                    <tr key={tableUser.username} className="border-b hover:bg-blue-50/50 transition-colors transition-colors">
                       <td className="py-4 px-6">
                         <input
                           type="checkbox"
@@ -888,7 +888,7 @@ export default function UsersPage() {
           {/* User Details Modal */}
           {showUserModal && selectedUser && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
-              <div className="bg-white rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+              <div className="bg-white rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex ">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-xl font-semibold flex items-center gap-2">
                     <span className="text-blue-600">👤</span>
@@ -1035,7 +1035,7 @@ export default function UsersPage() {
           {/* Add User Modal */}
           {showAddUserModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
-              <div className="bg-white rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+              <div className="bg-white rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex ">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-xl font-semibold flex items-center gap-2">
                     <span className="text-green-600">➕</span>
@@ -1058,7 +1058,7 @@ export default function UsersPage() {
                         type="text"
                         value={newUser.username}
                         onChange={(e) => handleNewUserChange('username', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                         placeholder="Enter username"
                         required
                       />
@@ -1069,7 +1069,7 @@ export default function UsersPage() {
                         type="text"
                         value={newUser.fullName}
                         onChange={(e) => handleNewUserChange('fullName', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                         placeholder="Enter full name"
                       />
                     </div>
@@ -1083,7 +1083,7 @@ export default function UsersPage() {
                         type="email"
                         value={newUser.email}
                         onChange={(e) => handleNewUserChange('email', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                         placeholder="Enter email address"
                       />
                     </div>
@@ -1093,7 +1093,7 @@ export default function UsersPage() {
                         type="tel"
                         value={newUser.phone}
                         onChange={(e) => handleNewUserChange('phone', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                         placeholder="Enter phone number"
                       />
                     </div>
@@ -1106,7 +1106,7 @@ export default function UsersPage() {
                       <select
                         value={newUser.role}
                         onChange={(e) => handleNewUserChange('role', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                         required
                       >
                         <option value="sales-representative">Sales Representative</option>
@@ -1125,7 +1125,7 @@ export default function UsersPage() {
                         type="text"
                         value={newUser.department}
                         onChange={(e) => handleNewUserChange('department', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                         placeholder="Enter department"
                       />
                     </div>
@@ -1139,7 +1139,7 @@ export default function UsersPage() {
                         value={newUser.password}
                         onChange={(value) => handleNewUserChange('password', value)}
                         placeholder="Enter password"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                         required
                       />
                     </div>
@@ -1149,7 +1149,7 @@ export default function UsersPage() {
                         value={newUser.confirmPassword}
                         onChange={(value) => handleNewUserChange('confirmPassword', value)}
                         placeholder="Confirm password"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                         required
                       />
                     </div>
@@ -1258,7 +1258,7 @@ export default function UsersPage() {
           {/* Edit User Modal */}
           {showEditUserModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
-              <div className="bg-white rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+              <div className="bg-white rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex ">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-xl font-semibold flex items-center gap-2">
                     <span className="text-blue-600">✏️</span>
@@ -1291,7 +1291,7 @@ export default function UsersPage() {
                         type="text"
                         value={editingUser.fullName}
                         onChange={(e) => handleEditUserChange('fullName', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                         placeholder="Enter full name"
                       />
                     </div>
@@ -1305,7 +1305,7 @@ export default function UsersPage() {
                         type="email"
                         value={editingUser.email}
                         onChange={(e) => handleEditUserChange('email', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                         placeholder="Enter email address"
                       />
                     </div>
@@ -1315,7 +1315,7 @@ export default function UsersPage() {
                         type="tel"
                         value={editingUser.phone}
                         onChange={(e) => handleEditUserChange('phone', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                         placeholder="Enter phone number"
                       />
                     </div>
@@ -1328,7 +1328,7 @@ export default function UsersPage() {
                       <select
                         value={editingUser.role}
                         onChange={(e) => handleEditUserChange('role', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                       >
                         <option value="sales-representative">Sales Representative</option>
                         <option value="admin">Administrator</option>
@@ -1346,7 +1346,7 @@ export default function UsersPage() {
                         type="text"
                         value={editingUser.department}
                         onChange={(e) => handleEditUserChange('department', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                         placeholder="Enter department"
                       />
                     </div>
@@ -1355,7 +1355,7 @@ export default function UsersPage() {
                       <select
                         value={editingUser.status}
                         onChange={(e) => handleEditUserChange('status', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                       >
                         <option value="active">Active</option>
                         <option value="inactive">Inactive</option>
@@ -1552,7 +1552,7 @@ export default function UsersPage() {
                       type="password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                       placeholder="Enter new password"
                       minLength={6}
                     />
@@ -1564,7 +1564,7 @@ export default function UsersPage() {
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                       placeholder="Confirm new password"
                       minLength={6}
                     />

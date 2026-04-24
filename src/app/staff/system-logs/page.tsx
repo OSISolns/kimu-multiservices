@@ -154,7 +154,7 @@ export default function SystemLogsAdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50/50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed flex-col py-8">
       <div className="max-w-7xl mx-auto px-4">
         <div className="bg-white rounded-2xl shadow-lg p-8">
           <div className="flex items-center gap-3 mb-8">
@@ -214,7 +214,7 @@ export default function SystemLogsAdminPage() {
                 <select
                   value={filters.action}
                   onChange={(e) => handleFilterChange('action', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                 >
                   <option value="">All Actions</option>
                   <option value="db_backup">DB Backup</option>
@@ -228,7 +228,7 @@ export default function SystemLogsAdminPage() {
                 <select
                   value={filters.limit}
                   onChange={(e) => handleFilterChange('limit', parseInt(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                 >
                   <option value={25}>25</option>
                   <option value={50}>50</option>
@@ -262,7 +262,7 @@ export default function SystemLogsAdminPage() {
                 </thead>
                 <tbody>
                   {systemLogs.map((log) => (
-                    <tr key={log.id} className="border-b last:border-0 hover:bg-gray-50">
+                    <tr key={log.id} className="border-b last:border-0 hover:bg-blue-50/50 transition-colors">
                       <td className="py-3 px-4 font-semibold">{log.action.replace(/_/g, ' ')}</td>
                       <td className="py-3 px-4 font-mono text-xs whitespace-pre-wrap">
                         {log.details ? (() => { try { return JSON.stringify(JSON.parse(log.details), null, 2); } catch { return log.details; } })() : 'No details'}
@@ -286,7 +286,7 @@ export default function SystemLogsAdminPage() {
                 <button
                   onClick={() => handleFilterChange('page', pagination.page - 1)}
                   disabled={pagination.page === 1}
-                  className="px-3 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  className="px-3 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-50/50 transition-colors"
                 >
                   Previous
                 </button>
@@ -296,7 +296,7 @@ export default function SystemLogsAdminPage() {
                 <button
                   onClick={() => handleFilterChange('page', pagination.page + 1)}
                   disabled={pagination.page === pagination.totalPages}
-                  className="px-3 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  className="px-3 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-50/50 transition-colors"
                 >
                   Next
                 </button>
@@ -325,7 +325,7 @@ export default function SystemLogsAdminPage() {
                 <select
                   value={newLog.action}
                   onChange={e => setNewLog(l => ({ ...l, action: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                 >
                   <option value="">Select Action</option>
                   <option value="db_backup">DB Backup</option>
@@ -339,7 +339,7 @@ export default function SystemLogsAdminPage() {
                 <textarea
                   value={newLog.details}
                   onChange={e => setNewLog(l => ({ ...l, details: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                   rows={4}
                 />
               </div>

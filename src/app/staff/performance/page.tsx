@@ -65,7 +65,7 @@ export default function StaffPerformancePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50/50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed flex-col flex items-center justify-center">
         <LoadingSpinner message="Loading Performance Data" size="lg" fullScreen={true} />
       </div>
     );
@@ -267,7 +267,7 @@ export default function StaffPerformancePage() {
               </thead>
               <tbody>
                 {filteredStaff.map(s => (
-                  <tr key={s.name} className="border-b last:border-0 hover:bg-gray-50">
+                  <tr key={s.name} className="border-b last:border-0 hover:bg-blue-50/50 transition-colors">
                     <td className="py-2 px-4">{s.name}</td>
                     <td className="py-2 px-4">{s.fullName}</td>
                     <td className="py-2 px-4">{s.leads}</td>
@@ -312,7 +312,7 @@ export default function StaffPerformancePage() {
               </thead>
               <tbody>
                 {filteredStaff.map(s => (
-                  <tr key={s.name} className="border-b last:border-0 hover:bg-gray-50">
+                  <tr key={s.name} className="border-b last:border-0 hover:bg-blue-50/50 transition-colors">
                     <td className="py-2 px-4">{s.name}</td>
                     <td className="py-2 px-4">{s.fullName}</td>
                     <td className="py-2 px-4">{s.bookings}</td>
@@ -356,7 +356,7 @@ export default function StaffPerformancePage() {
               </thead>
               <tbody>
                 {filteredStaff.map(s => (
-                  <tr key={s.name} className="border-b last:border-0 hover:bg-gray-50">
+                  <tr key={s.name} className="border-b last:border-0 hover:bg-blue-50/50 transition-colors">
                     <td className="py-2 px-4">{s.name}</td>
                     <td className="py-2 px-4">{s.fullName}</td>
                     <td className="py-2 px-4">{s.bookings}</td>
@@ -426,7 +426,7 @@ export default function StaffPerformancePage() {
               </thead>
               <tbody>
                 {filteredStaff.map((s, i) => (
-                  <tr key={s.name} className={s.kpi >= 90 ? 'bg-green-50 font-bold' : 'border-b last:border-0 hover:bg-gray-50'}>
+                  <tr key={s.name} className={s.kpi >= 90 ? 'bg-green-50 font-bold' : 'border-b last:border-0 hover:bg-blue-50/50 transition-colors'}>
                     <td className="py-2 px-4">{s.name}</td>
                     <td className="py-2 px-4">{s.fullName}</td>
                     <td className="py-2 px-4 capitalize">{s.role.replace('-', ' ')}</td>

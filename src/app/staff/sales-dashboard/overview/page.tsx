@@ -141,7 +141,7 @@ export default function SalesOverviewPage() {
             {/* KPI Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                 {kpiCards.map((card, index) => (
-                    <div key={index} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 group">
+                    <div key={index} className="bg-white/90 backdrop-blur-xl p-6 rounded-3xl shadow-xl shadow-gray-200/50 border border-white/60 hover:shadow-md transition-all duration-200 group">
                         <div className="flex justify-between items-start mb-4">
                             <div className={`p-3 rounded-xl bg-${card.color}-50 text-${card.color}-600 group-hover:scale-110 transition-transform`}>
                                 <card.icon className="w-6 h-6" />
@@ -162,7 +162,7 @@ export default function SalesOverviewPage() {
             {/* Recent Activity & Pipeline Preview */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Recent Activity */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div className="bg-white/90 backdrop-blur-xl p-6 rounded-3xl shadow-xl shadow-gray-200/50 border border-white/60">
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="text-lg font-bold text-gray-900">Recent Activity</h3>
                         <a href="/staff/sales-dashboard/activities" className="text-sm text-blue-600 hover:text-blue-700 font-medium">View All</a>
@@ -172,7 +172,7 @@ export default function SalesOverviewPage() {
                             <div className="text-center py-10 text-gray-400">No recent activities.</div>
                         ) : (
                             recentActivities.map((activity) => (
-                                <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                                <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-blue-50/50 transition-colors transition-colors">
                                     <div className={`p-2 rounded-full flex-shrink-0 
                                         ${activity.type === 'call' ? 'bg-green-100 text-green-600' :
                                             activity.type === 'meeting' ? 'bg-purple-100 text-purple-600' :
@@ -196,7 +196,7 @@ export default function SalesOverviewPage() {
                 </div>
 
                 {/* Pipeline Summary */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div className="bg-white/90 backdrop-blur-xl p-6 rounded-3xl shadow-xl shadow-gray-200/50 border border-white/60">
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="text-lg font-bold text-gray-900">Pipeline Summary</h3>
                         <a href="/staff/sales-dashboard/pipeline" className="text-sm text-blue-600 hover:text-blue-700 font-medium">View Pipeline</a>

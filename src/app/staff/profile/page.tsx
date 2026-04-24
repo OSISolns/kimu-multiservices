@@ -266,7 +266,7 @@ export default function ProfilePage() {
 
     if (userLoading || loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="min-h-screen bg-gray-50/50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed flex-col flex items-center justify-center">
                 <LoadingSpinner message="Loading profile..." size="lg" fullScreen={true} />
             </div>
         );
@@ -387,7 +387,7 @@ export default function ProfilePage() {
                                                 type="text"
                                                 value={profileForm.fullName}
                                                 onChange={(e) => setProfileForm(prev => ({ ...prev, fullName: e.target.value }))}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                             />
                                         </div>
                                         <div>
@@ -398,7 +398,7 @@ export default function ProfilePage() {
                                                 type="email"
                                                 value={profileForm.email}
                                                 onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                             />
                                         </div>
                                         <div>
@@ -409,7 +409,7 @@ export default function ProfilePage() {
                                                 type="tel"
                                                 value={profileForm.phone}
                                                 onChange={(e) => setProfileForm(prev => ({ ...prev, phone: e.target.value }))}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                             />
                                         </div>
                                         <div>
@@ -420,7 +420,7 @@ export default function ProfilePage() {
                                                 type="text"
                                                 value={profileForm.department}
                                                 onChange={(e) => setProfileForm(prev => ({ ...prev, department: e.target.value }))}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                             />
                                         </div>
                                     </div>
@@ -545,7 +545,7 @@ export default function ProfilePage() {
                                 <h2 className="text-xl font-bold text-gray-900">Security</h2>
                             </div>
                             <div className="space-y-4">
-                                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                <div className="flex items-center justify-between p-4 border border-gray-100/80 rounded-lg hover:bg-blue-50/50 transition-colors transition-colors">
                                     <div>
                                         <h3 className="font-medium text-gray-900 flex items-center gap-2">
                                             <FaKey className="text-gray-400" />

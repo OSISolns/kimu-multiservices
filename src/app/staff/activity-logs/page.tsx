@@ -158,7 +158,7 @@ export default function ActivityLogsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50/50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed flex-col py-8">
       <div className="max-w-7xl mx-auto px-4">
         <div className="mb-4">
           <Link href="/staff/admin-dashboard" className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">&larr; Back to Dashboard</Link>
@@ -209,7 +209,7 @@ export default function ActivityLogsPage() {
                   <select
                     value={filters.action}
                     onChange={(e) => handleFilterChange('action', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                   >
                     <option value="">All Actions</option>
                     <option value="login">Login</option>
@@ -228,7 +228,7 @@ export default function ActivityLogsPage() {
                     type="date"
                     value={filters.startDate}
                     onChange={(e) => handleFilterChange('startDate', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                   />
                 </div>
                 <div>
@@ -237,7 +237,7 @@ export default function ActivityLogsPage() {
                     type="date"
                     value={filters.endDate}
                     onChange={(e) => handleFilterChange('endDate', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                   />
                 </div>
                 <div>
@@ -245,7 +245,7 @@ export default function ActivityLogsPage() {
                   <select
                     value={filters.limit}
                     onChange={(e) => handleFilterChange('limit', parseInt(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                   >
                     <option value={25}>25</option>
                     <option value={50}>50</option>
@@ -281,7 +281,7 @@ export default function ActivityLogsPage() {
                 </thead>
                 <tbody>
                   {activityLogs.map((log) => (
-                    <tr key={log.id} className="border-b last:border-0 hover:bg-gray-50">
+                    <tr key={log.id} className="border-b last:border-0 hover:bg-blue-50/50 transition-colors">
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
                           <span className="text-lg">{getActionIcon(log.action)}</span>
@@ -325,7 +325,7 @@ export default function ActivityLogsPage() {
                 <button
                   onClick={() => handleFilterChange('page', pagination.page - 1)}
                   disabled={pagination.page === 1}
-                  className="px-3 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  className="px-3 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-50/50 transition-colors"
                 >
                   Previous
                 </button>
@@ -335,7 +335,7 @@ export default function ActivityLogsPage() {
                 <button
                   onClick={() => handleFilterChange('page', pagination.page + 1)}
                   disabled={pagination.page === pagination.totalPages}
-                  className="px-3 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  className="px-3 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-50/50 transition-colors"
                 >
                   Next
                 </button>

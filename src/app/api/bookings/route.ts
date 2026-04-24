@@ -205,15 +205,16 @@ export async function POST(req: NextRequest) {
           idOrPassport: requestData.idOrPassport?.trim(),
           pickupDate: requestData.pickupDate,
           pickupTime: requestData.pickupTime,
-          returnDate: requestData.returnDate,
-          returnTime: requestData.returnTime,
+          pickupLocation: requestData.pickupLocation || requestData.pickup,
+          dropoffLocation: requestData.dropoffLocation || requestData.dropoff,
+          notes: requestData.notes,
           status: 'Active'
         }
       })
     }
     // Handle hotel bookings
     else if (requestData.type === 'Hotel') {
-      if (!requestData.guestName?.trim() || !requestData.phone?.trim()) {
+      if (!(requestData.guestName?.trim() || requestData.name?.trim()) || !requestData.phone?.trim()) {
         return NextResponse.json({
           success: false,
           error: 'Guest name and contact number are required'
@@ -223,23 +224,24 @@ export async function POST(req: NextRequest) {
       newBooking = await prisma.booking.create({
         data: {
           type: requestData.type,
-          name: requestData.guestName.trim(),
+          name: (requestData.guestName || requestData.name).trim(),
           email: requestData.email?.trim(),
           phone: requestData.phone.trim(),
-          pickupDate: requestData.checkInDate,
+          pickupDate: requestData.checkInDate || requestData.pickupDate,
           pickupTime: '14:00', // Standard check-in
-          returnDate: requestData.checkOutDate,
+          returnDate: requestData.checkOutDate || requestData.returnDate,
           returnTime: '11:00', // Standard check-out
+          notes: requestData.hotelName || requestData.notes,
           status: 'Confirmed'
         }
       })
     }
-    // Handle taxi service bookings
-    else if (requestData.type === 'Taxi Service') {
-      if (!requestData.name?.trim() || !requestData.phone?.trim() || !requestData.idOrPassport?.trim() || !requestData.nationality?.trim()) {
+    // Handle airport transfer bookings
+    else if (requestData.type === 'Airport Transfer') {
+      if (!requestData.name?.trim() || !requestData.phone?.trim()) {
         return NextResponse.json({
           success: false,
-          error: 'Customer name, phone, ID/Passport, and nationality are required for taxi service'
+          error: 'Customer name and contact number are required'
         }, { status: 400 })
       }
 
@@ -249,12 +251,11 @@ export async function POST(req: NextRequest) {
           name: requestData.name.trim(),
           email: requestData.email?.trim(),
           phone: requestData.phone.trim(),
-          nationality: requestData.nationality.trim(),
-          idOrPassport: requestData.idOrPassport.trim(),
           pickupDate: requestData.pickupDate,
           pickupTime: requestData.pickupTime,
-          returnDate: requestData.returnDate,
-          returnTime: requestData.returnTime,
+          pickupLocation: requestData.pickupLocation || requestData.pickup,
+          dropoffLocation: requestData.dropoffLocation || requestData.dropoff,
+          flightNumber: requestData.flightNumber || requestData.flight,
           status: 'Confirmed'
         }
       })
@@ -285,6 +286,10 @@ export async function POST(req: NextRequest) {
           returnDate: requestData.returnDate || requestData.checkOutDate || null,
           returnTime: requestData.returnTime || null,
           rentalDays: requestData.rentalDays || null,
+          pickupLocation: requestData.pickupLocation || requestData.pickup || null,
+          dropoffLocation: requestData.dropoffLocation || requestData.dropoff || null,
+          flightNumber: requestData.flightNumber || requestData.flight || null,
+          notes: requestData.notes || null,
           returnConfirmed: false,
           fullTank: false,
           status: 'Confirmed'

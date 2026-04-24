@@ -20,6 +20,49 @@ interface Staff {
   whatsappNotifications: boolean;
 }
 
+/**
+ * High-Security Helper: Encrypt data with Server's RSA Public Key
+ * Prevents credential theft even if TLS is compromised or browser is monitored.
+ */
+async function encryptWithPublicKey(data: string, pemKey: string): Promise<string> {
+  // 1. Convert PEM format into a binary buffer
+  const binaryDerString = window.atob(
+    pemKey
+      .replace(/-----BEGIN PUBLIC KEY-----/, '')
+      .replace(/-----END PUBLIC KEY-----/, '')
+      .replace(/\s/g, '')
+  );
+  const binaryDer = new Uint8Array(binaryDerString.length);
+  for (let i = 0; i < binaryDerString.length; i++) {
+    binaryDer[i] = binaryDerString.charCodeAt(i);
+  }
+
+  // 2. Import the public key
+  const publicKey = await window.crypto.subtle.importKey(
+    'spki',
+    binaryDer,
+    {
+      name: 'RSA-OAEP',
+      hash: 'SHA-256',
+    },
+    true,
+    ['encrypt']
+  );
+
+  // 3. Encrypt the data
+  const encodedData = new TextEncoder().encode(data);
+  const encryptedBuffer = await window.crypto.subtle.encrypt(
+    {
+      name: 'RSA-OAEP',
+    },
+    publicKey,
+    encodedData
+  );
+
+  // 4. Return as Base64 encoded string
+  return window.btoa(String.fromCharCode(...new Uint8Array(encryptedBuffer)));
+}
+
 export default function LoginForm() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -42,10 +85,23 @@ export default function LoginForm() {
     setError('');
 
     try {
+      // 1. Fetch the server's public key (High Security Requirement)
+      const keyRes = await fetch('/api/auth/publicKey');
+      if (!keyRes.ok) throw new Error('Could not initialize security layer');
+      const { publicKey } = await keyRes.json();
+
+      // 2. Encrypt the password before sending (Asymmetric RSA-OAEP)
+      const encryptedPassword = await encryptWithPublicKey(password, publicKey);
+
+      // 3. Send the request with the secure payload
       const res = await fetch('/api/staff/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ 
+          username, 
+          password: encryptedPassword,
+          isEncrypted: true // Flag for server-side decryption
+        })
       });
 
       if (!res.ok) {
@@ -83,9 +139,7 @@ export default function LoginForm() {
         case 'admin':
           router.push('/staff/admin-dashboard');
           break;
-        case 'sales':
         case 'sales-representative':
-        case 'agent':
           router.push('/staff/sales-dashboard');
           break;
         case 'transport-officer':
@@ -94,8 +148,11 @@ export default function LoginForm() {
         case 'manager':
           router.push('/staff/manager-dashboard');
           break;
+        case 'operations':
+          router.push('/staff/operations-dashboard');
+          break;
         default:
-          router.push('/staff/sales-dashboard');
+          router.push('/staff/profile');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');

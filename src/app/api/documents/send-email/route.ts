@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
             <p style="margin: 0; color: #6b7280; font-size: 14px;">
               <strong>Contact Information:</strong><br/>
               Email: info@kimumultiservices.com<br/>
-              Phone: +250 788 123 456
+              Phone: +250 792 958 752
             </p>
           </div>
           

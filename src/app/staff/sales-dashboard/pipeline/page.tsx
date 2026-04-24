@@ -332,7 +332,7 @@ export default function PipelinePage() {
             </div>
 
             {/* Controls */}
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white/90 backdrop-blur-xl p-4 rounded-2xl shadow-xl shadow-gray-200/50 border border-white/60">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900">Sales Pipeline</h2>
                     <p className="text-gray-500">Drag and drop to move deals.</p>
@@ -345,7 +345,7 @@ export default function PipelinePage() {
                             placeholder="Search leads..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64"
+                            className="pl-10 pr-4 py-2 border border-gray-100/80 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64"
                         />
                     </div>
                     <button
@@ -364,14 +364,14 @@ export default function PipelinePage() {
                     {leadsByStage.map((column) => (
                         <div
                             key={column.stage}
-                            className="w-80 flex flex-col bg-gray-100 rounded-xl p-4 h-full max-h-[calc(100vh-14rem)]"
+                            className="w-80 flex flex-col bg-white/60 backdrop-blur-md rounded-2xl p-4 border border-white/50 shadow-sm h-full max-h-[calc(100vh-14rem)]"
                             onDragOver={handleDragOver}
                             onDrop={(e) => handleDrop(e, column.stage)}
                         >
                             <div className="flex justify-between items-center mb-4 px-1">
                                 <h3 className="font-semibold text-gray-700 flex items-center gap-2">
                                     {column.stage}
-                                    <span className="bg-white text-gray-500 px-2 py-0.5 rounded-full text-xs border border-gray-200">
+                                    <span className="bg-white text-gray-500 px-2 py-0.5 rounded-full text-xs border border-gray-100/80">
                                         {column.leads.length}
                                     </span>
                                 </h3>
@@ -386,7 +386,7 @@ export default function PipelinePage() {
                                             key={lead.id}
                                             draggable
                                             onDragStart={(e) => handleDragStart(e, lead.id)}
-                                            className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all cursor-grab active:cursor-grabbing group relative"
+                                            className="bg-white p-4 rounded-lg shadow-sm border border-gray-100/80 hover:shadow-md transition-all cursor-grab active:cursor-grabbing group relative"
                                         >
                                             <div className="flex justify-between items-start mb-2">
                                                 <h4 className="font-semibold text-gray-900 text-sm">{lead.name}</h4>
@@ -426,7 +426,7 @@ export default function PipelinePage() {
                                     );
                                 })}
                                 {column.leads.length === 0 && (
-                                    <div className="text-center py-8 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-lg">
+                                    <div className="text-center py-8 text-gray-400 text-sm border-2 border-dashed border-gray-100/80 rounded-lg">
                                         Drop here
                                     </div>
                                 )}
@@ -453,7 +453,7 @@ export default function PipelinePage() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Contact Name *</label>
                                     <input
                                         type="text"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                         placeholder="John Doe"
                                         value={newDeal.name || ''}
                                         onChange={(e) => setNewDeal({ ...newDeal, name: e.target.value })}
@@ -463,7 +463,7 @@ export default function PipelinePage() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Company *</label>
                                     <input
                                         type="text"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                         placeholder="Acme Corp"
                                         value={newDeal.company || ''}
                                         onChange={(e) => setNewDeal({ ...newDeal, company: e.target.value })}
@@ -473,7 +473,7 @@ export default function PipelinePage() {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Stage</label>
                                 <select
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
                                     value={newDeal.stage || 'Contacted'}
                                     onChange={(e) => setNewDeal({ ...newDeal, stage: e.target.value })}
                                 >
@@ -485,7 +485,7 @@ export default function PipelinePage() {
                             <div className="flex gap-3 mt-6">
                                 <button
                                     onClick={() => setIsAddModalOpen(false)}
-                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-blue-50/50 transition-colors font-medium"
                                 >
                                     Cancel
                                 </button>

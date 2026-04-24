@@ -83,7 +83,7 @@ export default function Contact() {
       await new Promise(resolve => setTimeout(resolve, 1000))
 
       // WhatsApp integration with better formatting
-      const phone = '250798284312'
+      const phone = '250792958752'
       const urgencyText = formData.urgency === 'urgent' ? 'URGENT: ' : ''
       const msg =
         `${urgencyText}New Inquiry from KIMU Website%0A%0A` +
@@ -162,8 +162,8 @@ export default function Contact() {
                     <FaPhone className="text-blue-600 mt-1 flex-shrink-0" />
                     <div>
                       <h3 className="text-lg font-semibold mb-1">Phone Numbers</h3>
-                      <p className="text-gray-600">+250 798 284 312</p>
-                      <p className="text-gray-600">+250 788 447 574</p>
+                      <p className="text-gray-600">+250 792 958 752</p>
+                      <p className="text-gray-600">+250 792 958 752</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
@@ -271,7 +271,7 @@ export default function Contact() {
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      placeholder="+250 798 284 312"
+                      placeholder="+250 792 958 752"
                       className={`w-full px-4 py-2.5 border ${errors.phone ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors`}
                     />
                     {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}

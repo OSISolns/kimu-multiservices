@@ -357,7 +357,7 @@ export default function TransportReportsPage() {
                     {reportData.upcomingMaintenance.length > 0 ? (
                       <div className="space-y-3">
                         {reportData.upcomingMaintenance.slice(0, 3).map((item, index) => (
-                          <div key={index} className="group p-4 bg-gray-50/50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
+                          <div key={index} className="group p-4 bg-gray-50/50 rounded-2xl border border-transparent hover:border-gray-100/80 transition-all">
                             <div className="flex justify-between items-start">
                               <div>
                                 <p className="text-sm font-black text-gray-900 uppercase">{item.vehicleName}</p>

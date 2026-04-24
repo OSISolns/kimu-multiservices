@@ -201,7 +201,7 @@ const buildWhatsAppLink = (vehicle: Vehicle, message?: string) => {
     message ??
     `Hello, I'm interested in ${vehicle.name} ${vehicle.year}. Could you share the application details?`;
 
-  return `https://wa.me/250798284312?text=${encodeURIComponent(composedMessage)}`;
+  return `https://wa.me/250792958752?text=${encodeURIComponent(composedMessage)}`;
 };
 
 // Vehicle Detail Modal Component with Image Gallery
@@ -395,7 +395,7 @@ function VehicleDetailModal({
                   Apply Now
                 </a>
                 <a
-                  href="tel:+250798284312"
+                  href="tel:+250792958752"
                   className="inline-flex items-center justify-center gap-2 border-2 border-blue-600 text-blue-600 px-5 py-3 rounded-xl hover:bg-blue-50 font-semibold"
                 >
                   <FaPhone className="text-sm" />

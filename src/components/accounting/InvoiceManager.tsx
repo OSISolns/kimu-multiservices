@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { FaPlus, FaEdit, FaTrash, FaFileInvoiceDollar, FaEye, FaDownload, FaReceipt, FaTimes, FaUserPlus, FaSpinner, FaCheckCircle } from 'react-icons/fa';
 import jsPDF from 'jspdf';
 import Image from 'next/image';
+import { addWatermark } from '@/lib/pdfGenerator';
 
 interface Invoice {
   id: number;
@@ -220,6 +221,9 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
   const generatePDF = async (invoice: Invoice) => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+
+    // Add Watermark
+    addWatermark(doc);
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 20;
     let yPosition = 20;
@@ -310,8 +314,8 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
     doc.text('KIMU Transport & Multiservices', margin, yPosition + 6);
     doc.text('Gisozi, KG 780 St, Kigali, Rwanda', margin, yPosition + 10);
     doc.text('Email: kimutransport6@gmail.com', margin, yPosition + 14);
-    doc.text('Phone: +250 798 284 312', margin, yPosition + 18);
-    doc.text('Phone: +250 788 447 574', margin, yPosition + 22);
+    doc.text('Phone: +250 792 958 752', margin, yPosition + 18);
+    doc.text('Phone: +250 792 958 752', margin, yPosition + 22);
 
     // Client Information
     doc.setFontSize(8);
@@ -513,6 +517,9 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
   const generateReceipt = async (invoice: Invoice) => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+
+    // Add Watermark
+    addWatermark(doc);
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 20;
     let yPosition = 20;
@@ -601,7 +608,7 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
     doc.text('KIMU Transport & Multiservices', margin, yPosition + 6);
     doc.text('Gisozi, KG 780 St, Kigali, Rwanda', margin, yPosition + 10);
     doc.text('Email: kimutransport6@gmail.com', margin, yPosition + 14);
-    doc.text('Phone: +250 798 284 312', margin, yPosition + 18);
+    doc.text('Phone: +250 792 958 752', margin, yPosition + 18);
 
     // Client Information
     doc.setFontSize(8);
@@ -1298,7 +1305,7 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
                         <div className="space-y-1 text-sm font-medium">
                           <p className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-orange-400 rounded-full"></span> Gisozi, KG 780 St, Kigali, Rwanda</p>
                           <p className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-orange-400 rounded-full"></span> kimutransport6@gmail.com</p>
-                          <p className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-orange-400 rounded-full"></span> +250 798 284 312 / +250 788 447 574</p>
+                          <p className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-orange-400 rounded-full"></span> +250 792 958 752 / +250 792 958 752</p>
                         </div>
                       </div>
                     </div>

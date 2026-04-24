@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import { LOGO_BASE64 } from './logo-base64';
 
 interface InvoiceData {
     invoiceNumber: string;
@@ -30,9 +31,37 @@ interface QuoteData {
     status: string;
 }
 
+export const addWatermark = (doc: jsPDF) => {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const imgWidth = 100;
+    const imgHeight = 100;
+    const x = (pageWidth - imgWidth) / 2;
+    const y = (pageHeight - imgHeight) / 2;
+
+    // Save current state
+    doc.saveGraphicsState();
+    
+    // Set transparency for watermark
+    try {
+        // @ts-ignore - jspdf types might be missing GState
+        doc.setGState(new doc.GState({ opacity: 0.1 }));
+    } catch (e) {
+        // Fallback or ignore if GState is not available
+    }
+
+    doc.addImage(LOGO_BASE64, 'PNG', x, y, imgWidth, imgHeight, undefined, 'FAST');
+    
+    // Restore state
+    doc.restoreGraphicsState();
+};
+
 export const generateInvoicePDF = (invoice: InvoiceData): jsPDF => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+
+    // Add Watermark
+    addWatermark(doc);
 
     // Header
     doc.setFontSize(24);
@@ -44,8 +73,9 @@ export const generateInvoicePDF = (invoice: InvoiceData): jsPDF => {
     doc.setFont('helvetica', 'normal');
     doc.text('KIMU Transport & Multiservices', 15, 35);
     doc.text('Kigali, Rwanda', 15, 40);
-    doc.text('info@kimutransport.com', 15, 45);
-    doc.text('+250 XXX XXX XXX', 15, 50);
+    doc.text('kimutransport6@gmail.com', 15, 45);
+    doc.text('+250 792 958 752', 15, 50);
+    doc.text('+250 792 958 752', 15, 55);
 
     // Invoice Details
     doc.setFont('helvetica', 'bold');
@@ -188,6 +218,9 @@ export const generateQuotePDF = (quote: QuoteData): jsPDF => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
 
+    // Add Watermark
+    addWatermark(doc);
+
     // Header
     doc.setFontSize(24);
     doc.setFont('helvetica', 'bold');
@@ -198,8 +231,9 @@ export const generateQuotePDF = (quote: QuoteData): jsPDF => {
     doc.setFont('helvetica', 'normal');
     doc.text('KIMU Transport & Multiservices', 15, 35);
     doc.text('Kigali, Rwanda', 15, 40);
-    doc.text('info@kimutransport.com', 15, 45);
-    doc.text('+250 XXX XXX XXX', 15, 50);
+    doc.text('kimutransport6@gmail.com', 15, 45);
+    doc.text('+250 792 958 752', 15, 50);
+    doc.text('+250 792 958 752', 15, 55);
 
     // Quote Details
     doc.setFont('helvetica', 'bold');

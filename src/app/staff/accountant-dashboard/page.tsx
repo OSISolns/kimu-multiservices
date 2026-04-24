@@ -386,7 +386,7 @@ export default function UpgradedAccountantDashboard() {
                 <select
                   value={dateRange}
                   onChange={(e) => setDateRange(e.target.value)}
-                  className="appearance-none pl-4 pr-10 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all cursor:pointer hover:bg-gray-50"
+                  className="appearance-none pl-4 pr-10 py-2 bg-white border border-gray-100/80 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all cursor:pointer hover:bg-blue-50/50 transition-colors"
                 >
                   <option value="all">All Time</option>
                   <option value="daily">Today</option>
@@ -398,7 +398,7 @@ export default function UpgradedAccountantDashboard() {
               </div>
               <button
                 onClick={handleDataUpdate}
-                className="p-2 bg-white border border-gray-200 rounded-xl text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm active:scale-95"
+                className="p-2 bg-white border border-gray-100/80 rounded-xl text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm active:scale-95"
                 title="Refresh Data"
               >
                 <FaSync className={isDataLoading ? "animate-spin" : ""} />

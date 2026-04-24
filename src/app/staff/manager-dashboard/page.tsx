@@ -136,7 +136,7 @@ export default function ManagerDashboardPage() {
 
     if (isLoading || loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="min-h-screen bg-gray-50/50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed flex-col flex items-center justify-center">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
                     <p className="text-gray-600">Loading dashboard...</p>
@@ -151,7 +151,7 @@ export default function ManagerDashboardPage() {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="min-h-screen bg-gray-50/50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed flex-col flex items-center justify-center">
                 <div className="bg-white rounded-2xl p-8 shadow-lg max-w-md w-full text-center">
                     <div className="text-red-500 text-5xl mb-4">⚠️</div>
                     <h2 className="text-xl font-bold text-gray-800 mb-2">Dashboard Error</h2>
@@ -240,7 +240,7 @@ export default function ManagerDashboardPage() {
                 <div className="bg-white rounded-2xl p-6 shadow lg:col-span-2">
                     <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><FaCog className="text-blue-500" /> Management Actions</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Link href="/staff/users" className="p-4 border border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-200 transition-all group">
+                        <Link href="/staff/users" className="p-4 border border-gray-100/80 rounded-xl hover:bg-blue-50 hover:border-blue-200 transition-all group">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-blue-100 text-blue-600 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors">
                                     <FaUsers />
@@ -252,7 +252,7 @@ export default function ManagerDashboardPage() {
                             </div>
                         </Link>
 
-                        <Link href="/staff/vehicles" className="p-4 border border-gray-200 rounded-xl hover:bg-orange-50 hover:border-orange-200 transition-all group">
+                        <Link href="/staff/vehicles" className="p-4 border border-gray-100/80 rounded-xl hover:bg-orange-50 hover:border-orange-200 transition-all group">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-orange-100 text-orange-600 rounded-lg group-hover:bg-orange-600 group-hover:text-white transition-colors">
                                     <FaCar />
@@ -264,7 +264,7 @@ export default function ManagerDashboardPage() {
                             </div>
                         </Link>
 
-                        <Link href="/staff/bookings" className="p-4 border border-gray-200 rounded-xl hover:bg-purple-50 hover:border-purple-200 transition-all group">
+                        <Link href="/staff/bookings" className="p-4 border border-gray-100/80 rounded-xl hover:bg-purple-50 hover:border-purple-200 transition-all group">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-purple-100 text-purple-600 rounded-lg group-hover:bg-purple-600 group-hover:text-white transition-colors">
                                     <FaCalendarAlt />
@@ -276,7 +276,7 @@ export default function ManagerDashboardPage() {
                             </div>
                         </Link>
 
-                        <Link href="/staff/reports" className="p-4 border border-gray-200 rounded-xl hover:bg-green-50 hover:border-green-200 transition-all group">
+                        <Link href="/staff/reports" className="p-4 border border-gray-100/80 rounded-xl hover:bg-green-50 hover:border-green-200 transition-all group">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-green-100 text-green-600 rounded-lg group-hover:bg-green-600 group-hover:text-white transition-colors">
                                     <FaFileAlt />

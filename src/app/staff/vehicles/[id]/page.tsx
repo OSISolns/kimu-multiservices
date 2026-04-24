@@ -91,7 +91,7 @@ export default function EditVehiclePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50/50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed ">
       <div className="max-w-3xl mx-auto px-4 py-8">
         <h1 className="text-2xl font-semibold mb-6">Edit Vehicle #{vehicle.id}</h1>
 
@@ -99,7 +99,7 @@ export default function EditVehiclePage() {
           <div className="mb-4 p-3 rounded bg-red-50 text-red-700 border border-red-200">{error}</div>
         )}
 
-        <div className="bg-white rounded-lg shadow p-6 space-y-6">
+        <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-gray-200/50 border border-white/60 p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>

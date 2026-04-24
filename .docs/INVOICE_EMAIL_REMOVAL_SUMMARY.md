@@ -38,7 +38,7 @@ The official KIMU Transport & Multiservices template is **already in use** for b
 - ✅ Company information: "KIMU Transport & Multiservices"
 - ✅ Address: Gisozi, KG 780 St, Kigali, Rwanda
 - ✅ Email: kimutransport6@gmail.com
-- ✅ Phones: +250 798 284 312, +250 788 447 574
+- ✅ Phones:  +250 792 958 752, +250 788 447 574
 - ✅ Payment information with all bank accounts:
   - COPEDU Bank: 1011020164888
   - Equity Bank: 4019201132304
