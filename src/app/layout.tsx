@@ -133,7 +133,6 @@ export default function RootLayout({
                   Contact <span className="text-orange-300">Us</span>
                 </h3>
                 <p>Phone: +250 792 958 752</p>
-                <p>Phone: +250 792 958 752</p>
                 <p>Email: kimutransport6@gmail.com</p>
                 <p>Address: Gisozi, KG 780 St</p>
               </div>

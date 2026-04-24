@@ -315,7 +315,6 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
     doc.text('Gisozi, KG 780 St, Kigali, Rwanda', margin, yPosition + 10);
     doc.text('Email: kimutransport6@gmail.com', margin, yPosition + 14);
     doc.text('Phone: +250 792 958 752', margin, yPosition + 18);
-    doc.text('Phone: +250 792 958 752', margin, yPosition + 22);
 
     // Client Information
     doc.setFontSize(8);

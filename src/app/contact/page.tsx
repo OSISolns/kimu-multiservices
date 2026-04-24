@@ -163,7 +163,6 @@ export default function Contact() {
                     <div>
                       <h3 className="text-lg font-semibold mb-1">Phone Numbers</h3>
                       <p className="text-gray-600">+250 792 958 752</p>
-                      <p className="text-gray-600">+250 792 958 752</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
