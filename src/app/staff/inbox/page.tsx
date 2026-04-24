@@ -26,6 +26,7 @@ export default function Inbox() {
   }, [user]);
 
   const fetchNotifications = async () => {
+    if (!user) return;
     try {
       setIsLoading(true);
       const response = await fetch(`/api/notifications?userId=${user.id}`);
@@ -59,6 +60,7 @@ export default function Inbox() {
   };
 
   const deleteNotification = async (id: number) => {
+    if (!user) return;
     if (!confirm('Are you sure you want to delete this message?')) return;
     try {
       const response = await fetch(`/api/notifications/${id}`, {
@@ -74,6 +76,7 @@ export default function Inbox() {
   };
 
   const markAllAsRead = async () => {
+    if (!user) return;
     try {
       const response = await fetch('/api/notifications/mark-all-read', {
         method: 'POST',
@@ -92,6 +95,7 @@ export default function Inbox() {
   };
 
   if (userLoading) return <LoadingSpinner message="Opening Inbox..." fullScreen={true} />;
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-slate-50 py-10 px-4">
