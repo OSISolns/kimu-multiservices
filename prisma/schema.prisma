@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
   // Use default output in node_modules/.prisma to avoid Windows file locks on engine DLLs
 }
@@ -10,108 +10,109 @@ datasource db {
 }
 
 model User {
-  id                    Int      @id @default(autoincrement())
-  username              String   @unique
+  id                    Int       @id @default(autoincrement())
+  username              String    @unique
   fullName              String?
   email                 String?
   phone                 String?
   passwordHash          String
-  role                  String   @default("agent")
+  role                  String    @default("agent")
   department            String?
-  status                String   @default("active")
+  status                String    @default("active")
   profilePicture        String?
-  createdAt             DateTime @default(now())
+  createdAt             DateTime  @default(now())
   lastLogin             DateTime?
-  emailNotifications    Boolean  @default(false)
-  whatsappNotifications Boolean  @default(false)
-  
+  emailNotifications    Boolean   @default(false)
+  whatsappNotifications Boolean   @default(false)
+
   // Preferences
-  theme                 String?  @default("system")
-  language              String?  @default("en")
-  timezone              String?  @default("Africa/Kigali")
-  
+  theme    String? @default("system")
+  language String? @default("en")
+  timezone String? @default("Africa/Kigali")
+
   // Privacy Settings
-  profileVisibility     String?  @default("team")
-  showEmail             Boolean  @default(false)
-  showPhone             Boolean  @default(false)
-  
-  employee              Employee?
-  reportTemplates       ReportTemplate[]
-  reports               Report[]
-  dashboards            Dashboard[]
-  analyticsEvents       AnalyticsEvent[]
-  carListings           CarListing[]
+  profileVisibility String? @default("team")
+  showEmail         Boolean @default(false)
+  showPhone         Boolean @default(false)
+
+  employee        Employee?
+  reportTemplates ReportTemplate[]
+  reports         Report[]
+  dashboards      Dashboard[]
+  analyticsEvents AnalyticsEvent[]
+  carListings     CarListing[]
 }
 
 model Vehicle {
-  id                    Int      @id @default(autoincrement())
-  name                  String
-  image                 String
-  type                  String
-  category              String
-  price                 String
-  year                  Int
-  engine                String
-  mileage               String
-  transmission          String
-  fuel                  String
-  capacity              String
-  doors                 Int
-  description           String
-  isAvailable           Boolean  @default(true)
-  power                 String
-  fuelEfficiency        String
-  quantity              Int      @default(1)
-  status                String   @default("available")
-  maintenanceNotes      String?
-  maintenanceDate       DateTime?
-  quantityUpdateReason  String?
-  quantityUpdateDate    DateTime?
-  licensePlate          String?
-  vehicleId             String?
+  id                   Int               @id @default(autoincrement())
+  name                 String
+  image                String
+  type                 String
+  category             String
+  price                String
+  year                 Int
+  engine               String
+  mileage              String
+  transmission         String
+  fuel                 String
+  capacity             String
+  doors                Int
+  description          String
+  isAvailable          Boolean           @default(true)
+  power                String
+  fuelEfficiency       String
+  quantity             Int               @default(1)
+  status               String            @default("available")
+  maintenanceNotes     String?
+  maintenanceDate      DateTime?
+  quantityUpdateReason String?
+  quantityUpdateDate   DateTime?
+  licensePlate         String?
+  vehicleId            String?
+  financeContracts     FinanceContract[]
 }
 
 model Booking {
-  id               Int      @id @default(autoincrement())
-  type             String
-  name             String?
-  email            String?
-  phone            String?
-  nationality      String?
-  idOrPassport     String?
-  carType          String?
-  pickupDate       String?
-  pickupTime       String?
-  returnDate       String?
-  returnTime       String?
-  rentalDays       Int?
-  returnConfirmed  Boolean @default(false)
-  fullTank         Boolean @default(false)
-  pickupLocation   String?
-  dropoffLocation  String?
-  flightNumber     String?
-  notes            String?
-  status           String  @default("Active")
-  createdAt        DateTime @default(now())
+  id              Int      @id @default(autoincrement())
+  type            String
+  name            String?
+  email           String?
+  phone           String?
+  nationality     String?
+  idOrPassport    String?
+  carType         String?
+  pickupDate      String?
+  pickupTime      String?
+  returnDate      String?
+  returnTime      String?
+  rentalDays      Int?
+  returnConfirmed Boolean  @default(false)
+  fullTank        Boolean  @default(false)
+  pickupLocation  String?
+  dropoffLocation String?
+  flightNumber    String?
+  notes           String?
+  status          String   @default("Active")
+  createdAt       DateTime @default(now())
 }
 
 model Notification {
-  id          Int      @id @default(autoincrement())
-  userId      Int?
-  message     String
-  type        String
-  read        Boolean @default(false)
-  createdAt   DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  message   String
+  type      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
 
 model ActivityLog {
-  id          Int      @id @default(autoincrement())
-  userId      Int?
-  action      String
-  details     String?
-  ipAddress   String?
-  userAgent   String?
-  createdAt   DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  action    String
+  details   String?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
 }
 
 model SystemLog {
@@ -125,33 +126,31 @@ model SystemLog {
 model Payment {
   id            Int      @id @default(autoincrement())
   bookingId     Int
-  bookingType   String   // e.g. "Car Rental", "Hotel", "Taxi"
+  bookingType   String // e.g. "Car Rental", "Hotel", "Taxi"
   amount        Float
   currency      String   @default("RWF")
-  paymentMethod String   // "cash", "card", "mobile_money", "bank_transfer"
-  status        String   // "pending", "completed", "failed", "refunded"
+  paymentMethod String // "cash", "card", "mobile_money", "bank_transfer"
+  status        String // "pending", "completed", "failed", "refunded"
   transactionId String?
   paymentDate   DateTime @default(now())
   userId        Int?
 }
 
-
-
 model Lead {
-  id            Int      @id @default(autoincrement())
-  name          String
-  company       String
-  stage         String   @default("Contacted")
-  value         Float    @default(0)
-  contact       String?
-  email         String?
-  location      String?
-  lastContact   DateTime @default(now())
-  nextFollowUp  DateTime
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  
-  quotes        Quote[]
+  id           Int      @id @default(autoincrement())
+  name         String
+  company      String
+  stage        String   @default("Contacted")
+  value        Float    @default(0)
+  contact      String?
+  email        String?
+  location     String?
+  lastContact  DateTime @default(now())
+  nextFollowUp DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  quotes Quote[]
 }
 
 model Campaign {
@@ -169,12 +168,12 @@ model Campaign {
 }
 
 model Activity {
-  id       Int      @id @default(autoincrement())
-  date     DateTime @default(now())
-  client   String
-  activity String
-  outcome  String
-  type     String   @default("call")
+  id        Int      @id @default(autoincrement())
+  date      DateTime @default(now())
+  client    String
+  activity  String
+  outcome   String
+  type      String   @default("call")
   createdAt DateTime @default(now())
 }
 
@@ -195,30 +194,30 @@ model Quote {
 
 // Accounting Models
 model Income {
-  id               Int       @id @default(autoincrement())
+  id               Int      @id @default(autoincrement())
   description      String
   amount           Float
-  category         String    // car_rental, taxi_service, airport_transfer, hotel, car_sales, refund, other
-  paymentMethod    String    // MTN Momo, Equity Bank, BK Bank, Cash
+  category         String // car_rental, taxi_service, airport_transfer, hotel, car_sales, refund, other
+  paymentMethod    String // MTN Momo, Equity Bank, BK Bank, Cash
   date             DateTime
   reference        String?
   notes            String?
   clientName       String?
   clientPhone      String?
-  isRefund         Boolean?  @default(false)
+  isRefund         Boolean? @default(false)
   originalIncomeId Int?
-  originalIncome   Income?   @relation("IncomeRefunds", fields: [originalIncomeId], references: [id], onDelete: SetNull)
-  refunds          Income[]  @relation("IncomeRefunds")
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  originalIncome   Income?  @relation("IncomeRefunds", fields: [originalIncomeId], references: [id], onDelete: SetNull)
+  refunds          Income[] @relation("IncomeRefunds")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model Expense {
   id            Int      @id @default(autoincrement())
   description   String
   amount        Float
-  category      String   // fuel, maintenance, insurance, salaries, wages, utilities, office, marketing, traffic_tickets, other
-  paymentMethod String   // MTN Momo, Equity Bank, BK Bank, Cash
+  category      String // fuel, maintenance, insurance, salaries, wages, utilities, office, marketing, traffic_tickets, other
+  paymentMethod String // MTN Momo, Equity Bank, BK Bank, Cash
   date          DateTime
   receiptNumber String?
   notes         String?
@@ -227,86 +226,86 @@ model Expense {
 }
 
 model Invoice {
-  id            Int      @id @default(autoincrement())
-  invoiceNumber String   @unique
+  id            Int       @id @default(autoincrement())
+  invoiceNumber String    @unique
   clientName    String
   clientEmail   String
   clientPhone   String?
   amount        Float
-  taxRate       Float    @default(18) // Rwanda VAT rate
+  taxRate       Float     @default(18) // Rwanda VAT rate
   taxAmount     Float
   totalAmount   Float
   grandTotal    Float
   dueDate       DateTime
   description   String
-  items         Json     // Array of invoice items
-  status        String   @default("pending") // pending, outstanding, paid
-  emailSent     Boolean  @default(false)
+  items         Json // Array of invoice items
+  status        String    @default("pending") // pending, outstanding, paid
+  emailSent     Boolean   @default(false)
   emailSentAt   DateTime?
   emailSubject  String?
   emailMessage  String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model Budget {
   id          Int      @id @default(autoincrement())
-  category    String   // fuel, maintenance, insurance, salaries, wages, utilities, office, marketing, traffic_tickets, other
+  category    String // fuel, maintenance, insurance, salaries, wages, utilities, office, marketing, traffic_tickets, other
   amount      Float
-  period      String   // monthly, quarterly, yearly
+  period      String // monthly, quarterly, yearly
   year        Int
   month       Int?
   quarter     Int?
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   @@unique([category, period, year, month, quarter])
 }
 
 // Analytics and Reporting Models
 model ReportTemplate {
-  id                Int      @id @default(autoincrement())
-  name              String
-  description       String?
-  category          String   // financial, operational, customer, employee
-  query             Json     // Report query configuration
-  parameters        Json?    // Report parameters schema
-  isActive          Boolean  @default(true)
-  createdBy         Int
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
-  user              User     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-  reports           Report[]
-  
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  category    String // financial, operational, customer, employee
+  query       Json // Report query configuration
+  parameters  Json? // Report parameters schema
+  isActive    Boolean  @default(true)
+  createdBy   Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user    User     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  reports Report[]
+
   @@index([category])
   @@index([isActive])
 }
 
 model Report {
-  id                Int      @id @default(autoincrement())
-  templateId        Int?
-  name              String
-  description       String?
-  category          String
-  type              String   // scheduled, on_demand, real_time
-  status            String   @default("pending") // pending, running, completed, failed
-  parameters        Json?    // Report parameters used
-  filters           Json?    // Applied filters
-  data              Json?    // Report data/results
-  filePath          String?  // Path to generated file
-  fileFormat        String?  // pdf, excel, csv, json
-  generatedBy       Int
-  generatedAt       DateTime?
-  completedAt       DateTime?
-  expiresAt         DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
-  template          ReportTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
-  user              User     @relation(fields: [generatedBy], references: [id], onDelete: Cascade)
-  
+  id          Int       @id @default(autoincrement())
+  templateId  Int?
+  name        String
+  description String?
+  category    String
+  type        String // scheduled, on_demand, real_time
+  status      String    @default("pending") // pending, running, completed, failed
+  parameters  Json? // Report parameters used
+  filters     Json? // Applied filters
+  data        Json? // Report data/results
+  filePath    String? // Path to generated file
+  fileFormat  String? // pdf, excel, csv, json
+  generatedBy Int
+  generatedAt DateTime?
+  completedAt DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  template ReportTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  user     User            @relation(fields: [generatedBy], references: [id], onDelete: Cascade)
+
   @@index([category])
   @@index([type])
   @@index([status])
@@ -314,36 +313,36 @@ model Report {
 }
 
 model Dashboard {
-  id                Int      @id @default(autoincrement())
-  name              String
-  description       String?
-  layout            Json     // Dashboard layout configuration
-  widgets           Json     // Widget configurations
-  isPublic          Boolean  @default(false)
-  isDefault         Boolean  @default(false)
-  createdBy         Int
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
-  user              User     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-  
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  layout      Json // Dashboard layout configuration
+  widgets     Json // Widget configurations
+  isPublic    Boolean  @default(false)
+  isDefault   Boolean  @default(false)
+  createdBy   Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+
   @@index([isPublic])
   @@index([isDefault])
 }
 
 model AnalyticsEvent {
-  id                Int      @id @default(autoincrement())
-  eventType         String   // page_view, user_action, system_event, business_event
-  eventName         String
-  properties        Json?    // Event properties
-  userId            Int?
-  sessionId         String?
-  ipAddress         String?
-  userAgent         String?
-  timestamp         DateTime @default(now())
-  
-  user              User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
+  id         Int      @id @default(autoincrement())
+  eventType  String // page_view, user_action, system_event, business_event
+  eventName  String
+  properties Json? // Event properties
+  userId     Int?
+  sessionId  String?
+  ipAddress  String?
+  userAgent  String?
+  timestamp  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
   @@index([eventType])
   @@index([eventName])
   @@index([userId])
@@ -351,32 +350,32 @@ model AnalyticsEvent {
 }
 
 model Employee {
-  id                Int      @id @default(autoincrement())
-  userId            Int?     @unique
-  firstName         String?
-  lastName          String?
-  email             String?
-  phone             String?
-  employeeId        String   @unique
-  position          String
-  department        String
-  employmentType    String   // full-time, part-time, contract
-  hireDate          DateTime
-  salary            Float
-  bankAccount       String?
-  bankName          String?
-  taxId             String?
-  socialSecurityId  String?
-  status            String   @default("active") // active, inactive, terminated
-  terminationDate   DateTime?
-  notes             String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id               Int       @id @default(autoincrement())
+  userId           Int?      @unique
+  firstName        String?
+  lastName         String?
+  email            String?
+  phone            String?
+  employeeId       String    @unique
+  position         String
+  department       String
+  employmentType   String // full-time, part-time, contract
+  hireDate         DateTime
+  salary           Float
+  bankAccount      String?
+  bankName         String?
+  taxId            String?
+  socialSecurityId String?
+  status           String    @default("active") // active, inactive, terminated
+  terminationDate  DateTime?
+  notes            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  user              User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  salaryStructures  SalaryStructure[]
-  payrollItems      PayrollItem[]
-  payrolls          Payroll[]
+  user             User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  salaryStructures SalaryStructure[]
+  payrollItems     PayrollItem[]
+  payrolls         Payroll[]
 
   @@index([employeeId])
   @@index([department])
@@ -384,54 +383,54 @@ model Employee {
 }
 
 model SalaryStructure {
-  id           Int      @id @default(autoincrement())
-  employeeId   Int
-  baseSalary   Float
-  allowances   Json     // JSON object for various allowances
-  deductions   Json     // JSON object for various deductions
+  id            Int       @id @default(autoincrement())
+  employeeId    Int
+  baseSalary    Float
+  allowances    Json // JSON object for various allowances
+  deductions    Json // JSON object for various deductions
   effectiveDate DateTime
-  endDate      DateTime?
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  endDate       DateTime?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@index([employeeId])
   @@index([effectiveDate])
 }
 
 model Payroll {
-  id               Int      @id @default(autoincrement())
-  employeeId       Int
-  period           String   // e.g., "2024-01"
-  year             Int
-  month            Int
-  status           String   @default("draft") // draft, processed, paid
-  grossSalary      Float
-  netSalary        Float
-  totalAllowances  Float    @default(0)
-  totalDeductions  Float    @default(0)
-  workingDays      Int
-  actualDays       Int
-  overtimeHours    Float    @default(0)
-  overtimePay      Float    @default(0)
-  bonus            Float    @default(0)
-  advance          Float    @default(0)
-  loanDeduction    Float    @default(0)
-  taxDeduction     Float    @default(0)
-  socialSecurity   Float    @default(0)
-  otherDeductions  Float    @default(0)
-  paymentMethod    String?  // bank, cash, mobile_money
-  paymentDate      DateTime?
-  processedBy      Int?
-  processedAt      DateTime?
-  notes            String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id              Int       @id @default(autoincrement())
+  employeeId      Int
+  period          String // e.g., "2024-01"
+  year            Int
+  month           Int
+  status          String    @default("draft") // draft, processed, paid
+  grossSalary     Float
+  netSalary       Float
+  totalAllowances Float     @default(0)
+  totalDeductions Float     @default(0)
+  workingDays     Int
+  actualDays      Int
+  overtimeHours   Float     @default(0)
+  overtimePay     Float     @default(0)
+  bonus           Float     @default(0)
+  advance         Float     @default(0)
+  loanDeduction   Float     @default(0)
+  taxDeduction    Float     @default(0)
+  socialSecurity  Float     @default(0)
+  otherDeductions Float     @default(0)
+  paymentMethod   String? // bank, cash, mobile_money
+  paymentDate     DateTime?
+  processedBy     Int?
+  processedAt     DateTime?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  employee         Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  payrollItems     PayrollItem[]
+  employee     Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  payrollItems PayrollItem[]
 
   @@index([employeeId])
   @@index([period])
@@ -443,15 +442,15 @@ model PayrollItem {
   id          Int      @id @default(autoincrement())
   payrollId   Int
   employeeId  Int
-  type        String   // allowance, deduction, bonus, etc.
+  type        String // allowance, deduction, bonus, etc.
   name        String
   amount      Float
   percentage  Float?
   description String?
   createdAt   DateTime @default(now())
 
-  payroll     Payroll  @relation(fields: [payrollId], references: [id], onDelete: Cascade)
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  payroll  Payroll  @relation(fields: [payrollId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@index([payrollId])
   @@index([employeeId])
@@ -459,58 +458,92 @@ model PayrollItem {
 }
 
 model PettyCashTransaction {
-  id            Int      @id @default(autoincrement())
-  date          DateTime @default(now())
-  description   String
-  amount        Float
-  type          String   // "CREDIT" (Deposit), "DEBIT" (Expense)
-  category      String?
-  receiptUrl    String?
-  requestedBy   String?
-  approvedBy    String?
-  status        String   @default("pending") // pending, approved, rejected, completed
-  balanceAfter  Float?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  date         DateTime @default(now())
+  description  String
+  amount       Float
+  type         String // "CREDIT" (Deposit), "DEBIT" (Expense)
+  category     String?
+  receiptUrl   String?
+  requestedBy  String?
+  approvedBy   String?
+  status       String   @default("pending") // pending, approved, rejected, completed
+  balanceAfter Float?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model SavedItem {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  itemType    String   // "vehicle", "lead", "quote", etc.
-  itemId      Int      // ID of the saved item
-  itemData    Json?    // Cached item data for quick display
-  notes       String?  // Optional user notes
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  itemType  String // "vehicle", "lead", "quote", etc.
+  itemId    Int // ID of the saved item
+  itemData  Json? // Cached item data for quick display
+  notes     String? // Optional user notes
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@unique([userId, itemType, itemId])
   @@index([userId])
   @@index([itemType])
 }
 
 model CarListing {
-  id            Int      @id @default(autoincrement())
-  userId        Int
-  make          String
-  model         String
-  year          Int
-  price         Float
-  mileage       Int
-  condition     String   // New, Used
-  transmission  String   // Automatic, Manual
-  fuelType      String   // Petrol, Diesel, Electric, Hybrid
-  color         String
-  description   String?
-  images        Json     // Array of image URLs
-  status        String   @default("pending") // pending, approved, sold, rejected
-  contactPhone  String
-  location      String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  make         String
+  model        String
+  year         Int
+  price        Float
+  mileage      Int
+  condition    String // New, Used
+  transmission String // Automatic, Manual
+  fuelType     String // Petrol, Diesel, Electric, Hybrid
+  color        String
+  description  String?
+  images       Json // Array of image URLs
+  status       String   @default("pending") // pending, approved, sold, rejected
+  contactPhone String
+  location     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
+}
+
+// Car Finance Tracking
+model FinanceContract {
+  id           String    @id @default(cuid())
+  vehicleId    Int
+  vehicle      Vehicle   @relation(fields: [vehicleId], references: [id])
+  clientName   String
+  clientPhone  String
+  clientEmail  String?
+  totalPrice   Float
+  downPayment  Float
+  amountPaid   Float     @default(0)
+  dailyRate    Float
+  termMonths   Int
+  startDate    DateTime?
+  endDate      DateTime?
+  maturityDate DateTime?
+  status       String    @default("PENDING") // PENDING, READY_FOR_RELEASE, ACTIVE, COMPLETED, EXPIRED_UNPAID
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  payments FinancePayment[]
+}
+
+model FinancePayment {
+  id          String          @id @default(cuid())
+  contractId  String
+  contract    FinanceContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  amount      Float
+  paymentDate DateTime        @default(now())
+  recordedBy  Int?
+  notes       String?
+  createdAt   DateTime        @default(now())
 }
