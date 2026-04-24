@@ -30,6 +30,7 @@ export default function SalesDashboardRoot() {
   }, [user]);
 
   const fetchDashboardData = async () => {
+    if (!user) return;
     try {
       setIsLoading(true);
       // Fetch multiple data points in parallel
@@ -61,6 +62,8 @@ export default function SalesDashboardRoot() {
   };
 
   if (userLoading || isLoading) return <LoadingSpinner message="Assembling Mission Control..." fullScreen={true} />;
+  if (!user) return null;
+
 
   const quickLinks = [
     { title: 'Airport Transfers', icon: <FaPlane />, color: 'bg-blue-500', href: '/staff/airport-transfers', count: '---' },
