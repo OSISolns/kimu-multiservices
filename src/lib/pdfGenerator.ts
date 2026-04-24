@@ -75,7 +75,6 @@ export const generateInvoicePDF = (invoice: InvoiceData): jsPDF => {
     doc.text('Kigali, Rwanda', 15, 40);
     doc.text('kimutransport6@gmail.com', 15, 45);
     doc.text('+250 792 958 752', 15, 50);
-    doc.text('+250 792 958 752', 15, 55);
 
     // Invoice Details
     doc.setFont('helvetica', 'bold');
@@ -233,7 +232,6 @@ export const generateQuotePDF = (quote: QuoteData): jsPDF => {
     doc.text('Kigali, Rwanda', 15, 40);
     doc.text('kimutransport6@gmail.com', 15, 45);
     doc.text('+250 792 958 752', 15, 50);
-    doc.text('+250 792 958 752', 15, 55);
 
     // Quote Details
     doc.setFont('helvetica', 'bold');

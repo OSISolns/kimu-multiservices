@@ -1305,7 +1305,7 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
                         <div className="space-y-1 text-sm font-medium">
                           <p className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-orange-400 rounded-full"></span> Gisozi, KG 780 St, Kigali, Rwanda</p>
                           <p className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-orange-400 rounded-full"></span> kimutransport6@gmail.com</p>
-                          <p className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-orange-400 rounded-full"></span> +250 792 958 752 / +250 792 958 752</p>
+                          <p className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-orange-400 rounded-full"></span> +250 792 958 752</p>
                         </div>
                       </div>
                     </div>
