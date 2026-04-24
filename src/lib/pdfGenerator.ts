@@ -40,6 +40,7 @@ export const addWatermark = (doc: jsPDF) => {
     const y = (pageHeight - imgHeight) / 2;
 
     // Save current state
+    // @ts-ignore
     doc.saveGraphicsState();
     
     // Set transparency for watermark
@@ -53,6 +54,7 @@ export const addWatermark = (doc: jsPDF) => {
     doc.addImage(LOGO_BASE64, 'PNG', x, y, imgWidth, imgHeight, undefined, 'FAST');
     
     // Restore state
+    // @ts-ignore
     doc.restoreGraphicsState();
 };
 
