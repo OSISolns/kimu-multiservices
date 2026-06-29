@@ -164,6 +164,10 @@ export default function Contact() {
                       <h3 className="text-lg font-semibold mb-1">Phone Numbers</h3>
                       <p className="text-gray-600">+250 792 958 752</p>
                     </div>
+                       <div>
+                      <h3 className="text-lg font-semibold mb-1">Hot Line</h3>
+                      <p className="text-gray-600">6364</p>
+                    </div>
                   </div>
                   <div className="flex items-start space-x-3">
                     <FaEnvelope className="text-orange-600 mt-1 flex-shrink-0" />
