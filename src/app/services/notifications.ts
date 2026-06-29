@@ -8,7 +8,7 @@ const AGENT_PHONE_NUMBERS = [
 ];
 
 const AGENT_EMAILS = [
-  'valery.osisolns@gmail.com',
+  'kimutransport6@gmail.com',
 ];
 
 // Admin emails for financial notifications

@@ -17,7 +17,13 @@ import {
   FaGasPump,
   FaCalendar,
   FaRoad,
-  FaEye
+  FaEye,
+  FaPlaneArrival,
+  FaPlaneDeparture,
+  FaCoins,
+  FaBuilding,
+  FaCrown,
+  FaGem
 } from 'react-icons/fa'
 import { useState, useEffect, useCallback, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
@@ -453,7 +459,7 @@ function OffersContent() {
                     <h3 className="font-bold text-xl mb-3 text-gray-900">City Rides</h3>
                     <p className="text-gray-600 leading-relaxed">Quick and reliable city transportation with GPS tracking</p>
                     <div className="mt-4 flex items-center text-yellow-600 text-sm">
-                      <span className="animate-pulse">🚗</span>
+                      <FaCar className="animate-pulse text-lg" />
                       <span className="ml-2">Available Now</span>
                     </div>
                   </div>
@@ -468,7 +474,7 @@ function OffersContent() {
                     <h3 className="font-bold text-xl mb-3 text-gray-900">Airport Transfer</h3>
                     <p className="text-gray-600 leading-relaxed">Comfortable airport pickups and drop-offs with flight monitoring</p>
                     <div className="mt-4 flex items-center text-blue-600 text-sm">
-                      <span className="animate-pulse">✈️</span>
+                      <FaPlane className="animate-pulse text-lg" />
                       <span className="ml-2">24/7 Service</span>
                     </div>
                   </div>
@@ -483,7 +489,7 @@ function OffersContent() {
                     <h3 className="font-bold text-xl mb-3 text-gray-900">Long Distance</h3>
                     <p className="text-gray-600 leading-relaxed">Inter-city travel with comfort and professional drivers</p>
                     <div className="mt-4 flex items-center text-green-600 text-sm">
-                      <span className="animate-pulse">🛣️</span>
+                      <FaRoad className="animate-pulse text-lg" />
                       <span className="ml-2">Premium Service</span>
                     </div>
                   </div>
@@ -540,7 +546,7 @@ function OffersContent() {
                     <h3 className="font-bold text-xl mb-3 text-gray-900">Airport Pickup</h3>
                     <p className="text-gray-600 leading-relaxed">Meet & greet service with flight monitoring and real-time updates</p>
                     <div className="mt-4 flex items-center text-green-600 text-sm">
-                      <span className="animate-pulse">🛬</span>
+                      <FaPlaneArrival className="animate-pulse text-lg" />
                       <span className="ml-2">Flight Tracking</span>
                     </div>
                   </div>
@@ -555,7 +561,7 @@ function OffersContent() {
                     <h3 className="font-bold text-xl mb-3 text-gray-900">Airport Drop-off</h3>
                     <p className="text-gray-600 leading-relaxed">Reliable departure transportation with punctual service</p>
                     <div className="mt-4 flex items-center text-teal-600 text-sm">
-                      <span className="animate-pulse">🛫</span>
+                      <FaPlaneDeparture className="animate-pulse text-lg" />
                       <span className="ml-2">On-Time Guarantee</span>
                     </div>
                   </div>
@@ -607,16 +613,16 @@ function OffersContent() {
                   <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-yellow-500 rounded-2xl blur opacity-0 group-hover:opacity-75 transition-all duration-500"></div>
                   <div className="relative bg-white rounded-2xl p-8 shadow-xl border border-orange-100 group-hover:shadow-2xl group-hover:-translate-y-2 transition-all duration-500">
                     <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-yellow-100 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                      <span className="text-3xl">🏨</span>
+                      <FaHotel className="text-3xl text-orange-600" />
                     </div>
                     <h3 className="font-bold text-xl mb-3 text-gray-900">Budget Hotels</h3>
                     <p className="text-gray-600 leading-relaxed">Comfortable and affordable options with essential amenities</p>
                     <div className="mt-4 flex items-center text-orange-600 text-sm">
-                      <span className="animate-pulse">💰</span>
+                      <FaCoins className="animate-pulse text-lg" />
                       <span className="ml-2">Best Value</span>
                     </div>
                     <div className="mt-2 flex items-center text-orange-600 text-sm">
-                      <span className="animate-pulse">⭐</span>
+                      <FaStar className="animate-pulse text-lg" />
                       <span className="ml-2">3-Star Quality</span>
                     </div>
                   </div>
@@ -626,16 +632,16 @@ function OffersContent() {
                   <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-pink-500 rounded-2xl blur opacity-0 group-hover:opacity-75 transition-all duration-500"></div>
                   <div className="relative bg-white rounded-2xl p-8 shadow-xl border border-red-100 group-hover:shadow-2xl group-hover:-translate-y-2 transition-all duration-500">
                     <div className="w-16 h-16 bg-gradient-to-br from-red-100 to-pink-100 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                      <span className="text-3xl">🏢</span>
+                      <FaBuilding className="text-3xl text-red-600" />
                     </div>
                     <h3 className="font-bold text-xl mb-3 text-gray-900">Mid-Range Hotels</h3>
                     <p className="text-gray-600 leading-relaxed">Quality accommodation with premium amenities and services</p>
                     <div className="mt-4 flex items-center text-red-600 text-sm">
-                      <span className="animate-pulse">✨</span>
+                      <FaGem className="animate-pulse text-lg" />
                       <span className="ml-2">Premium Features</span>
                     </div>
                     <div className="mt-2 flex items-center text-red-600 text-sm">
-                      <span className="animate-pulse">⭐</span>
+                      <FaStar className="animate-pulse text-lg" />
                       <span className="ml-2">4-Star Quality</span>
                     </div>
                   </div>
@@ -645,16 +651,16 @@ function OffersContent() {
                   <div className="absolute inset-0 bg-gradient-to-r from-pink-400 to-purple-500 rounded-2xl blur opacity-0 group-hover:opacity-75 transition-all duration-500"></div>
                   <div className="relative bg-white rounded-2xl p-8 shadow-xl border border-pink-100 group-hover:shadow-2xl group-hover:-translate-y-2 transition-all duration-500">
                     <div className="w-16 h-16 bg-gradient-to-br from-pink-100 to-purple-100 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                      <span className="text-3xl">🏰</span>
+                      <FaCrown className="text-3xl text-pink-600" />
                     </div>
                     <h3 className="font-bold text-xl mb-3 text-gray-900">Luxury Hotels</h3>
                     <p className="text-gray-600 leading-relaxed">Premium hotels and resorts with world-class amenities</p>
                     <div className="mt-4 flex items-center text-pink-600 text-sm">
-                      <span className="animate-pulse">👑</span>
+                      <FaCrown className="animate-pulse text-lg" />
                       <span className="ml-2">Luxury Experience</span>
                     </div>
                     <div className="mt-2 flex items-center text-pink-600 text-sm">
-                      <span className="animate-pulse">⭐</span>
+                      <FaStar className="animate-pulse text-lg" />
                       <span className="ml-2">5-Star Quality</span>
                     </div>
                   </div>

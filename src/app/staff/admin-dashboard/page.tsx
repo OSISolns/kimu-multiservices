@@ -29,6 +29,32 @@ import {
   FaArrowUp,
 } from "react-icons/fa";
 
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+} from 'chart.js';
+import { Chart as ReactChart } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement
+);
+
 type Booking = any;
 type Payment = any;
 type Notification = any;
@@ -48,6 +74,7 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [breakdownTab, setBreakdownTab] = useState<'bookings' | 'roles'>('bookings');
 
   useEffect(() => {
     if (isLoading) return;
@@ -138,8 +165,11 @@ export default function AdminDashboardPage() {
         const vehiclesData = Array.isArray(extractData(vehiclesRes, [])) ? extractData(vehiclesRes, []) : [];
         const quotesData = extractData(quotesRes, {})?.quotes || extractData(quotesRes, {})?.data || (Array.isArray(extractData(quotesRes, [])) ? extractData(quotesRes, []) : []);
         const leadsData = extractData(leadsRes, {})?.leads || extractData(leadsRes, {})?.data || (Array.isArray(extractData(leadsRes, [])) ? extractData(leadsRes, []) : []);
-        const systemLogsData = Array.isArray(extractData(systemLogsRes, [])) ? extractData(systemLogsRes, []) : [];
-        const activityLogsData = Array.isArray(extractData(activityLogsRes, [])) ? extractData(activityLogsRes, []) : [];
+        const systemLogsObj = extractData(systemLogsRes, {});
+        const systemLogsData = Array.isArray(systemLogsObj) ? systemLogsObj : (systemLogsObj?.systemLogs || []);
+        
+        const activityLogsObj = extractData(activityLogsRes, {});
+        const activityLogsData = Array.isArray(activityLogsObj) ? activityLogsObj : (activityLogsObj?.activityLogs || []);
 
         console.log('Parsed data:', {
           bookings: bookingsData.length,
@@ -252,6 +282,189 @@ export default function AdminDashboardPage() {
     return types;
   }, [bookings]);
 
+  const roleLabelsLocal: Record<string, string> = {
+    admin: 'System Admin',
+    manager: 'Manager',
+    accountant: 'Accountant',
+    staff: 'Sales Staff',
+    'transport-officer': 'Transport Officer',
+    operations: 'Operations',
+    agent: 'Field Agent',
+    'sales-representative': 'Sales Representative',
+  };
+
+  const roleDistribution = useMemo(() => {
+    if (!Array.isArray(users)) return {};
+    return users.reduce((acc: Record<string, number>, u: any) => {
+      acc[u.role] = (acc[u.role] || 0) + 1;
+      return acc;
+    }, {});
+  }, [users]);
+
+  const monthlyData = useMemo(() => {
+    const months = [];
+    const revenueMap: Record<string, number> = {};
+    const bookingsMap: Record<string, number> = {};
+    
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const label = d.toLocaleDateString('default', { month: 'short', year: '2-digit' });
+      months.push(label);
+      
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      revenueMap[key] = 0;
+      bookingsMap[key] = 0;
+    }
+    
+    if (Array.isArray(payments)) {
+      payments.forEach((p: any) => {
+        if (p.status === 'completed' && p.paymentDate) {
+          const date = new Date(p.paymentDate);
+          const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          if (key in revenueMap) {
+            revenueMap[key] += p.amount || 0;
+          }
+        }
+      });
+    }
+    
+    if (Array.isArray(bookings)) {
+      bookings.forEach((b: any) => {
+        if (b.createdAt) {
+          const date = new Date(b.createdAt);
+          const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          if (key in bookingsMap) {
+            bookingsMap[key] += 1;
+          }
+        }
+      });
+    }
+    
+    const revenueData = months.map(m => {
+      const key = Object.keys(revenueMap).find(k => {
+        const [year, month] = k.split('-');
+        const d = new Date(parseInt(year), parseInt(month) - 1, 1);
+        return d.toLocaleDateString('default', { month: 'short', year: '2-digit' }) === m;
+      });
+      return key ? revenueMap[key] : 0;
+    });
+    
+    const bookingsData = months.map(m => {
+      const key = Object.keys(bookingsMap).find(k => {
+        const [year, month] = k.split('-');
+        const d = new Date(parseInt(year), parseInt(month) - 1, 1);
+        return d.toLocaleDateString('default', { month: 'short', year: '2-digit' }) === m;
+      });
+      return key ? bookingsMap[key] : 0;
+    });
+    
+    return {
+      labels: months,
+      revenue: revenueData,
+      bookings: bookingsData
+    };
+  }, [payments, bookings]);
+
+  const chartData = {
+    labels: monthlyData.labels,
+    datasets: [
+      {
+        type: 'bar' as const,
+        label: 'Revenue (RWF)',
+        data: monthlyData.revenue,
+        backgroundColor: 'rgba(52, 83, 183, 0.75)',
+        borderColor: 'rgb(52, 83, 183)',
+        borderWidth: 2,
+        borderRadius: 8,
+        yAxisID: 'y',
+      },
+      {
+        type: 'line' as const,
+        label: 'Bookings Count',
+        data: monthlyData.bookings,
+        borderColor: 'rgb(249, 115, 22)',
+        borderWidth: 3,
+        fill: false,
+        tension: 0.3,
+        pointBackgroundColor: 'rgb(249, 115, 22)',
+        pointHoverRadius: 7,
+        yAxisID: 'y1',
+      }
+    ]
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        mode: 'index' as const,
+        intersect: false,
+        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+        titleColor: '#fff',
+        bodyColor: '#cbd5e1',
+        padding: 12,
+        cornerRadius: 12,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderWidth: 1,
+      }
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false,
+        },
+        ticks: {
+          font: {
+            family: 'Outfit, sans-serif',
+            weight: 600 as any,
+            size: 11,
+          },
+          color: '#64748b',
+        }
+      },
+      y: {
+        type: 'linear' as const,
+        display: true,
+        position: 'left' as const,
+        grid: {
+          color: 'rgba(226, 232, 240, 0.5)',
+        },
+        ticks: {
+          font: {
+            family: 'Outfit, sans-serif',
+            weight: 500 as any,
+          },
+          color: '#64748b',
+          callback: function(val: any) {
+            if (val >= 1e6) return (val / 1e6).toFixed(1) + 'M';
+            if (val >= 1e3) return (val / 1e3).toFixed(0) + 'K';
+            return val;
+          }
+        }
+      },
+      y1: {
+        type: 'linear' as const,
+        display: true,
+        position: 'right' as const,
+        grid: {
+          drawOnChartArea: false,
+        },
+        ticks: {
+          font: {
+            family: 'Outfit, sans-serif',
+            weight: 500 as any,
+          },
+          color: '#64748b',
+        }
+      }
+    }
+  };
+
   const refreshData = () => {
     setLastRefresh(new Date());
     // Trigger useEffect to reload data
@@ -277,7 +490,7 @@ export default function AdminDashboardPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white rounded-2xl p-8 shadow-lg max-w-md w-full text-center">
-          <div className="text-red-500 text-5xl mb-4">⚠️</div>
+          <div className="text-red-500 text-5xl mb-4 flex justify-center"><FaExclamationTriangle /></div>
           <h2 className="text-xl font-bold text-gray-800 mb-2">Dashboard Error</h2>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
@@ -406,7 +619,29 @@ export default function AdminDashboardPage() {
               </span>
             </div>
             <div className="text-3xl font-black text-gray-900 tracking-tight mb-1">{totalLeads}</div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Leads</div>
+          </div>
+        </div>
+
+        {/* Dynamic Trends Chart */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-[32px] p-8 border border-white/50 shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div>
+              <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Financial & Booking Trends</h3>
+              <p className="text-xs text-gray-500 font-bold uppercase tracking-wider opacity-60">Last 6 Months Activity & Revenue Overview</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-[#3453B7] inline-block" />
+                <span className="text-xs font-bold text-gray-600">Revenue (RWF)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-orange-500 inline-block" />
+                <span className="text-xs font-bold text-gray-600">Bookings Count</span>
+              </div>
+            </div>
+          </div>
+          <div className="h-80 w-full relative">
+            <ReactChart type="bar" data={chartData} options={chartOptions as any} />
           </div>
         </div>
 
@@ -486,29 +721,81 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          {/* Booking Types Breakdown */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-[32px] p-8 border border-white/50 shadow-sm">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-indigo-100 text-indigo-600 rounded-xl">
-                <FaChartLine className="text-lg" />
-              </div>
-              <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Booking Types</h3>
-            </div>
-            <div className="space-y-4">
-              {Object.entries(bookingTypes).map(([type, count]) => (
-                <div key={type} className="group">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-bold text-gray-600 group-hover:text-indigo-600 transition-colors">{type}</span>
-                    <span className="text-sm font-black text-gray-900">{count as number}</span>
+          {/* Distribution Analysis */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-[32px] p-8 border border-white/50 shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-indigo-100 text-indigo-600 rounded-xl">
+                    <FaChartLine className="text-lg" />
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full group-hover:from-indigo-400 group-hover:to-blue-400 transition-all"
-                      style={{ width: `${((count as number) / bookings.length) * 100}%` }}
-                    />
-                  </div>
+                  <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Distribution</h3>
                 </div>
-              ))}
+                <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
+                  <button
+                    onClick={() => setBreakdownTab('bookings')}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${
+                      breakdownTab === 'bookings' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                  >
+                    Bookings
+                  </button>
+                  <button
+                    onClick={() => setBreakdownTab('roles')}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 ${
+                      breakdownTab === 'roles' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                  >
+                    User Roles
+                  </button>
+                </div>
+              </div>
+
+              {breakdownTab === 'bookings' ? (
+                <div className="space-y-4">
+                  {Object.entries(bookingTypes).length === 0 ? (
+                    <div className="text-center py-8 text-gray-400 font-medium">No booking data available</div>
+                  ) : (
+                    Object.entries(bookingTypes).map(([type, count]) => (
+                      <div key={type} className="group">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-bold text-gray-600 group-hover:text-indigo-600 transition-colors">{type}</span>
+                          <span className="text-sm font-black text-gray-900">{count as number}</span>
+                        </div>
+                        <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full group-hover:from-indigo-400 group-hover:to-blue-400 transition-all"
+                            style={{ width: `${bookings.length > 0 ? ((count as number) / bookings.length) * 100 : 0}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {Object.entries(roleDistribution).length === 0 ? (
+                    <div className="text-center py-8 text-gray-400 font-medium">No user role data available</div>
+                  ) : (
+                    Object.entries(roleDistribution).map(([role, count]) => (
+                      <div key={role} className="group">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-bold text-gray-600 group-hover:text-indigo-600 transition-colors">
+                            {roleLabelsLocal[role] || role.toUpperCase()}
+                          </span>
+                          <span className="text-sm font-black text-gray-900">{count as number}</span>
+                        </div>
+                        <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full group-hover:from-indigo-400 group-hover:to-blue-400 transition-all"
+                            style={{ width: `${users.length > 0 ? ((count as number) / users.length) * 100 : 0}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

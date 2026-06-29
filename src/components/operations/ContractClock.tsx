@@ -2,6 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { FaCheckCircle, FaExclamationTriangle } from "react-icons/fa";
 
 interface ClockProps {
   contractId: string;
@@ -53,16 +54,16 @@ export const ContractClock = ({ startDate, dailyRate, totalPaid, totalPrice, ter
           <h3 className="font-bold text-gray-700">Payment Clock</h3>
           <p className="text-xs text-gray-500 mt-1">Tracks time elapsed vs payments made</p>
         </div>
-        <span className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm border ${
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-sm border ${
           status === "COMPLETED" ? "bg-green-100 text-green-700 border-green-200" :
           isExpiredUnpaid ? "bg-red-100 text-red-700 border-red-200" :
           isInArrears ? "bg-orange-100 text-orange-700 border-orange-200" : 
           "bg-blue-100 text-blue-700 border-blue-200"
         }`}>
-          {status === "COMPLETED" ? "✅ COMPLETED" :
-           isExpiredUnpaid ? "🚨 EXPIRED (RECOVERY)" :
-           isInArrears ? "⚠️ ARREARS" : 
-           "✅ ON TRACK"}
+          {status === "COMPLETED" ? <><FaCheckCircle /> COMPLETED</> :
+           isExpiredUnpaid ? <><FaExclamationTriangle /> EXPIRED (RECOVERY)</> :
+           isInArrears ? <><FaExclamationTriangle /> ARREARS</> : 
+           <><FaCheckCircle /> ON TRACK</>}
         </span>
       </div>
 

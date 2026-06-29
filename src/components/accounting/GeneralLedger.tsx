@@ -82,15 +82,39 @@ export default function GeneralLedger({ onDataExport }: GeneralLedgerProps) {
     return true;
   });
 
-  const exportToExcel = () => {
-    const data = {
-      entries: filteredEntries,
-      accountSummaries,
-      period: filters.startDate && filters.endDate ? 
-        `${filters.startDate} to ${filters.endDate}` : 'All Time',
-      generatedAt: new Date().toISOString()
-    };
-    onDataExport?.(data);
+  const exportToExcel = async () => {
+    const { exportToExcel: doExport } = await import('@/utils/excelExport');
+    
+    const columns = [
+      { header: 'Date', key: 'date', type: 'date' as const },
+      { header: 'Account', key: 'account', type: 'text' as const },
+      { header: 'Description', key: 'description', type: 'text' as const },
+      { header: 'Reference', key: 'reference', type: 'text' as const },
+      { header: 'Debit (RWF)', key: 'debit', type: 'number' as const, numFormat: '#,##0" RWF"' },
+      { header: 'Credit (RWF)', key: 'credit', type: 'number' as const, numFormat: '#,##0" RWF"' },
+      { header: 'Balance (RWF)', key: 'runningBalance', type: 'number' as const, numFormat: '#,##0" RWF"' },
+      { header: 'Type', key: 'type', type: 'text' as const }
+    ];
+
+    const data = filteredEntries.map(item => ({
+      ...item,
+      date: item.date.split('T')[0],
+      type: item.type.toUpperCase()
+    }));
+
+    await doExport({
+      filename: `GeneralLedger_${new Date().toISOString().split('T')[0]}`,
+      sheetName: 'General Ledger',
+      title: 'General Ledger Report',
+      subtitle: `Generated on ${new Date().toLocaleDateString()}`,
+      columns,
+      data,
+      summaryRow: {
+        reference: 'Total',
+        debit: { formula: '=SUM(E{start}:E{end})' },
+        credit: { formula: '=SUM(F{start}:F{end})' }
+      }
+    });
   };
 
   const getAccountTypeColor = (account: string) => {

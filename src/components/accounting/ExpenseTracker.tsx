@@ -163,6 +163,41 @@ export default function ExpenseTracker({ onExpenseAdded }: ExpenseTrackerProps) 
 
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
+  const handleExcelExport = async () => {
+    const { exportToExcel } = await import('@/utils/excelExport');
+    
+    const columns = [
+      { header: 'Date', key: 'date', type: 'date' as const },
+      { header: 'ID', key: 'id', type: 'text' as const },
+      { header: 'Description', key: 'description', type: 'text' as const },
+      { header: 'Category', key: 'category', type: 'text' as const },
+      { header: 'Payment Method', key: 'paymentMethod', type: 'text' as const },
+      { header: 'Receipt Number', key: 'receiptNumber', type: 'text' as const },
+      { header: 'Notes', key: 'notes', type: 'text' as const },
+      { header: 'Amount (RWF)', key: 'amount', type: 'number' as const, numFormat: '#,##0" RWF"' }
+    ];
+
+    const data = expenses.map(item => ({
+      ...item,
+      category: item.category.split('_').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+      receiptNumber: item.receiptNumber || '-',
+      notes: item.notes || '-'
+    }));
+
+    await exportToExcel({
+      filename: `Expense_Report_${new Date().toISOString().split('T')[0]}`,
+      sheetName: 'Expenses',
+      title: 'Expense Tracker Report',
+      subtitle: `Generated on ${new Date().toLocaleDateString()} | Total Transactions: ${expenses.length}`,
+      columns,
+      data,
+      summaryRow: {
+        description: 'Total',
+        amount: { formula: '=SUM(H{start}:H{end})' }
+      }
+    });
+  };
+
   return (
     <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-white/50 p-6 transition-all duration-300 hover:shadow-md">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
@@ -186,6 +221,12 @@ export default function ExpenseTracker({ onExpenseAdded }: ExpenseTrackerProps) 
             </select>
             <FaFilter className="absolute right-3 top-1/2 transform -translate-y-1/2 text-orange-400 pointer-events-none" />
           </div>
+          <button
+            onClick={handleExcelExport}
+            className="px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 flex items-center gap-2 shadow-lg shadow-blue-500/30 transition-all active:scale-95 font-medium whitespace-nowrap"
+          >
+            <FaDownload /> Export Excel
+          </button>
           <button
             onClick={() => {
               resetForm();

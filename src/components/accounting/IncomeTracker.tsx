@@ -182,6 +182,46 @@ export default function IncomeTracker({ onIncomeAdded }: IncomeTrackerProps) {
 
   const totalIncome = income.reduce((sum, item) => sum + item.amount, 0);
 
+  const handleExcelExport = async () => {
+    const { exportToExcel } = await import('@/utils/excelExport');
+    
+    const columns = [
+      { header: 'Date', key: 'date', type: 'date' as const },
+      { header: 'ID', key: 'id', type: 'text' as const },
+      { header: 'Description', key: 'description', type: 'text' as const },
+      { header: 'Category', key: 'category', type: 'text' as const },
+      { header: 'Payment Method', key: 'paymentMethod', type: 'text' as const },
+      { header: 'Client Name', key: 'clientName', type: 'text' as const },
+      { header: 'Client Phone', key: 'clientPhone', type: 'text' as const },
+      { header: 'Reference', key: 'reference', type: 'text' as const },
+      { header: 'Notes', key: 'notes', type: 'text' as const },
+      { header: 'Amount (RWF)', key: 'amount', type: 'number' as const, numFormat: '#,##0" RWF"' }
+    ];
+
+    const data = income.map(item => ({
+      ...item,
+      amount: item.isRefund ? -Math.abs(item.amount) : item.amount,
+      category: item.category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+      clientName: item.clientName || '-',
+      clientPhone: item.clientPhone || '-',
+      reference: item.reference || '-',
+      notes: item.notes || '-'
+    }));
+
+    await exportToExcel({
+      filename: `Income_Report_${new Date().toISOString().split('T')[0]}`,
+      sheetName: 'Income',
+      title: 'Income Tracker Report',
+      subtitle: `Generated on ${new Date().toLocaleDateString()} | Total Transactions: ${income.length}`,
+      columns,
+      data,
+      summaryRow: {
+        description: 'Total',
+        amount: { formula: '=SUM(J{start}:J{end})' }
+      }
+    });
+  };
+
   return (
     <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-white/50 p-6 transition-all duration-300 hover:shadow-md">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
@@ -205,6 +245,12 @@ export default function IncomeTracker({ onIncomeAdded }: IncomeTrackerProps) {
             </select>
             <FaFilter className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
           </div>
+          <button
+            onClick={handleExcelExport}
+            className="px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 flex items-center gap-2 shadow-lg shadow-blue-500/30 transition-all active:scale-95 font-medium whitespace-nowrap"
+          >
+            <FaDownload /> Export Excel
+          </button>
           <button
             onClick={() => {
               resetForm();

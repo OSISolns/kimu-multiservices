@@ -20,23 +20,70 @@ export async function GET(req: NextRequest) {
         isAvailable: true,
         status: true,
         maintenanceDate: true,
+        maintenanceNotes: true,
         mileage: true,
         fuelEfficiency: true,
         quantity: true
       }
     })
 
+    // Fetch booking data to calculate actual vehicle usage
+    const bookings = await prisma.booking.findMany({
+      select: {
+        carType: true
+      }
+    })
+
+    // Count bookings matching each vehicle by name/model
+    const vehicleUsageCounts = vehicles.map(vehicle => {
+      const nameLower = vehicle.name.toLowerCase()
+      const nameParts = nameLower.split(' ')
+      // Filter out brand names or common filler words
+      const cleanParts = nameParts.filter(part => !['toyota', 'kia', 'hyundai', 'full', 'electric', 'hybrid'].includes(part))
+
+      const count = bookings.filter(b => {
+        if (!b.carType) return false
+        const bookingCar = b.carType.toLowerCase()
+
+        // Exact match or contains match
+        if (bookingCar.includes(nameLower) || nameLower.includes(bookingCar)) {
+          return true
+        }
+
+        // Substring model match (e.g. "rav4", "sorento", "sonata", "prado", "noah", "prius", "coaster")
+        return cleanParts.some(part => part.length > 2 && bookingCar.includes(part))
+      }).length
+
+      return {
+        name: vehicle.name,
+        count
+      }
+    })
+
+    // Sort by booking counts (descending)
+    const sortedUsage = [...vehicleUsageCounts].sort((a, b) => b.count - a.count)
+
+    // Most used (default to first vehicle if no booking counts exist)
+    const mostUsedVehicle = sortedUsage.length > 0 && sortedUsage[0].count > 0
+      ? sortedUsage[0].name
+      : (vehicles.length > 0 ? vehicles[0].name : 'N/A')
+
+    // Least used (default to last vehicle if no booking counts exist)
+    const leastUsedVehicle = sortedUsage.length > 1
+      ? (sortedUsage[sortedUsage.length - 1].count > 0 ? sortedUsage[sortedUsage.length - 1].name : sortedUsage[sortedUsage.length - 1].name)
+      : (vehicles.length > 1 ? vehicles[vehicles.length - 1].name : 'N/A')
+
     // Recent activity samples
     const recentActiveVehicles = vehicles
-      .filter(v => v.status === 'in_use')
+      .filter(v => v.status === 'in_use' || v.status === 'in-use')
       .slice(0, 5)
       .map(v => ({ id: v.id, name: v.name, status: v.status }))
 
     // Calculate metrics
     const totalVehicles = vehicles.length
-    const availableVehicles = vehicles.filter(v => v.isAvailable && v.status === 'available').length
-    const inUseVehicles = vehicles.filter(v => v.status === 'in_use').length
-    const maintenanceVehicles = vehicles.filter(v => v.status === 'maintenance').length
+    const availableVehicles = vehicles.filter(v => v.isAvailable && (v.status === 'available' || v.status === 'Available')).length
+    const inUseVehicles = vehicles.filter(v => v.status === 'in_use' || v.status === 'in-use').length
+    const maintenanceVehicles = vehicles.filter(v => v.status === 'maintenance' || v.status === 'Maintenance').length
 
     // Calculate total mileage (simplified - in real app, this would come from trip records)
     const totalMileage = vehicles.reduce((sum, v) => {
@@ -52,10 +99,6 @@ export async function GET(req: NextRequest) {
     const averageFuelEfficiency = fuelEfficiencyValues.length > 0
       ? (fuelEfficiencyValues.reduce((sum, v) => sum + v, 0) / fuelEfficiencyValues.length).toFixed(1)
       : 0
-
-    // Find most and least used vehicles (simplified logic)
-    const mostUsedVehicle = vehicles.length > 0 ? vehicles[0].name : 'N/A'
-    const leastUsedVehicle = vehicles.length > 1 ? vehicles[vehicles.length - 1].name : 'N/A'
 
     // Get active bookings count
     const activeBookings = await prisma.booking.count({
@@ -79,7 +122,7 @@ export async function GET(req: NextRequest) {
       .map(v => ({
         vehicleName: v.name,
         maintenanceDate: v.maintenanceDate ? new Date(v.maintenanceDate).toLocaleDateString() : '',
-        type: 'Scheduled Maintenance'
+        type: v.maintenanceNotes || 'Scheduled Maintenance'
       }))
       .sort((a, b) => new Date(a.maintenanceDate).getTime() - new Date(b.maintenanceDate).getTime())
       .slice(0, 5)

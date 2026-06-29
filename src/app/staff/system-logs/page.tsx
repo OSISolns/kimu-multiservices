@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { FaDatabase, FaHistory, FaFilter, FaDownload, FaPlus, FaUserShield } from 'react-icons/fa';
+import BackButton from '@/components/BackButton';
 import { useRouter } from 'next/navigation';
 
 interface SystemLog {
@@ -157,6 +158,9 @@ export default function SystemLogsAdminPage() {
     <div className="min-h-screen bg-gray-50/50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed flex-col py-8">
       <div className="max-w-7xl mx-auto px-4">
         <div className="bg-white rounded-2xl shadow-lg p-8">
+          <div className="mb-6">
+            <BackButton href="/staff/admin-dashboard" label="Back to Dashboard" className="mb-4" />
+          </div>
           <div className="flex items-center gap-3 mb-8">
             <FaUserShield className="text-3xl text-blue-600" />
             <div>

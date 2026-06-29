@@ -5,7 +5,7 @@ import { Bar } from 'react-chartjs-2';
 import ExcelJS from 'exceljs';
 import { useUser } from '../../UserContext';
 import { useRouter } from 'next/navigation';
-import { FaFileAlt, FaDownload, FaPrint, FaChartLine, FaChartPie, FaMoneyBillWave, FaCalendarAlt, FaSearch, FaFilter, FaEye, FaEdit, FaTrash, FaPlus, FaMinus, FaPercentage, FaClock, FaExclamationTriangle, FaCheckCircle, FaTimesCircle, FaTag, FaCalculator, FaPiggyBank, FaBalanceScale, FaUser, FaCar, FaHotel, FaTaxi, FaPlane, FaHandshake, FaSignOutAlt, FaSignInAlt } from 'react-icons/fa';
+import { FaFileAlt, FaDownload, FaPrint, FaChartLine, FaChartPie, FaMoneyBillWave, FaCalendarAlt, FaSearch, FaFilter, FaEye, FaEdit, FaTrash, FaPlus, FaMinus, FaPercentage, FaClock, FaExclamationTriangle, FaCheckCircle, FaTimesCircle, FaTag, FaCalculator, FaPiggyBank, FaBalanceScale, FaUser, FaCar, FaHotel, FaTaxi, FaPlane, FaHandshake, FaSignOutAlt, FaSignInAlt, FaStar } from 'react-icons/fa';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 // Real data and utility functions - will be populated from database
@@ -175,7 +175,7 @@ export default function StaffPerformancePage() {
               <div className="text-2xl font-extrabold">KPI: {s.kpi}</div>
               <div className="text-sm">Bookings: {s.bookings}</div>
               <div className="text-sm">Revenue: {s.revenue.toLocaleString()} RWF</div>
-              <div className="text-sm">Feedback: {s.feedback} ⭐</div>
+              <div className="text-sm flex items-center justify-center gap-1">Feedback: {s.feedback} <FaStar className="text-yellow-500 text-xs" /></div>
               <div className="text-sm">Attendance: {s.attendance}%</div>
             </div>
           ))}
@@ -192,7 +192,7 @@ export default function StaffPerformancePage() {
           </div>
           <div className="bg-yellow-50 rounded-lg p-4 text-center">
             <div className="text-lg font-bold text-yellow-700">Average Feedback</div>
-            <div className="text-2xl font-extrabold text-yellow-900">{avgFeedback} ⭐</div>
+            <div className="text-2xl font-extrabold text-yellow-900 flex items-center justify-center gap-1">{avgFeedback} <FaStar className="text-yellow-500 text-sm" /></div>
           </div>
           <div className="bg-purple-50 rounded-lg p-4 text-center">
             <div className="text-lg font-bold text-purple-700">Top by Revenue</div>
@@ -275,7 +275,7 @@ export default function StaffPerformancePage() {
                     <td className="py-2 px-4">{s.revenue?.toLocaleString()} RWF</td>
                     <td className="py-2 px-4">{s.campaigns || '-'}</td>
                     <td className="py-2 px-4">{s.crmActivity || '-'}</td>
-                    <td className="py-2 px-4">{s.feedback} ⭐</td>
+                    <td className="py-2 px-4"><span className="inline-flex items-center gap-1">{s.feedback} <FaStar className="text-yellow-500 text-xs" /></span></td>
                     <td className="py-2 px-4">{s.attendance}%</td>
                     <td className="py-2 px-4">{s.kpi}</td>
                   </tr>
@@ -320,7 +320,7 @@ export default function StaffPerformancePage() {
                     <td className="py-2 px-4">{s.vehiclesManaged || '-'}</td>
                     <td className="py-2 px-4">{s.tripLogs || '-'}</td>
                     <td className="py-2 px-4">{s.maintenanceActions || '-'}</td>
-                    <td className="py-2 px-4">{s.feedback} ⭐</td>
+                    <td className="py-2 px-4"><span className="inline-flex items-center gap-1">{s.feedback} <FaStar className="text-yellow-500 text-xs" /></span></td>
                     <td className="py-2 px-4">{s.attendance}%</td>
                     <td className="py-2 px-4">{s.kpi}</td>
                   </tr>
@@ -363,7 +363,7 @@ export default function StaffPerformancePage() {
                     <td className="py-2 px-4">{s.revenue?.toLocaleString()} RWF</td>
                     <td className="py-2 px-4">{s.invoices || '-'}</td>
                     <td className="py-2 px-4">{s.paymentsTracked || '-'}</td>
-                    <td className="py-2 px-4">{s.feedback} ⭐</td>
+                    <td className="py-2 px-4"><span className="inline-flex items-center gap-1">{s.feedback} <FaStar className="text-yellow-500 text-xs" /></span></td>
                     <td className="py-2 px-4">{s.attendance}%</td>
                     <td className="py-2 px-4">{s.kpi}</td>
                   </tr>
@@ -436,7 +436,7 @@ export default function StaffPerformancePage() {
                     <td className="py-2 px-4">{s.pending}</td>
                     <td className="py-2 px-4">{s.cancelled}</td>
                     <td className="py-2 px-4">{s.leads}</td>
-                    <td className="py-2 px-4">{s.feedback} ⭐</td>
+                    <td className="py-2 px-4"><span className="inline-flex items-center gap-1">{s.feedback} <FaStar className="text-yellow-500 text-xs" /></span></td>
                     <td className="py-2 px-4">{s.reviews}</td>
                     <td className="py-2 px-4">{s.attendance}%</td>
                     <td className="py-2 px-4">{s.kpi}</td>

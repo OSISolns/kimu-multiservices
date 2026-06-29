@@ -1,0 +1,10 @@
+from .auth import router as auth_router
+from .users import router as users_router
+from .vehicles import router as vehicles_router
+from .bookings import router as bookings_router
+from .payments import router as payments_router
+from .crm import router as crm_router
+from .accounting import router as accounting_router
+from .payroll import router as payroll_router
+from .logs import router as logs_router
+from .finance import router as finance_router

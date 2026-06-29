@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     console.log('API /users: Received username:', username);
     const user = username ? await prisma.user.findUnique({ where: { username } }) : null;
     console.log('API /users: Found user:', user ? { username: user.username, role: user.role } : null);
-    if (!user || !hasRole(user, ['admin', 'manager', 'accountant'])) {
+    if (!user || !hasRole(user, ['admin', 'manager', 'accountant', 'transport-officer', 'tofficer', 'operations'])) {
       console.log('API /users: Not authorized', { hasUser: !!user, role: user?.role });
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }

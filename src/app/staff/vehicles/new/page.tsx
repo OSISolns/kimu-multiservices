@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/app/UserContext'
 import { FaCar, FaSave, FaArrowLeft, FaUpload } from 'react-icons/fa'
+import BackButton from '@/components/BackButton'
 
 interface VehicleFormData {
   name: string
@@ -124,12 +125,7 @@ export default function NewVehiclePage() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
-            <button
-              onClick={() => router.back()}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <FaArrowLeft className="text-gray-600" />
-            </button>
+            <BackButton href="/staff/vehicles" label="Back to Vehicles" />
             <div className="flex items-center gap-3">
               <div className="p-3 bg-blue-100 rounded-lg">
                 <FaCar className="text-blue-600 text-xl" />

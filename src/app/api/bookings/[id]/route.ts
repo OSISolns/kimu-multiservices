@@ -1,12 +1,73 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// API route for individual booking operations (DELETE)
+// API route for individual booking operations (DELETE, PUT)
 
 // Role-based access control
 function checkUserPermissions(user: any, requiredRoles: string[]) {
   if (!user) return false
   return requiredRoles.includes(user.role)
+}
+
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    console.log('=== PUT /api/bookings/[id] START ===')
+    const resolvedParams = await params
+    const bookingId = parseInt(resolvedParams.id)
+
+    if (isNaN(bookingId)) {
+      return NextResponse.json({ error: 'Invalid booking ID' }, { status: 400 })
+    }
+
+    // Authentication check
+    const username = req.headers.get('x-username')
+    if (!username) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+
+    const user = await prisma.user.findUnique({ where: { username } })
+    if (!user || !checkUserPermissions(user, ['staff', 'admin', 'tofficer', 'transport-officer', 'operations'])) {
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+    }
+
+    const body = await req.json()
+    const { vehicle, driver, status } = body
+
+    console.log(`Updating booking #${bookingId}:`, { vehicle, driver, status })
+
+    // Check if booking exists
+    const existingBooking = await prisma.booking.findUnique({
+      where: { id: bookingId }
+    })
+
+    if (!existingBooking) {
+      return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+    }
+
+    // Prepare update payload
+    const dataToUpdate: any = {}
+    if (vehicle !== undefined) dataToUpdate.vehicle = vehicle
+    if (driver !== undefined) dataToUpdate.driver = driver
+    if (status !== undefined) dataToUpdate.status = status
+
+    // Update booking in database
+    const updatedBooking = await prisma.booking.update({
+      where: { id: bookingId },
+      data: dataToUpdate
+    })
+
+    console.log('Booking updated successfully:', updatedBooking)
+    return NextResponse.json({
+      success: true,
+      booking: updatedBooking
+    })
+  } catch (error) {
+    console.error('=== PUT /api/bookings/[id] ERROR ===', error)
+    return NextResponse.json({ success: false, error: 'Unable to update booking' }, { status: 500 })
+  }
 }
 
 export async function DELETE(

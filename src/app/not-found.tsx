@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link';
+import { FaEnvelope, FaPhone, FaWhatsapp } from 'react-icons/fa';
 
 export default function NotFound() {
   return (
@@ -31,7 +32,7 @@ export default function NotFound() {
           >
             Go Home
           </Link>
-          
+
           <Link
             href="/"
             className="flex items-center justify-center gap-2 px-8 py-4 bg-gray-600 text-white rounded-xl font-semibold hover:bg-gray-700 transition-all duration-200 hover:scale-105 shadow-lg"
@@ -72,10 +73,19 @@ export default function NotFound() {
           <p className="text-gray-600 mb-4">
             If you believe this is an error or need assistance, please contact our support team.
           </p>
-          <div className="text-sm text-gray-600 space-y-1">
-            <p>📧 Email: valery.osisolns@gmail.com</p>
-            <p>📞 Phone: +250 792 958 752</p>
-            <p>💬 WhatsApp: +250 792 958 752</p>
+          <div className="text-sm text-gray-600 space-y-2 flex flex-col items-center">
+            <p className="flex items-center gap-2">
+              <FaEnvelope className="text-blue-500" />
+              <span>Email: kimutransport6@gmail.com</span>
+            </p>
+            <p className="flex items-center gap-2">
+              <FaPhone className="text-green-500" />
+              <span>Phone: +250 792 958 752</span>
+            </p>
+            <p className="flex items-center gap-2">
+              <FaWhatsapp className="text-emerald-500" />
+              <span>WhatsApp: +250 792 958 752</span>
+            </p>
           </div>
         </div>
 

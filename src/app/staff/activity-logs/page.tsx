@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect } from 'react';
-import { FaHistory, FaFilter, FaDownload, FaSearch, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaHistory, FaFilter, FaDownload, FaSearch, FaEye, FaEyeSlash, FaSignInAlt, FaSignOutAlt, FaPlus, FaEdit, FaCar, FaBell, FaCog, FaUser, FaFileAlt } from 'react-icons/fa';
 import { useUser } from '../../UserContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -93,15 +93,15 @@ export default function ActivityLogsPage() {
 
   const getActionIcon = (action: string) => {
     switch (action) {
-      case 'login': return '🔐';
-      case 'logout': return '🚪';
-      case 'booking_created': return '📋';
-      case 'booking_updated': return '✏️';
-      case 'vehicle_added': return '🚗';
-      case 'notification_created': return '🔔';
-      case 'settings_updated': return '⚙️';
-      case 'user_created': return '👤';
-      default: return '📝';
+      case 'login': return <FaSignInAlt className="inline" />;
+      case 'logout': return <FaSignOutAlt className="inline" />;
+      case 'booking_created': return <FaFileAlt className="inline" />;
+      case 'booking_updated': return <FaEdit className="inline" />;
+      case 'vehicle_added': return <FaCar className="inline" />;
+      case 'notification_created': return <FaBell className="inline" />;
+      case 'settings_updated': return <FaCog className="inline" />;
+      case 'user_created': return <FaUser className="inline" />;
+      default: return <FaFileAlt className="inline" />;
     }
   };
 

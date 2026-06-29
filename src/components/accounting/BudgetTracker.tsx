@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from 'react';
-import { FaPlus, FaEdit, FaTrash, FaChartPie, FaExclamationTriangle, FaCheckCircle, FaTimes, FaSpinner } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaChartPie, FaExclamationTriangle, FaCheckCircle, FaTimes, FaSpinner, FaDownload } from 'react-icons/fa';
 
 interface Budget {
   id: number;
@@ -207,6 +207,54 @@ export default function BudgetTracker({ onBudgetUpdated }: BudgetTrackerProps) {
   const totalVariance = totalBudget - totalActual;
   const overBudgetCount = budgets.filter(budget => budget.status === 'over_budget').length;
 
+  const handleExcelExport = async () => {
+    const { exportToExcel } = await import('@/utils/excelExport');
+    
+    const columns = [
+      { header: 'Period', key: 'periodLabel', type: 'text' as const },
+      { header: 'Category', key: 'category', type: 'text' as const },
+      { header: 'Budgeted (RWF)', key: 'amount', type: 'number' as const, numFormat: '#,##0" RWF"' },
+      { header: 'Actual (RWF)', key: 'actualAmount', type: 'number' as const, numFormat: '#,##0" RWF"' },
+      { header: 'Variance (RWF)', key: 'variance', type: 'formula' as const, numFormat: '#,##0" RWF"' },
+      { header: 'Status', key: 'status', type: 'text' as const },
+      { header: 'Description', key: 'description', type: 'text' as const }
+    ];
+
+    const data = budgets.map(item => {
+      let periodLabel = `${item.year}`;
+      if (item.period === 'monthly' && item.month) {
+        periodLabel = `${item.year}-${String(item.month).padStart(2, '0')}`;
+      } else if (item.period === 'quarterly' && item.quarter) {
+        periodLabel = `${item.year}-Q${item.quarter}`;
+      }
+
+      return {
+        ...item,
+        periodLabel,
+        category: item.category.split('_').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+        status: item.status?.replace('_', ' ').toUpperCase() || 'NO DATA',
+        actualAmount: item.actualAmount || 0,
+        variance: { formula: `=C{row}-D{row}` },
+        description: item.description || '-'
+      };
+    });
+
+    await exportToExcel({
+      filename: `Budget_Report_${selectedYear}_${selectedPeriod}`,
+      sheetName: 'Budgets',
+      title: 'Budget Tracker Report',
+      subtitle: `Period: ${selectedYear} ${selectedPeriod} | Total Budgets: ${budgets.length}`,
+      columns,
+      data,
+      summaryRow: {
+        category: 'Total',
+        amount: { formula: '=SUM(C{start}:C{end})' },
+        actualAmount: { formula: '=SUM(D{start}:D{end})' },
+        variance: { formula: '=SUM(E{start}:E{end})' }
+      }
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Header Controls */}
@@ -261,6 +309,12 @@ export default function BudgetTracker({ onBudgetUpdated }: BudgetTrackerProps) {
               ))}
             </select>
           )}
+          <button
+            onClick={handleExcelExport}
+            className="bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 flex items-center gap-2 shadow-lg shadow-green-500/30 transition-all active:scale-95 font-medium"
+          >
+            <FaDownload /> Export Excel
+          </button>
           <button
             onClick={() => {
               resetForm();

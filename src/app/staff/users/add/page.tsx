@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/UserContext';
-import { FaUserPlus, FaSave, FaTimes, FaEye, FaEyeSlash, FaShieldAlt } from 'react-icons/fa';
+import { FaUserPlus, FaSave, FaTimes, FaEye, FaEyeSlash, FaShieldAlt, FaUser, FaEnvelope, FaPhone, FaLock } from 'react-icons/fa';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import BackButton from '@/components/BackButton';
 
 interface UserFormData {
   username: string;
@@ -18,12 +19,22 @@ interface UserFormData {
   whatsappNotifications: boolean;
 }
 
+const roles = [
+  { value: 'staff', label: 'Sales Staff', color: 'bg-blue-100 text-blue-700' },
+  { value: 'transport-officer', label: 'Transport Officer', color: 'bg-amber-100 text-amber-700' },
+  { value: 'accountant', label: 'Accountant', color: 'bg-emerald-100 text-emerald-700' },
+  { value: 'admin', label: 'System Admin', color: 'bg-rose-100 text-rose-700' },
+  { value: 'manager', label: 'Manager', color: 'bg-violet-100 text-violet-700' },
+  { value: 'agent', label: 'Field Agent', color: 'bg-orange-100 text-orange-700' },
+];
+
 export default function AddUserPage() {
   const { user, isLoading: userLoading, resetInactivityTimer } = useUser();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [toastMsg, setToastMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [formData, setFormData] = useState<UserFormData>({
     username: '',
     fullName: '',
@@ -37,45 +48,23 @@ export default function AddUserPage() {
     whatsappNotifications: true
   });
 
-  // Reset inactivity timer on user activity
   useEffect(() => {
-    const handleActivity = () => {
-      if (user) {
-        resetInactivityTimer();
-      }
-    };
-
+    const handleActivity = () => { if (user) resetInactivityTimer(); };
     const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
-    events.forEach(event => {
-      document.addEventListener(event, handleActivity, true);
-    });
-
-    return () => {
-      events.forEach(event => {
-        document.removeEventListener(event, handleActivity, true);
-      });
-    };
+    events.forEach(e => document.addEventListener(e, handleActivity, true));
+    return () => events.forEach(e => document.removeEventListener(e, handleActivity, true));
   }, [user, resetInactivityTimer]);
 
-  if (userLoading) {
-    return <LoadingSpinner />;
-  }
-
-  if (!user) {
-    router.push('/staff/login');
-    return null;
-  }
-
+  if (userLoading) return <LoadingSpinner />;
+  if (!user) { router.push('/staff/login'); return null; }
   if (user.role !== 'admin' && user.role !== 'staff' && user.role !== 'accountant') {
-    router.push('/staff/admin-dashboard');
-    return null;
+    router.push('/staff/admin-dashboard'); return null;
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     if (type === 'checkbox') {
-      const checked = (e.target as HTMLInputElement).checked;
-      setFormData(prev => ({ ...prev, [name]: checked }));
+      setFormData(prev => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -83,7 +72,6 @@ export default function AddUserPage() {
 
   const validateForm = (): string[] => {
     const errors: string[] = [];
-
     if (!formData.username.trim()) errors.push('Username is required');
     if (!formData.fullName.trim()) errors.push('Full name is required');
     if (!formData.email.trim()) errors.push('Email is required');
@@ -93,28 +81,21 @@ export default function AddUserPage() {
     if (formData.password !== formData.confirmPassword) errors.push('Passwords do not match');
     if (!formData.role) errors.push('Role is required');
     if (!formData.department.trim()) errors.push('Department is required');
-
     return errors;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const errors = validateForm();
     if (errors.length > 0) {
-      alert('Please fix the following errors:\n' + errors.join('\n'));
+      setToastMsg({ type: 'error', text: errors[0] });
       return;
     }
-
     setLoading(true);
-
     try {
       const response = await fetch('/api/users', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-username': user.username,
-        },
+        headers: { 'Content-Type': 'application/json', 'x-username': user.username },
         body: JSON.stringify({
           username: formData.username.trim(),
           fullName: formData.fullName.trim(),
@@ -127,256 +108,174 @@ export default function AddUserPage() {
           whatsappNotifications: formData.whatsappNotifications
         }),
       });
-
       if (response.ok) {
-        alert('User created successfully!');
-        router.push('/staff/users');
+        setToastMsg({ type: 'success', text: 'User created successfully!' });
+        setTimeout(() => router.push('/staff/users'), 1500);
       } else {
         const errorData = await response.json();
-        alert('Error creating user: ' + (errorData.error || 'Unknown error'));
+        setToastMsg({ type: 'error', text: errorData.error || 'Error creating user' });
       }
     } catch (error) {
-      console.error('Error creating user:', error);
-      alert('Error creating user. Please try again.');
+      setToastMsg({ type: 'error', text: 'Network error. Please try again.' });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCancel = () => {
-    router.push('/staff/users');
-  };
+  const inputClass = "w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 focus:bg-white transition-all duration-200";
+  const labelClass = "block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5";
 
   return (
-    <div className="min-h-screen bg-gray-50/50 bg-[url('/subtle-prism.svg')] bg-cover bg-fixed ">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-[#f0f2f8] p-6 lg:p-8">
+      <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Add New User</h1>
-          <p className="text-gray-600 mt-2">
-            Create a new user account with appropriate permissions and settings.
-          </p>
+        <div className="mb-6">
+          <BackButton href="/staff/users" label="Back to Users" className="mb-5" />
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+              <FaUserPlus className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-black text-slate-900">Add New User</h1>
+              <p className="text-sm text-slate-500 font-medium">Create a new staff account with role-based access</p>
+            </div>
+          </div>
         </div>
 
-        {/* Form */}
-        <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-gray-200/50 border border-white/60">
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            {/* Basic Information */}
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Username *
-                  </label>
-                  <input
-                    type="text"
-                    name="username"
-                    value={formData.username}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter username"
-                    required
-                  />
-                </div>
+        {/* Toast */}
+        {toastMsg && (
+          <div className={`mb-4 p-4 rounded-xl flex items-center gap-3 text-sm font-semibold animate-in slide-in-from-top-2 ${
+            toastMsg.type === 'success' ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' : 'bg-rose-50 border border-rose-200 text-rose-700'
+          }`}>
+            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${toastMsg.type === 'success' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+            {toastMsg.text}
+          </div>
+        )}
 
+        {/* Form Card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <form onSubmit={handleSubmit} className="divide-y divide-slate-50">
+            
+            {/* Personal Info */}
+            <div className="p-6">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Personal Information</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter full name"
-                    required
-                  />
+                  <label className={labelClass}>Username *</label>
+                  <div className="relative">
+                    <FaUser className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                    <input type="text" name="username" value={formData.username} onChange={handleInputChange} className={`${inputClass} pl-10`} placeholder="e.g. john.doe" required />
+                  </div>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email *
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter email address"
-                    required
-                  />
+                  <label className={labelClass}>Full Name *</label>
+                  <div className="relative">
+                    <FaUser className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                    <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} className={`${inputClass} pl-10`} placeholder="Enter full name" required />
+                  </div>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone *
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter phone number"
-                    required
-                  />
+                  <label className={labelClass}>Email Address *</label>
+                  <div className="relative">
+                    <FaEnvelope className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                    <input type="email" name="email" value={formData.email} onChange={handleInputChange} className={`${inputClass} pl-10`} placeholder="name@kimu.rw" required />
+                  </div>
+                </div>
+                <div>
+                  <label className={labelClass}>Phone Number *</label>
+                  <div className="relative">
+                    <FaPhone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                    <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} className={`${inputClass} pl-10`} placeholder="+250 78X XXX XXX" required />
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Security */}
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Security</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-6">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Security Credentials</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Password *
-                  </label>
+                  <label className={labelClass}>Password *</label>
                   <div className="relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      name="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter password"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    >
-                      {showPassword ? <FaEyeSlash className="text-gray-400" /> : <FaEye className="text-gray-400" />}
+                    <FaLock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                    <input type={showPassword ? 'text' : 'password'} name="password" value={formData.password} onChange={handleInputChange} className={`${inputClass} pl-10 pr-10`} placeholder="Min. 6 characters" required />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                      {showPassword ? <FaEyeSlash className="w-4 h-4" /> : <FaEye className="w-4 h-4" />}
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Confirm Password *
-                  </label>
+                  <label className={labelClass}>Confirm Password *</label>
                   <div className="relative">
-                    <input
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Confirm password"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    >
-                      {showConfirmPassword ? <FaEyeSlash className="text-gray-400" /> : <FaEye className="text-gray-400" />}
+                    <FaLock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                    <input type={showConfirmPassword ? 'text' : 'password'} name="confirmPassword" value={formData.confirmPassword} onChange={handleInputChange} className={`${inputClass} pl-10 pr-10`} placeholder="Repeat password" required />
+                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                      {showConfirmPassword ? <FaEyeSlash className="w-4 h-4" /> : <FaEye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Role and Department */}
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Role & Department</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Role & Department */}
+            <div className="p-6">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Role & Department</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Role *
-                  </label>
-                  <select
-                    name="role"
-                    value={formData.role}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  >
-                    <option value="staff">Staff</option>
-                    <option value="transport-officer">Transport Officer</option>
-                    <option value="accountant">Accountant</option>
-                    <option value="admin">Admin</option>
-                    <option value="manager">Manager</option>
-                    <option value="agent">Agent</option>
+                  <label className={labelClass}>Role *</label>
+                  <select name="role" value={formData.role} onChange={handleInputChange} className={inputClass} required>
+                    {roles.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                   </select>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Department *
-                  </label>
-                  <input
-                    type="text"
-                    name="department"
-                    value={formData.department}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter department"
-                    required
-                  />
+                  <label className={labelClass}>Department *</label>
+                  <input type="text" name="department" value={formData.department} onChange={handleInputChange} className={inputClass} placeholder="e.g. Sales Operations" required />
                 </div>
               </div>
-            </div>
-
-            {/* Notification Preferences */}
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Notification Preferences</h3>
-              <div className="space-y-3">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="emailNotifications"
-                    checked={formData.emailNotifications}
-                    onChange={handleInputChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Email Notifications</span>
-                </label>
-
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="whatsappNotifications"
-                    checked={formData.whatsappNotifications}
-                    onChange={handleInputChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">WhatsApp Notifications</span>
-                </label>
+              {/* Role badge preview */}
+              <div className="mt-3">
+                <span className="text-xs text-slate-400 font-medium">Selected role preview: </span>
+                <span className={`inline-block ml-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${roles.find(r => r.value === formData.role)?.color || 'bg-slate-100 text-slate-600'}`}>
+                  {roles.find(r => r.value === formData.role)?.label}
+                </span>
               </div>
             </div>
 
-            {/* Form Actions */}
-            <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-100/80">
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-blue-50/50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-              >
-                <FaTimes className="mr-2" />
+            {/* Notifications */}
+            <div className="p-6">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Notification Preferences</h3>
+              <div className="space-y-3">
+                {[
+                  { name: 'emailNotifications', checked: formData.emailNotifications, label: 'Email Notifications', sub: 'Receive alerts via email address' },
+                  { name: 'whatsappNotifications', checked: formData.whatsappNotifications, label: 'WhatsApp Notifications', sub: 'Receive alerts via WhatsApp' },
+                ].map(pref => (
+                  <label key={pref.name} className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors group">
+                    <div className="relative flex-shrink-0">
+                      <input type="checkbox" name={pref.name} checked={pref.checked} onChange={handleInputChange} className="sr-only peer" />
+                      <div className="w-10 h-6 bg-slate-200 rounded-full peer peer-checked:bg-blue-500 transition-colors duration-200" />
+                      <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 peer-checked:translate-x-4" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-slate-700">{pref.label}</div>
+                      <div className="text-xs text-slate-400">{pref.sub}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="px-6 py-4 bg-slate-50 flex items-center justify-between gap-3">
+              <button type="button" onClick={() => router.push('/staff/users')} className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all duration-200 shadow-sm">
+                <FaTimes className="w-3.5 h-3.5" />
                 Cancel
               </button>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+              <button type="submit" disabled={loading} className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-bold rounded-xl hover:shadow-lg hover:shadow-blue-500/30 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 transition-all duration-200 shadow-sm">
                 {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Creating...
-                  </>
+                  <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Creating...</>
                 ) : (
-                  <>
-                    <FaSave className="mr-2" />
-                    Create User
-                  </>
+                  <><FaSave className="w-3.5 h-3.5" />Create User</>
                 )}
               </button>
             </div>

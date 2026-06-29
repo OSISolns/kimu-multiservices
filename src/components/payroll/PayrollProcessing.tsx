@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Employee, Payroll } from '@/types/payroll';
 
 interface PayrollProcessingProps {
@@ -20,19 +20,28 @@ export default function PayrollProcessing({ user }: PayrollProcessingProps) {
   const [processedPayrolls, setProcessedPayrolls] = useState<Payroll[]>([]);
   const [errors, setErrors] = useState<any[]>([]);
 
+  const fetchAbortRef = useRef<AbortController | null>(null);
+
   useEffect(() => {
-    fetchEmployees();
+    const controller = new AbortController();
+    fetchAbortRef.current = controller;
+    fetchEmployees(controller.signal);
+    return () => {
+      controller.abort();
+      fetchAbortRef.current = null;
+    };
   }, []);
 
-  const fetchEmployees = async () => {
+  const fetchEmployees = async (signal?: AbortSignal) => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/payroll/employees?status=active');
+      const response = await fetch('/api/payroll/employees?status=active', { signal });
       const data = await response.json();
       if (data.success) {
         setEmployees(data.employees);
       }
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') return;
       console.error('Error fetching employees:', error);
     } finally {
       setIsLoading(false);

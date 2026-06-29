@@ -15,7 +15,9 @@ function initializePrismaClient(): PrismaClient {
   const tursoUrl = process.env.TURSO_DATABASE_URL || process.env.kimutransport_TURSO_DATABASE_URL;
   const tursoToken = process.env.TURSO_AUTH_TOKEN || process.env.kimutransport_TURSO_AUTH_TOKEN;
 
-  if (tursoUrl && tursoToken) {
+  const useRemote = process.env.USE_REMOTE_DB === 'true' || ((process.env.NODE_ENV as string) !== 'development');
+
+  if (useRemote && tursoUrl && tursoToken) {
     console.log('🚀 Initialising Prisma with Turso libSQL adapter');
     const adapter = new PrismaLibSQL({
       url: tursoUrl,
@@ -25,7 +27,7 @@ function initializePrismaClient(): PrismaClient {
     // The adapter handles the connection directly
     return new PrismaClient({
       adapter,
-      log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+      log: (process.env.NODE_ENV as string) === 'development' ? ['query', 'error', 'warn'] : ['error'],
       errorFormat: 'pretty',
     });
   }
@@ -33,7 +35,7 @@ function initializePrismaClient(): PrismaClient {
   // Development fallback – local SQLite file
   console.log('📁 Using local SQLite database');
   return new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    log: (process.env.NODE_ENV as string) === 'development' ? ['query', 'error', 'warn'] : ['error'],
     errorFormat: 'pretty',
     datasources: {
       db: {

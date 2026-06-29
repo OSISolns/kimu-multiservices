@@ -171,20 +171,26 @@ export default function TransportOfficerPage() {
     return null;
   }
 
-  const filteredBookings = bookings.filter(booking =>
-    filter === 'all' || booking.status.toLowerCase() === filter.toLowerCase()
-  );
+  const filteredBookings = bookings.filter(booking => {
+    if (filter === 'all') return true;
+    const normFilter = filter.toLowerCase().replace(/[-_\s]/g, '');
+    const normStatus = booking.status.toLowerCase().replace(/[-_\s]/g, '');
+    return normStatus === normFilter;
+  });
 
-  const filteredVehicles = vehicles.filter(vehicle =>
-    vehicleFilter === 'all' || vehicle.status.toLowerCase() === vehicleFilter.toLowerCase()
-  );
+  const filteredVehicles = vehicles.filter(vehicle => {
+    if (vehicleFilter === 'all') return true;
+    const normFilter = vehicleFilter.toLowerCase().replace(/[-_\s]/g, '');
+    const normStatus = vehicle.status.toLowerCase().replace(/[-_\s]/g, '');
+    return normStatus === normFilter;
+  });
 
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch (status?.toLowerCase().replace(/[-_\s]/g, '')) {
       case 'active': return 'bg-blue-100 text-blue-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       case 'confirmed': return 'bg-blue-100 text-blue-800';
-      case 'in-progress': return 'bg-purple-100 text-purple-800';
+      case 'inprogress': return 'bg-purple-100 text-purple-800';
       case 'completed': return 'bg-green-100 text-green-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -192,17 +198,17 @@ export default function TransportOfficerPage() {
   };
 
   const getVehicleStatusColor = (status: string) => {
-    switch (status) {
+    switch (status?.toLowerCase().replace(/[-_\s]/g, '')) {
       case 'available': return 'bg-green-100 text-green-800';
-      case 'in-use': return 'bg-blue-100 text-blue-800';
+      case 'inuse': return 'bg-blue-100 text-blue-800';
       case 'maintenance': return 'bg-yellow-100 text-yellow-800';
-      case 'out-of-service': return 'bg-red-100 text-red-800';
+      case 'outofservice': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch (status?.toLowerCase().replace(/[-_\s]/g, '')) {
       case 'active': return <FaCheckCircle className="text-blue-600" />;
       case 'completed': return <FaCheckCircle className="text-green-600" />;
       case 'cancelled': return <FaTimesCircle className="text-red-600" />;
@@ -263,7 +269,7 @@ export default function TransportOfficerPage() {
             </div>
             <h3 className="text-sm font-medium text-gray-500 mb-1">Active Bookings</h3>
             <p className="text-3xl font-bold text-gradient">
-              {aggregate?.activeBookings ?? bookings.filter(b => ['active', 'pending', 'confirmed', 'in-progress'].includes(b.status.toLowerCase())).length}
+              {aggregate?.activeBookings ?? bookings.filter(b => ['active', 'pending', 'confirmed', 'inprogress'].includes(b.status.toLowerCase().replace(/[-_\s]/g, ''))).length}
             </p>
           </div>
 
@@ -278,7 +284,7 @@ export default function TransportOfficerPage() {
             </div>
             <h3 className="text-sm font-medium text-gray-500 mb-1">Available Vehicles</h3>
             <p className="text-3xl font-bold text-gradient">
-              {aggregate?.availableVehicles ?? vehicles.filter(v => v.isAvailable && v.status === 'available').length}
+              {aggregate?.availableVehicles ?? vehicles.filter(v => v.isAvailable && v.status.toLowerCase().replace(/[-_\s]/g, '') === 'available').length}
             </p>
           </div>
 
@@ -308,7 +314,7 @@ export default function TransportOfficerPage() {
             </div>
             <h3 className="text-sm font-medium text-gray-500 mb-1">In Use</h3>
             <p className="text-3xl font-bold text-gradient">
-              {aggregate?.inUseVehicles ?? bookings.filter(b => b.status === 'in-progress').length}
+              {aggregate?.inUseVehicles ?? bookings.filter(b => b.status.toLowerCase().replace(/[-_\s]/g, '') === 'inprogress').length}
             </p>
           </div>
         </div>

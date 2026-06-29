@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Employee, Payroll, PayrollSummary, PayrollStats } from '@/types/payroll';
-import { FaTimes, FaSpinner, FaUserPlus, FaMoneyBillWave, FaCheckCircle, FaExclamationTriangle, FaEye, FaEdit, FaToggleOn, FaToggleOff, FaTrash } from 'react-icons/fa';
+import { FaTimes, FaSpinner, FaUserPlus, FaMoneyBillWave, FaCheckCircle, FaExclamationTriangle, FaEye, FaEdit, FaToggleOn, FaToggleOff, FaTrash, FaDownload } from 'react-icons/fa';
 
 interface PayrollDashboardProps {
   user: any;
@@ -361,6 +361,46 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
   // Active employees for payroll processing
   const activeEmployees = employees.filter(e => e.status === 'active');
 
+  const handleExcelExport = async () => {
+    const { exportToExcel } = await import('@/utils/excelExport');
+    
+    const columns = [
+      { header: 'Period', key: 'period', type: 'text' as const },
+      { header: 'Employee Name', key: 'employeeName', type: 'text' as const },
+      { header: 'Department', key: 'department', type: 'text' as const },
+      { header: 'Position', key: 'position', type: 'text' as const },
+      { header: 'Basic Salary (RWF)', key: 'basicSalary', type: 'number' as const, numFormat: '#,##0" RWF"' },
+      { header: 'Gross Salary (RWF)', key: 'grossSalary', type: 'number' as const, numFormat: '#,##0" RWF"' },
+      { header: 'Total Deductions (RWF)', key: 'totalDeductions', type: 'number' as const, numFormat: '#,##0" RWF"' },
+      { header: 'Net Salary (RWF)', key: 'netSalary', type: 'number' as const, numFormat: '#,##0" RWF"' },
+      { header: 'Status', key: 'status', type: 'text' as const }
+    ];
+
+    const data = payrolls.map(item => ({
+      ...item,
+      employeeName: item.employee.user?.fullName || item.employee.user?.username || `${item.employee.firstName} ${item.employee.lastName}`,
+      department: item.employee.department,
+      position: item.employee.position,
+      status: item.status.toUpperCase()
+    }));
+
+    await exportToExcel({
+      filename: `Payroll_Report_${selectedPeriod}`,
+      sheetName: 'Payrolls',
+      title: 'Payroll Report',
+      subtitle: `Period: ${selectedPeriod} | Total Employees: ${payrolls.length}`,
+      columns,
+      data,
+      summaryRow: {
+        position: 'Total',
+        basicSalary: { formula: '=SUM(E{start}:E{end})' },
+        grossSalary: { formula: '=SUM(F{start}:F{end})' },
+        totalDeductions: { formula: '=SUM(G{start}:G{end})' },
+        netSalary: { formula: '=SUM(H{start}:H{end})' }
+      }
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -624,12 +664,20 @@ export default function PayrollDashboard({ user }: PayrollDashboardProps) {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium text-gray-900">Payrolls</h3>
-                <button
-                  onClick={handleProcessPayroll}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
-                >
-                  <FaMoneyBillWave /> Process Payroll
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleExcelExport}
+                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2"
+                  >
+                    <FaDownload /> Export Excel
+                  </button>
+                  <button
+                    onClick={handleProcessPayroll}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
+                  >
+                    <FaMoneyBillWave /> Process Payroll
+                  </button>
+                </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">

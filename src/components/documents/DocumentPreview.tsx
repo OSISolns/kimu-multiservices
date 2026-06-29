@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { DocumentData } from '@/lib/document-generator';
+import { FaExclamationTriangle } from 'react-icons/fa';
 
 interface DocumentPreviewProps {
     documentId?: string;
@@ -197,7 +198,7 @@ export default function DocumentPreview({
                     {error && (
                         <div className="flex items-center justify-center h-full">
                             <div className="text-center">
-                                <div className="text-red-500 text-5xl mb-4">⚠️</div>
+                                <div className="text-red-500 text-5xl mb-4 flex justify-center"><FaExclamationTriangle /></div>
                                 <h3 className="text-xl font-semibold text-gray-800 mb-2">Error Loading Document</h3>
                                 <p className="text-gray-600 mb-4">{error}</p>
                                 <button

@@ -36,16 +36,14 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var _this = this;
 var { PrismaClient } = require('@prisma/client');
-var speakeasy = require('speakeasy');
 var bcrypt = require('bcryptjs');
 var prisma = new PrismaClient();
 function main() {
     return __awaiter(this, void 0, void 0, function () {
-        var agentTotpSecret, agentHash, adminTotpSecret, adminPassword, adminHash, accountantTotpSecret, accountantHash, accountantPassword;
+        var agentHash, adminPassword, adminHash, accountantHash, accountantPassword;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    agentTotpSecret = speakeasy.generateSecret({ length: 20 }).base32;
                     // Hash agent password
                     return [4 /*yield*/, bcrypt.hash('agent1@2025', 10)];
                 case 1:
@@ -53,70 +51,62 @@ function main() {
                     // Upsert agent user
                     return [4 /*yield*/, prisma.user.upsert({
                             where: { username: 'agent1' },
-                            update: { passwordHash: agentHash, totpSecret: agentTotpSecret, role: 'staff' },
+                            update: { passwordHash: agentHash, role: 'staff' },
                             create: {
                                 username: 'agent1',
                                 passwordHash: agentHash,
                                 role: 'staff',
-                                totpSecret: agentTotpSecret,
                             },
                         })];
                 case 2:
-                    // Upsert agent user
                     _a.sent();
-                    adminTotpSecret = speakeasy.generateSecret({ length: 20 }).base32;
                     adminPassword = 'kimu@2025';
                     return [4 /*yield*/, bcrypt.hash(adminPassword, 10)];
                 case 3:
                     adminHash = _a.sent();
                     return [4 /*yield*/, prisma.user.upsert({
                             where: { username: 'admin' },
-                            update: { passwordHash: adminHash, role: 'admin', totpSecret: adminTotpSecret },
+                            update: { passwordHash: adminHash, role: 'admin' },
                             create: {
                                 username: 'admin',
                                 passwordHash: adminHash,
                                 role: 'admin',
-                                totpSecret: adminTotpSecret,
                             },
                         })];
                 case 4:
                     _a.sent();
-                    accountantTotpSecret = speakeasy.generateSecret({ length: 20 }).base32;
                     accountantPassword = 'accountant@2025';
                     return [4 /*yield*/, bcrypt.hash(accountantPassword, 10)];
                 case 5:
                     accountantHash = _a.sent();
                     return [4 /*yield*/, prisma.user.upsert({
                             where: { username: 'accountant' },
-                            update: { passwordHash: accountantHash, role: 'accountant', totpSecret: accountantTotpSecret },
+                            update: { passwordHash: accountantHash, role: 'accountant' },
                             create: {
                                 username: 'accountant',
                                 passwordHash: accountantHash,
                                 role: 'accountant',
-                                totpSecret: accountantTotpSecret,
                             },
                         })];
                 case 6:
                     _a.sent();
                     // Create transport officer user
-                    var transportOfficerTotpSecret = speakeasy.generateSecret({ length: 20 }).base32;
                     var transportOfficerPassword = 'kimu@2025';
                     return [4 /*yield*/, bcrypt.hash(transportOfficerPassword, 10)];
                 case 7:
                     var transportOfficerHash = _a.sent();
                     return [4 /*yield*/, prisma.user.upsert({
                             where: { username: 'tofficer' },
-                            update: { passwordHash: transportOfficerHash, role: 'transport-officer', totpSecret: transportOfficerTotpSecret },
+                            update: { passwordHash: transportOfficerHash, role: 'transport-officer' },
                             create: {
                                 username: 'tofficer',
                                 passwordHash: transportOfficerHash,
                                 role: 'transport-officer',
-                                totpSecret: transportOfficerTotpSecret,
                             },
                         })];
                 case 8:
                     _a.sent();
-                    console.log('Seeded agent1, admin, accountant, and transport officer users with TOTP secrets.');
+                    console.log('Seeded agent1, admin, accountant, and transport officer users.');
                     return [2 /*return*/];
             }
         });

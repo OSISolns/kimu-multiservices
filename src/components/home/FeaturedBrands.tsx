@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Vehicle } from '@/types/vehicle'
+import { FaStar, FaCar } from 'react-icons/fa'
 
 interface FeaturedBrandsProps {
     vehicles: Vehicle[];
@@ -311,7 +312,7 @@ export default function FeaturedBrands({ vehicles, onVehicleSelect }: FeaturedBr
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2 bg-yellow-100 px-3 py-2 rounded-xl">
-                                            <span className="text-yellow-600 text-lg">★</span>
+                                            <FaStar className="text-yellow-600 text-lg" />
                                             <span className="text-sm font-semibold text-gray-700">{getRating(brandGroups[currentBrandIndex].featuredVehicle.id)}</span>
                                             <span className="text-xs text-gray-500">({getReviews(brandGroups[currentBrandIndex].featuredVehicle.id)})</span>
                                         </div>
@@ -386,8 +387,8 @@ export default function FeaturedBrands({ vehicles, onVehicleSelect }: FeaturedBr
                             </div>
                         </div>
                     ) : (
-                        <div className="w-full max-w-2xl mx-auto bg-white rounded-3xl shadow-2xl border border-gray-100 p-12 text-center">
-                            <div className="text-gray-400 text-6xl mb-4">🚗</div>
+                        <div className="w-full max-w-2xl mx-auto bg-white rounded-3xl shadow-2xl border border-gray-100 p-12 text-center flex flex-col items-center justify-center">
+                                <FaCar className="text-gray-400 text-6xl mb-4" />
                             <h3 className="text-xl font-semibold text-gray-600 mb-2">No Vehicles Available</h3>
                             <p className="text-gray-500">Please check back later for our featured vehicles.</p>
                         </div>

@@ -62,3 +62,19 @@ Thumbs.db
 
 
 # .env
+
+
+# Python
+fastapi-backend/venv/
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Temporary/Test scripts
+read_excel*.js
+test_excel*.js
+

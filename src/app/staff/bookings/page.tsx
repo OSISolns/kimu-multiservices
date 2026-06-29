@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/UserContext';
 import { FaCar, FaCalendarAlt, FaMapMarkerAlt, FaPhone, FaEnvelope, FaClock, FaCheckCircle, FaTimesCircle, FaEye } from 'react-icons/fa';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import BackButton from '@/components/BackButton';
 import Image from 'next/image';
 import BookingDetailsModal from './components/BookingDetailsModal';
 
@@ -160,6 +161,7 @@ export default function BookingsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
+          <BackButton href="/staff/sales-dashboard" label="Back to Dashboard" className="mb-4" />
           <h1 className="text-3xl font-bold text-gray-900">Booking Management</h1>
           <p className="text-gray-600 mt-2">
             Manage all vehicle rental bookings and customer requests.

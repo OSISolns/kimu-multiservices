@@ -23,7 +23,10 @@ import {
   FaSortUp,
   FaSortDown,
   FaImage,
-  FaShieldAlt
+  FaShieldAlt,
+  FaExclamationTriangle,
+  FaCheck,
+  FaTimes
 } from 'react-icons/fa'
 
 interface Vehicle {
@@ -680,8 +683,8 @@ export default function VehiclesPage() {
                       {vehicle.status || 'Available'}
                     </span>
                     {isFirstVehicleOfBrand(vehicle) && (
-                      <span className="status-badge warning hover-bounce">
-                        🛡️ Brand Rep
+                      <span className="status-badge warning hover-bounce flex items-center gap-1">
+                        <FaShieldAlt className="text-yellow-600 text-[10px]" /> Brand Rep
                       </span>
                     )}
                   </div>
@@ -817,8 +820,8 @@ export default function VehiclesPage() {
                     </p>
                     {modalType === 'edit' && selectedVehicle && isFirstVehicleOfBrand(selectedVehicle) && (
                       <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded-lg">
-                        <p className="text-xs text-yellow-800 font-medium">
-                          ⚠️ Brand Image Protected: This vehicle&apos;s image represents the brand and cannot be changed
+                        <p className="text-xs text-yellow-800 font-medium flex items-center gap-1.5">
+                          <FaExclamationTriangle className="text-yellow-600" /> Brand Image Protected: This vehicle&apos;s image represents the brand and cannot be changed
                         </p>
                       </div>
                     )}
@@ -990,9 +993,9 @@ export default function VehiclesPage() {
                             This vehicle&apos;s image represents the brand and cannot be changed
                           </p>
                           <div className="mt-4 text-xs text-yellow-600 space-y-1">
-                            <p>🛡️ This image is used in the Offers page</p>
-                            <p>🛡️ It represents the brand to customers</p>
-                            <p>🛡️ Only other vehicles of the same brand can have their images changed</p>
+                            <p className="flex items-center gap-1.5 justify-center"><FaShieldAlt className="text-yellow-600 text-xs" /> This image is used in the Offers page</p>
+                            <p className="flex items-center gap-1.5 justify-center"><FaShieldAlt className="text-yellow-600 text-xs" /> It represents the brand to customers</p>
+                            <p className="flex items-center gap-1.5 justify-center"><FaShieldAlt className="text-yellow-600 text-xs" /> Only other vehicles of the same brand can have their images changed</p>
                           </div>
                         </div>
                       </div>
@@ -1228,8 +1231,8 @@ export default function VehiclesPage() {
                     }`}>
                     {editingVehicle.licensePlate
                       ? validateLicensePlate(editingVehicle.licensePlate)
-                        ? '✓ Valid Rwandan format'
-                        : '✗ Invalid format. Use: RA + Alphabet + 3 digits + Alphabet'
+                        ? <span className="flex items-center gap-1"><FaCheck className="inline text-green-600 text-xs" /> Valid Rwandan format</span>
+                        : <span className="flex items-center gap-1"><FaTimes className="inline text-red-600 text-xs" /> Invalid format. Use: RA + Alphabet + 3 digits + Alphabet</span>
                       : 'Required: Rwandan format (RA + Alphabet + 3 digits + Alphabet)'
                     }
                   </p>

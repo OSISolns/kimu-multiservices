@@ -535,34 +535,6 @@ export default function ProfilePage() {
                                 }}
                             />
                         </div>
-
-                        {/* Security Settings */}
-                        <div className="bg-white rounded-2xl shadow-lg p-6 backdrop-blur-sm bg-opacity-90">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
-                                    <FaShieldAlt className="text-white" />
-                                </div>
-                                <h2 className="text-xl font-bold text-gray-900">Security</h2>
-                            </div>
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between p-4 border border-gray-100/80 rounded-lg hover:bg-blue-50/50 transition-colors transition-colors">
-                                    <div>
-                                        <h3 className="font-medium text-gray-900 flex items-center gap-2">
-                                            <FaKey className="text-gray-400" />
-                                            Change Password
-                                        </h3>
-                                        <p className="text-sm text-gray-500">Update your account password</p>
-                                    </div>
-                                    <button
-                                        onClick={() => router.push('/staff/settings/password')}
-                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                                    >
-                                        Change
-                                    </button>
-                                </div>
-
-                            </div>
-                        </div>
                     </div>
 
                     {/* Right Column - Stats & Info */}

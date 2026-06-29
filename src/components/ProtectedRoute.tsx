@@ -142,7 +142,7 @@ export default function ProtectedRoute({
               Need access? Contact your administrator:
             </p>
             <div className="text-sm text-gray-600">
-              <p>📧 valery.osisolns@gmail.com</p>
+              <p>📧 kimutransport6@gmail.com</p>
               <p>📞 +250 792 958 752</p>
             </div>
           </div>

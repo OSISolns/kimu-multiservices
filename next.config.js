@@ -33,6 +33,7 @@ const nextConfig = {
       },
     ];
   },
+  // Webpack config used only for production builds
   webpack: (config) => {
     config.resolve.alias.canvas = false;
     config.resolve.alias.jspdf = 'jspdf/dist/jspdf.umd.min.js';
@@ -40,4 +41,4 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig; 
+module.exports = nextConfig;

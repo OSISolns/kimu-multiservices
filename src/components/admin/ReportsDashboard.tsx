@@ -9,6 +9,7 @@ import {
   Report,
   ReportStats 
 } from '@/types/analytics';
+import { FaChartBar, FaMoneyBillWave, FaRocket, FaUsers, FaUserTie, FaClipboardList } from 'react-icons/fa';
 
 interface ReportsDashboardProps {
   user: any;
@@ -118,12 +119,12 @@ export default function ReportsDashboard({ user }: ReportsDashboardProps) {
   };
 
   const tabs = [
-    { id: 'overview', name: 'Overview', icon: '📊' },
-    { id: 'financial', name: 'Financial', icon: '💰' },
-    { id: 'operational', name: 'Operational', icon: '🚀' },
-    { id: 'customers', name: 'Customers', icon: '👥' },
-    { id: 'employees', name: 'Employees', icon: '👨‍💼' },
-    { id: 'reports', name: 'Reports', icon: '📋' },
+    { id: 'overview', name: 'Overview', icon: <FaChartBar className="inline" /> },
+    { id: 'financial', name: 'Financial', icon: <FaMoneyBillWave className="inline" /> },
+    { id: 'operational', name: 'Operational', icon: <FaRocket className="inline" /> },
+    { id: 'customers', name: 'Customers', icon: <FaUsers className="inline" /> },
+    { id: 'employees', name: 'Employees', icon: <FaUserTie className="inline" /> },
+    { id: 'reports', name: 'Reports', icon: <FaClipboardList className="inline" /> },
   ];
 
   if (isLoading) {
@@ -188,7 +189,7 @@ export default function ReportsDashboard({ user }: ReportsDashboardProps) {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-green-100 rounded-md flex items-center justify-center">
-                  <span className="text-green-600 text-lg">💰</span>
+                  <FaMoneyBillWave className="text-green-600 text-lg" />
                 </div>
               </div>
               <div className="ml-4">
@@ -207,7 +208,7 @@ export default function ReportsDashboard({ user }: ReportsDashboardProps) {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-blue-100 rounded-md flex items-center justify-center">
-                  <span className="text-blue-600 text-lg">📊</span>
+                  <FaChartBar className="text-blue-600 text-lg" />
                 </div>
               </div>
               <div className="ml-4">
@@ -226,7 +227,7 @@ export default function ReportsDashboard({ user }: ReportsDashboardProps) {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-purple-100 rounded-md flex items-center justify-center">
-                  <span className="text-purple-600 text-lg">👥</span>
+                  <FaUsers className="text-purple-600 text-lg" />
                 </div>
               </div>
               <div className="ml-4">
@@ -245,7 +246,7 @@ export default function ReportsDashboard({ user }: ReportsDashboardProps) {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-yellow-100 rounded-md flex items-center justify-center">
-                  <span className="text-yellow-600 text-lg">👨‍💼</span>
+                  <FaUserTie className="text-yellow-600 text-lg" />
                 </div>
               </div>
               <div className="ml-4">

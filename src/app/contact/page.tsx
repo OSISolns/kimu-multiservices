@@ -87,13 +87,13 @@ export default function Contact() {
       const urgencyText = formData.urgency === 'urgent' ? 'URGENT: ' : ''
       const msg =
         `${urgencyText}New Inquiry from KIMU Website%0A%0A` +
-        `👤 *Name:* ${formData.name}%0A` +
-        `📧 *Email:* ${formData.email}%0A` +
-        `📱 *Phone:* ${formData.phone || 'Not provided'}%0A` +
-        `🚗 *Service:* ${formData.service}%0A` +
-        `⏰ *Urgency:* ${formData.urgency === 'urgent' ? 'High Priority' : 'Standard'}%0A%0A` +
-        `💬 *Message:* ${formData.message}%0A%0A` +
-        `🌐 *Source:* Website Contact Form`
+        `*NAME:* ${formData.name}%0A` +
+        `*EMAIL:* ${formData.email}%0A` +
+        `*PHONE:* ${formData.phone || 'Not provided'}%0A` +
+        `*SERVICE:* ${formData.service}%0A` +
+        `*URGENCY:* ${formData.urgency === 'urgent' ? 'High Priority' : 'Standard'}%0A%0A` +
+        `*MESSAGE:* ${formData.message}%0A%0A` +
+        `*SOURCE:* Website Contact Form`
 
       window.open(`https://wa.me/${phone}?text=${msg}`, '_blank')
       setIsSubmitting(false)
@@ -163,6 +163,11 @@ export default function Contact() {
                     <div>
                       <h3 className="text-lg font-semibold mb-1">Phone Numbers</h3>
                       <p className="text-gray-600">+250 792 958 752</p>
+                      <p className="text-gray-700 flex items-center gap-2 mt-1">
+                        <span className="text-xs font-medium text-white bg-blue-600 rounded-full px-2 py-0.5">Hotline</span>
+                        <span className="font-bold text-blue-700 text-xl tracking-widest">6364</span>
+                      </p>
+                    </div>
                   </div>
               
                   <div className="flex items-start space-x-3">

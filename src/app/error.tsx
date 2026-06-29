@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { FaExclamationTriangle, FaEnvelope, FaPhone, FaWhatsapp } from 'react-icons/fa';
 
 interface ErrorProps {
   error: Error & { digest?: string };
@@ -13,7 +14,7 @@ export default function Error({ error, reset }: ErrorProps) {
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
         <div className="mb-6">
           <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-            <div className="text-3xl text-red-600">⚠️</div>
+            <div className="text-3xl text-red-600"><FaExclamationTriangle /></div>
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             Something went wrong!
@@ -42,10 +43,10 @@ export default function Error({ error, reset }: ErrorProps) {
           <p className="text-sm text-gray-500 mb-2">
             If this problem continues, please contact our support team:
           </p>
-          <div className="text-sm text-gray-600">
-            <p>📧 Email: valery.osisolns@gmail.com</p>
-            <p>📞 Phone: +250 792 958 752</p>
-            <p>💬 WhatsApp: +250 792 958 752</p>
+          <div className="text-sm text-gray-600 space-y-2 flex flex-col items-center">
+            <p className="flex items-center gap-2"><FaEnvelope className="text-gray-400" /> Email: kimutransport6@gmail.com</p>
+            <p className="flex items-center gap-2"><FaPhone className="text-gray-400" /> Phone: +250 792 958 752</p>
+            <p className="flex items-center gap-2"><FaWhatsapp className="text-emerald-500" /> WhatsApp: +250 792 958 752</p>
           </div>
         </div>
       </div>

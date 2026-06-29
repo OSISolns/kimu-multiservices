@@ -21,13 +21,13 @@ let CACHED_KEYS = globalForCrypto.rsaKeys || null;
 
 export function getRSAKeys() {
   if (CACHED_KEYS) return CACHED_KEYS;
-  
-  // Try to get from environment variables
+
+  // Try to get from environment variables (stored as base64-encoded PEM)
   if (process.env.RSA_PUBLIC_KEY && process.env.RSA_PRIVATE_KEY) {
-    CACHED_KEYS = {
-      publicKey: process.env.RSA_PUBLIC_KEY,
-      privateKey: process.env.RSA_PRIVATE_KEY,
-    };
+    const publicKey = Buffer.from(process.env.RSA_PUBLIC_KEY, 'base64').toString('utf8');
+    const privateKey = Buffer.from(process.env.RSA_PRIVATE_KEY, 'base64').toString('utf8');
+    CACHED_KEYS = { publicKey, privateKey };
+    globalForCrypto.rsaKeys = CACHED_KEYS;
     return CACHED_KEYS;
   }
 

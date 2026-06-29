@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
     FaPlus, FaMinus, FaHistory, FaFileInvoiceDollar, FaSearch,
     FaFilter, FaDownload, FaEllipsisV, FaCheckCircle, FaTimesCircle,
@@ -40,16 +40,19 @@ export default function PettyCashManager() {
         date: '',
     });
 
-    const fetchTransactions = async () => {
+    const fetchAbortRef = useRef<AbortController | null>(null);
+
+    const fetchTransactions = async (signal?: AbortSignal) => {
         setIsLoading(true);
         try {
-            const response = await fetch('/api/accounting/petty-cash');
+            const response = await fetch('/api/accounting/petty-cash', { signal });
             if (response.ok) {
                 const data = await response.json();
                 setTransactions(data.transactions);
                 setBalance(data.balance);
             }
         } catch (error) {
+            if (error instanceof Error && error.name === 'AbortError') return;
             console.error('Error fetching petty cash data:', error);
         } finally {
             setIsLoading(false);
@@ -57,7 +60,13 @@ export default function PettyCashManager() {
     };
 
     useEffect(() => {
-        fetchTransactions();
+        const controller = new AbortController();
+        fetchAbortRef.current = controller;
+        fetchTransactions(controller.signal);
+        return () => {
+            controller.abort();
+            fetchAbortRef.current = null;
+        };
     }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -191,6 +200,42 @@ export default function PettyCashManager() {
         return amount.toLocaleString('en-RW') + ' RWF';
     };
 
+    const handleExcelExport = async () => {
+        const { exportToExcel } = await import('@/utils/excelExport');
+        
+        const columns = [
+            { header: 'Date', key: 'date', type: 'date' as const },
+            { header: 'Type', key: 'type', type: 'text' as const },
+            { header: 'Category', key: 'category', type: 'text' as const },
+            { header: 'Description', key: 'description', type: 'text' as const },
+            { header: 'Requested By', key: 'requestedBy', type: 'text' as const },
+            { header: 'Status', key: 'status', type: 'text' as const },
+            { header: 'Amount (RWF)', key: 'amount', type: 'number' as const, numFormat: '#,##0" RWF"' }
+        ];
+
+        const data = transactions.map(item => ({
+            ...item,
+            amount: item.type === 'DEBIT' ? -item.amount : item.amount,
+            category: item.category ? item.category.split('_').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : '-',
+            requestedBy: item.requestedBy || '-',
+            status: item.status.toUpperCase(),
+            date: item.date.split('T')[0]
+        }));
+
+        await exportToExcel({
+            filename: `PettyCash_Report_${new Date().toISOString().split('T')[0]}`,
+            sheetName: 'Petty Cash',
+            title: 'Petty Cash Report',
+            subtitle: `Generated on ${new Date().toLocaleDateString()} | Current Balance: ${formatRWF(balance)}`,
+            columns,
+            data,
+            summaryRow: {
+                status: 'Net Balance',
+                amount: { formula: '=SUM(G{start}:G{end})' }
+            }
+        });
+    };
+
     return (
         <div className="space-y-6">
             {/* Header Stats */}
@@ -250,6 +295,12 @@ export default function PettyCashManager() {
                     </button>
                 </div>
                 <div className="flex items-center gap-3">
+                    <button
+                        onClick={handleExcelExport}
+                        className="px-6 py-3 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-2xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-blue-100"
+                    >
+                        <FaDownload /> Export
+                    </button>
                     <button
                         onClick={() => {
                             setTransactionType('CREDIT');

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { FaBell } from 'react-icons/fa';
 import { useUser } from '@/app/UserContext';
 import { useRouter } from 'next/navigation';
@@ -47,43 +47,73 @@ export default function NotificationBell({
 
   const config = sizeConfig[size];
 
+  // Ref to hold the current AbortController so we can cancel in-flight requests
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   // Fetch unread notification count
   const fetchUnreadCount = useCallback(async () => {
     if (!user?.id) return;
 
+    // Abort any previous in-flight request before starting a new one
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
-      const response = await fetch(`/api/notifications?userId=${user.id}&read=false`);
+      const response = await fetch(
+        `/api/notifications?userId=${user.id}&read=false`,
+        { signal: controller.signal }
+      );
 
       if (response.ok) {
         const notifications = await response.json();
         const newCount = notifications.length;
-        
+
         // Check if there are new notifications to trigger ring animation
         if (newCount > unreadCount && unreadCount > 0) {
           setIsRinging(true);
           setTimeout(() => setIsRinging(false), 1000);
         }
-        
+
         setUnreadCount(newCount);
         setLastFetchTime(Date.now());
       }
     } catch (error) {
+      // Silently ignore AbortError — this is expected during HMR / component unmount
+      if (error instanceof Error && error.name === 'AbortError') return;
       console.warn('Failed to fetch notification count:', error);
     }
   }, [user?.id, unreadCount]);
 
-  // Initial fetch and auto-refresh
+  // Initial fetch — abort on cleanup to prevent HMR NetworkError
   useEffect(() => {
     if (user?.id) {
       fetchUnreadCount();
     }
+    return () => {
+      // Cancel any in-flight request when component unmounts or user changes
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    };
   }, [user?.id, fetchUnreadCount]);
 
+  // Polling interval — clears on cleanup to prevent stale interval NetworkErrors
   useEffect(() => {
     if (!autoRefresh || !user?.id) return;
 
     const interval = setInterval(fetchUnreadCount, refreshInterval);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      // Also abort any request that the interval may have just fired
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    };
   }, [autoRefresh, refreshInterval, fetchUnreadCount, user?.id]);
 
   // Handle click to navigate to notifications

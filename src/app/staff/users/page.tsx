@@ -9,7 +9,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useUser } from '../../UserContext';
 import ExcelJS from 'exceljs';
-import { FaPlus, FaEdit, FaTrash, FaUser } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaUser, FaKey, FaExclamationTriangle } from 'react-icons/fa';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ProfilePictureUpload from '@/components/ProfilePictureUpload';
 import PasswordInput from '@/components/PasswordInput';
@@ -891,7 +891,7 @@ export default function UsersPage() {
               <div className="bg-white rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-xl font-semibold flex items-center gap-2">
-                    <span className="text-blue-600">👤</span>
+                    <FaUser className="text-blue-600" />
                     User Details
                   </h3>
                   <button
@@ -1038,7 +1038,7 @@ export default function UsersPage() {
               <div className="bg-white rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-xl font-semibold flex items-center gap-2">
-                    <span className="text-green-600">➕</span>
+                    <FaPlus className="text-green-600" />
                     Add New User
                   </h3>
                   <button
@@ -1261,7 +1261,7 @@ export default function UsersPage() {
               <div className="bg-white rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-xl font-semibold flex items-center gap-2">
-                    <span className="text-blue-600">✏️</span>
+                    <FaEdit className="text-blue-600" />
                     Edit User
                   </h3>
                   <button
@@ -1520,7 +1520,7 @@ export default function UsersPage() {
               <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-xl font-semibold flex items-center gap-2">
-                    <span className="text-yellow-600">🔐</span>
+                    <FaKey className="text-yellow-600" />
                     Reset Password
                   </h3>
                   <button
@@ -1571,10 +1571,13 @@ export default function UsersPage() {
                   </div>
 
                   <div className="bg-yellow-50 p-3 rounded-lg">
-                    <p className="text-sm text-yellow-800">
-                      <strong>⚠️ Warning:</strong> This action will immediately change the user&apos;s password.
-                      The user will need to use this new password to log in.
-                    </p>
+                    <div className="text-sm text-yellow-800 flex items-start gap-2">
+                      <FaExclamationTriangle className="text-yellow-600 mt-0.5 shrink-0" />
+                      <div>
+                        <strong>Warning:</strong> This action will immediately change the user&apos;s password.
+                        The user will need to use this new password to log in.
+                      </div>
+                    </div>
                   </div>
                 </div>
 

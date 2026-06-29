@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useUser } from '@/app/UserContext'
 import { FaCar, FaChartBar, FaDownload, FaFilter, FaCalendar, FaUsers, FaRoad, FaGasPump, FaSpinner, FaTools, FaCheckCircle, FaExclamationTriangle, FaChartLine } from 'react-icons/fa'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import BackButton from '@/components/BackButton'
 
 interface TransportReport {
   totalVehicles: number
@@ -215,6 +216,7 @@ export default function TransportReportsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center gap-3">
+              <BackButton href="/staff/reports" label="Reports" />
               <div className="p-2 bg-gradient-to-r from-orange-600 to-amber-600 rounded-xl shadow-lg shadow-orange-500/30">
                 <FaCar className="text-white text-xl" />
               </div>

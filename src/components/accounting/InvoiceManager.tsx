@@ -759,6 +759,40 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
     }
   };
 
+  const handleExcelExport = async () => {
+    const { exportToExcel } = await import('@/utils/excelExport');
+    
+    const columns = [
+      { header: 'Date', key: 'createdAt', type: 'date' as const },
+      { header: 'Invoice Number', key: 'invoiceNumber', type: 'text' as const },
+      { header: 'Client Name', key: 'clientName', type: 'text' as const },
+      { header: 'Client Email', key: 'clientEmail', type: 'text' as const },
+      { header: 'Due Date', key: 'dueDate', type: 'date' as const },
+      { header: 'Status', key: 'status', type: 'text' as const },
+      { header: 'Amount (RWF)', key: 'grandTotal', type: 'number' as const, numFormat: '#,##0" RWF"' }
+    ];
+
+    const data = invoices.map(item => ({
+      ...item,
+      status: item.status.toUpperCase(),
+      createdAt: item.createdAt.split('T')[0],
+      dueDate: item.dueDate.split('T')[0]
+    }));
+
+    await exportToExcel({
+      filename: `Invoice_Report_${new Date().toISOString().split('T')[0]}`,
+      sheetName: 'Invoices',
+      title: 'Invoice Manager Report',
+      subtitle: `Generated on ${new Date().toLocaleDateString()} | Total Invoices: ${invoices.length}`,
+      columns,
+      data,
+      summaryRow: {
+        status: 'Total',
+        grandTotal: { formula: '=SUM(G{start}:G{end})' }
+      }
+    });
+  };
+
   return (
     <>
       {/* Print Styles */}
@@ -800,6 +834,12 @@ export default function InvoiceManager({ onInvoiceCreated }: InvoiceManagerProps
               <option value="outstanding">Outstanding</option>
               <option value="paid">Paid</option>
             </select>
+            <button
+              onClick={handleExcelExport}
+              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center gap-2"
+            >
+              <FaDownload /> Export Excel
+            </button>
             <button
               onClick={() => {
                 resetForm();

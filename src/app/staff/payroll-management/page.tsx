@@ -8,6 +8,7 @@ import PayrollDashboard from '@/components/payroll/PayrollDashboard';
 import EmployeeManagement from '@/components/payroll/EmployeeManagement';
 import PayrollProcessing from '@/components/payroll/PayrollProcessing';
 import PayrollReports from '@/components/payroll/PayrollReports';
+import { FaChartBar, FaUsers, FaMoneyBillWave, FaChartLine } from 'react-icons/fa';
 
 export default function PayrollManagementPage() {
   const router = useRouter();
@@ -31,10 +32,10 @@ export default function PayrollManagementPage() {
   }
 
   const tabs = [
-    { id: 'dashboard', name: 'Dashboard', icon: '📊' },
-    { id: 'employees', name: 'Employees', icon: '👥' },
-    { id: 'processing', name: 'Process Payroll', icon: '💰' },
-    { id: 'reports', name: 'Reports', icon: '📈' },
+    { id: 'dashboard', name: 'Dashboard', icon: <FaChartBar /> },
+    { id: 'employees', name: 'Employees', icon: <FaUsers /> },
+    { id: 'processing', name: 'Process Payroll', icon: <FaMoneyBillWave /> },
+    { id: 'reports', name: 'Reports', icon: <FaChartLine /> },
   ];
 
   return (
@@ -56,12 +57,12 @@ export default function PayrollManagementPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === tab.id
+                  className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
                 >
-                  <span className="mr-2">{tab.icon}</span>
+                  {tab.icon}
                   {tab.name}
                 </button>
               ))}
